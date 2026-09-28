@@ -41,11 +41,13 @@ varying vec2 vC; varying vec3 vCol; varying float vBig;
 void main() {
   float r = length(vC);
   if (r > 1.0) discard;
-  // small: soft gaussian point; large (defocused): flat disc with a slightly brighter rim (lens bokeh)
+  // small: soft gaussian point; large (defocused): a lens bokeh disc, soft-edged, a little brighter at the
+  // rim, faint onion rings from the aspheric elements, and a trace of colour fringe at the edge
   float small = exp(-r * r * 3.2);
-  float disc = smoothstep(1.0, 0.9, r) * (0.82 + 0.3 * smoothstep(0.6, 0.97, r));
+  float disc = smoothstep(1.0, 0.92, r) * (0.8 + 0.22 * smoothstep(0.55, 0.96, r) + 0.035 * sin(r * 34.0));
   float k = mix(small * 1.9, disc, vBig);
-  vec3 o = vCol * k;
+  float fr = smoothstep(0.84, 1.0, r) * vBig;
+  vec3 o = vCol * k * vec3(1.0 + 0.18 * fr, 1.0, 1.0 - 0.14 * fr);
   if (any(isnan(o)) || any(isinf(o))) discard;
   gl_FragColor = vec4(o, 1.0);
 }`;

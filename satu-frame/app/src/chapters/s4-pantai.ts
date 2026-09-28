@@ -9,9 +9,9 @@ import { scanRow } from '../clock';
 import { city, TOWER, SHORE_Z, CABLE_X } from '../sets/city';
 import { v3 } from '../r3';
 import { camPath, type Key } from '../path';
-import { P } from '../motion';
+import { P, eIO } from '../motion';
 import { clamp } from '../engine/util';
-import { makeRT, clearRT } from '../engine/gl';
+import { underwater } from '../fx';
 import type { Chapter } from '../world';
 
 const [T0, T1] = CH.pantai;
@@ -29,8 +29,6 @@ const KEYS: Key[] = [
   { t: T1, pos: v3(BX, -1.9, SZ - 129), look: v3(BX, -6, SZ - 136), fov: 60, focus: 3, ap: 10 },
 ];
 
-let under: THREE.WebGLRenderTarget | null = null;
-
 const s4: Chapter = {
   id: 'pantai',
   render(t, ctx, out) {
@@ -41,13 +39,11 @@ const s4: Chapter = {
     }, out);
     ctx.post.bloom = 0.7;
     ctx.post.bloomThreshold = 1.2;
-    // through the frozen surface: into black water
-    const k = clamp(P(t, 24.12, 0.2));
-    if (k > 0) {
-      under ??= makeRT(1080, 1920, { depthBuffer: false });
-      clearRT(ctx.renderer, under, [0.0006, 0.0014, 0.004]);
-      ctx.r3.comp.draw(ctx.renderer, under.texture, out, { mode: 'normal', opacity: k * k * (3 - 2 * k), premult: false });
-    }
+    // through the frozen surface into black water, the cable's line going on down through the murk (and
+    // turning to where S5's seabed camera sees it)
+    const k = clamp(P(t, 24.06, 0.12));
+    const u = eIO(P(t, 24.1, T1 - 24.1));
+    underwater(ctx.renderer, out, k * k * (3 - 2 * k), [0.52 - 0.19 * u, -0.05], [0.5 + 0.02 * u, 0.62 - 0.07 * u]);
   },
 };
 export default s4;

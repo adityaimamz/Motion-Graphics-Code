@@ -2,6 +2,7 @@
 // render in colour but are left out of the depth pass (they are light, not surfaces).
 import * as THREE from 'three';
 import { LIN } from './engine/palette';
+import { FSPass } from './engine/gl';
 
 export const FX_LAYER = 1;
 
@@ -64,6 +65,56 @@ export function glowTexture() {
   glowTex = new THREE.CanvasTexture(c);
   return glowTex;
 }
+let hazePass: FSPass | null = null;
+/**
+ * Inside the lit plastic of the antenna gap (S2 → S3): a deep blue haze, brightest toward the feed (right),
+ * laid over `out` with presence k. The camera passes through it from the board into the room.
+ */
+export function gapHaze(renderer: THREE.WebGLRenderer, out: THREE.WebGLRenderTarget, k: number) {
+  if (k <= 0.001) return;
+  if (!hazePass) {
+    hazePass = new FSPass(/* glsl */ `
+      uniform float k; uniform vec3 ice, deep;
+      void main() {
+        vec2 p = (vUv - vec2(0.62, 0.52)) * vec2(1.7, 0.75);
+        float g = exp(-dot(p, p) / 0.06);
+        fragColor = vec4((deep * 0.01 + ice * (0.008 + 0.1 * g)) * k, k);
+      }`, { k: { value: 0 }, ice: { value: new THREE.Vector3(...LIN.ice) }, deep: { value: new THREE.Vector3(...LIN.deep) } }, { blending: THREE.CustomBlending, transparent: true });
+    const m = hazePass.mat;
+    m.blendEquation = THREE.AddEquation; m.blendSrc = THREE.OneFactor; m.blendDst = THREE.OneMinusSrcAlphaFactor;
+  }
+  hazePass.u.k!.value = Math.min(1, k);
+  hazePass.render(renderer, out);
+}
+
+let waterPass: FSPass | null = null;
+/**
+ * Under the frozen sea (S4 → S5): dark murky water, and the cable's glow seen through it as one soft beam
+ * from screen point a to b (uv, 0..1 from the bottom left), fading into the murk toward b. Laid over `out`
+ * with presence k: it carries the line from the surface down to where the seabed takes it.
+ */
+export function underwater(renderer: THREE.WebGLRenderer, out: THREE.WebGLRenderTarget, k: number, a: [number, number], b: [number, number]) {
+  if (k <= 0.001) return;
+  if (!waterPass) {
+    waterPass = new FSPass(/* glsl */ `
+      uniform float k; uniform vec2 a, b; uniform vec3 ice;
+      void main() {
+        vec2 p = vUv * vec2(${(1080 / 1920).toFixed(4)}, 1.0), pa = a * vec2(${(1080 / 1920).toFixed(4)}, 1.0), pb = b * vec2(${(1080 / 1920).toFixed(4)}, 1.0);
+        vec2 ab = pb - pa; float h = clamp(dot(p - pa, ab) / dot(ab, ab), 0.0, 1.0);
+        float d = length(p - pa - ab * h);
+        float along = 1.0 - h;                               // brighter near the lens, lost in the murk far off
+        float beam = (exp(-d * d / 0.00012) * 0.9 + exp(-d * d / 0.004) * 0.25) * (0.25 + 0.75 * along * along);
+        vec3 c = vec3(0.0006, 0.0014, 0.004) + ice * (beam * 0.55 + 0.012 * exp(-d / 0.18));
+        fragColor = vec4(c * k, k);
+      }`, { k: { value: 0 }, a: { value: new THREE.Vector2() }, b: { value: new THREE.Vector2() }, ice: { value: new THREE.Vector3(...LIN.ice) } }, { blending: THREE.CustomBlending, transparent: true });
+    const m = waterPass.mat;
+    m.blendEquation = THREE.AddEquation; m.blendSrc = THREE.OneFactor; m.blendDst = THREE.OneMinusSrcAlphaFactor;
+  }
+  const u = waterPass.u;
+  u.k!.value = Math.min(1, k); (u.a!.value as THREE.Vector2).set(...a); (u.b!.value as THREE.Vector2).set(...b);
+  waterPass.render(renderer, out);
+}
+
 /** An additive glow sprite in a linear colour. */
 export function glowSprite(col: [number, number, number] = LIN.ice) {
   const m = new THREE.SpriteMaterial({ map: glowTexture(), color: new THREE.Color().setRGB(...col), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, toneMapped: false });

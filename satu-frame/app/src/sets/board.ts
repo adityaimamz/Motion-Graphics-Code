@@ -4,6 +4,7 @@
 // the SoC (package-on-package), PMIC, RF transceiver, open shield-can frames, the coax to the antenna,
 // and the aluminium frame rail with its plastic-filled antenna gap. The request is a flash that runs
 // SoC → RF → coax → gap: at ×18.750 electricity is still instant, so it lights the path at once and fades.
+// The antenna goes on transmitting for the rest of the chapter: the feed and the gap keep a steady glow.
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { LIN } from '../engine/palette';
@@ -21,6 +22,42 @@ export const PULSE_PATH = [
   V(57.2, 0.2, 22.2), V(58.5, 0.62, 18), V(58.2, 1.15, 12), V(55.2, 1.35, 5.2), V(51.6, 1.2, 1.3), V(50.9, 0.8, 0.6),
 ];
 export const GAP_X = 49.5;
+/** Where the feed spring touches the rail, right of the gap (board mm). */
+const FEED = V(50.9, 0.85, -0.38);
+
+/** Fine machining lines (one per row, varied), for the rail's roughness and bump. Deterministic. */
+function brushedTexture(rnd: () => number) {
+  const c = document.createElement('canvas');
+  c.width = 64; c.height = 1024;
+  const x = c.getContext('2d')!;
+  let v = 0.5;
+  for (let y = 0; y < c.height; y++) {
+    v = 0.6 * v + 0.4 * rnd();                       // neighbouring lines are alike, as from one pass
+    const g = Math.round(90 + 90 * v + (rnd() < 0.04 ? 60 : 0));
+    x.fillStyle = `rgb(${g},${g},${g})`; x.fillRect(0, y, c.width, 1);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.NoColorSpace; t.anisotropy = 8;
+  return t;
+}
+
+/** The plastic in the antenna gap: dark polymer with a fine moulded grain, glowing from inside near the
+ *  feed while the antenna transmits (false colour, like every signal in the film). */
+const PLASTIC_VERT = /* glsl */ `varying vec3 vW; void main() { vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
+const PLASTIC_FRAG = /* glsl */ `
+uniform float k; uniform vec3 ice, feed; varying vec3 vW;
+float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+void main() {
+  vec3 d = vW - feed;
+  // a band level with the feed, fading up and down the slot and deeper in: dim, the slot stays dark
+  float g = exp(-abs(d.y) / 0.9) * exp(-max(0.0, -d.z - 0.6) / 0.5);
+  float grain = 0.9 + 0.1 * vn(vW.xy * 30.0) + 0.05 * vn(vW.xy * 120.0);
+  // where the plastic meets the rail on the feed's side the light leaks brightest: a small hot corner
+  float leak = exp(-length((vW.xy - vec2(${(GAP_X + 0.75).toFixed(2)}, feed.y)) * vec2(1.0, 0.5)) / 0.28);
+  vec3 c = vec3(0.004, 0.0045, 0.006) * grain + ice * k * ((0.012 + 0.13 * g) * grain + 0.9 * leak);
+  gl_FragColor = vec4(c, 1.0);
+}`;
 
 class Board {
   scene = new THREE.Scene();
@@ -31,6 +68,14 @@ class Board {
   private tail = new THREE.PointLight(col(LIN.blue), 0, 18, 1.6);
   private pathPts: THREE.Vector3[] = [];
   private beads = [0.18, 0.4, 0.62, 0.84].map(() => new THREE.PointLight(col(LIN.ice), 0, 9, 1.8));
+  private plasticMat = new THREE.ShaderMaterial({
+    uniforms: { k: { value: 0 }, ice: { value: new THREE.Vector3(...LIN.ice) }, feed: { value: FEED.clone() } },
+    vertexShader: PLASTIC_VERT, fragmentShader: PLASTIC_FRAG,
+  });
+  private feedDot = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 12), new THREE.MeshBasicMaterial({ color: col(LIN.ice), toneMapped: false }));
+  private feedGlow = glowSprite(LIN.ice);
+  /** inside the slot, level with the feed: lights the slot's walls */
+  private feedLight = new THREE.PointLight(col(LIN.ice), 0, 10, 2);
 
   init(ctx: Ctx) {
     const s = this.scene;
@@ -138,6 +183,14 @@ class Board {
     });
     for (const m of [bodies, terms, padM]) { m.castShadow = true; m.receiveShadow = true; }
     s.add(bodies, terms, padM);
+    // what each part is (own draw, so the layout above keeps its randomness): MLCC capacitors in their
+    // brown-beige ceramic, thick-film resistors with a black top, a few dark inductors
+    const rk = mulberry32(71), tint = new THREE.Color();
+    const CAPS = [0x7d6450, 0x8a6f55, 0x6f5a48, 0x94795c, 0x7a6a58];
+    const kinds = keep.map(() => { const u = rk(); return u < 0.62 ? 0 : u < 0.9 ? 1 : 2; });
+    keep.forEach((_, i) => bodies.setColorAt(i, tint.setHex(kinds[i] === 0 ? CAPS[Math.floor(rk() * CAPS.length)]! : kinds[i] === 1 ? 0x141416 : 0x2b2c30)));
+    body.color.setHex(0xffffff); body.roughness = 0.55;
+    this.silkscreen(s, keep, kinds, chips, mulberry32(72));
 
     // chips: epoxy packages (the SoC as package-on-package), laser-marked pin-1 dot
     const epoxy = new THREE.MeshStandardMaterial({ color: 0x0b0b0d, roughness: 0.62 });
@@ -179,21 +232,82 @@ class Board {
     const flex = new THREE.Mesh(new THREE.BoxGeometry(9, 0.12, 14), new THREE.MeshStandardMaterial({ color: 0x3a3126, roughness: 0.45, metalness: 0.1 }));
     flex.position.set(14, 0.9, 14); flex.rotation.x = 0.06; s.add(flex);
 
-    // the aluminium frame rail along the top edge, split by the plastic antenna gap
-    const alu = new THREE.MeshStandardMaterial({ color: 0x3a3d42, roughness: 0.28, metalness: 1.0 });
-    const plastic = new THREE.MeshStandardMaterial({ color: 0x030304, roughness: 0.7 });
+    // the aluminium frame rail along the top edge (bead-blasted, then brushed: fine machining lines that
+    // stretch its highlights), split by the antenna gap. The gap is a real slot: the plastic that fills it
+    // sits 0.6 mm back from the rail's inner face, and the slot's edges are chamfered.
+    const brushed = brushedTexture(rnd);
+    const alu = new THREE.MeshPhysicalMaterial({ color: 0x3a3d42, metalness: 1.0, roughness: 0.34, roughnessMap: brushed, bumpMap: brushed, bumpScale: 0.004, anisotropy: 0.7 });
     const railL = new THREE.Mesh(new THREE.BoxGeometry(GAP_X - 0.75 + 4, 7.5, 1.6), alu); railL.position.set((GAP_X - 0.75 - 4) / 2, 0.2, -1.2);
     const railR = new THREE.Mesh(new THREE.BoxGeometry(72 - GAP_X - 0.75, 7.5, 1.6), alu); railR.position.set(GAP_X + 0.75 + (72 - GAP_X - 0.75) / 2, 0.2, -1.2);
-    const gap = new THREE.Mesh(new THREE.BoxGeometry(1.5, 7.5, 1.6), plastic); gap.position.set(GAP_X, 0.2, -1.2);
+    const gap = new THREE.Mesh(new THREE.BoxGeometry(1.5, 7.5, 1.0), this.plasticMat); gap.position.set(GAP_X, 0.2, -1.5);
     for (const m of [railL, railR, gap]) { m.castShadow = m.receiveShadow = true; }
     s.add(railL, railR, gap);
-    // antenna feed spring
-    const spring = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.5, 1.2), gold); spring.position.set(50.9, 0.27, 0.9); s.add(spring);
+    // 45° chamfers down both edges of the slot: thin bright lines that frame it when light rakes across
+    for (const sx of [-1, 1]) {
+      const ch = new THREE.Mesh(new THREE.BoxGeometry(0.17, 7.5, 0.17), alu);
+      ch.position.set(GAP_X + sx * 0.75, 0.2, -0.4); ch.rotation.y = Math.PI / 4; s.add(ch);
+    }
+    // antenna feed: a gold spring leaf from its pad on the board up to the rail, just right of the gap
+    const pad = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.1, 1.1), gold); pad.position.set(50.9, 0.05, 0.75); s.add(pad);
+    const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.07, 1.45), gold);
+    leaf.position.set(50.9, 0.47, 0.1); leaf.rotation.x = 0.62; leaf.castShadow = true; s.add(leaf);
+    // where the leaf touches the rail: the feed point, lit while the radio transmits
+    this.feedDot.position.copy(FEED); s.add(this.feedDot, this.feedGlow, this.feedLight);
 
     // the pulse: trail + glows (FX layer, no depth)
     const curve = new THREE.CatmullRomCurve3(PULSE_PATH, false, 'centripetal', 0.2);
     this.pathPts = curve.getSpacedPoints(95);
     s.add(this.trail.mesh, this.glowA, this.glowB, ...this.beads);
+  }
+
+  /** The silkscreen, printed in white ink on the mask: chip outlines with their pin-1 marks, outlines and
+   *  reference designators for some of the passives, a few labels (U1 on the SoC, ANT1 at the feed). */
+  private silkscreen(s: THREE.Scene, parts: { x: number; z: number; l: number; w: number; rot: boolean }[], kinds: number[], chips: [number, number, number, number][], rnd: () => number) {
+    const PX = 40, X0 = 2, Z0 = 2, Wmm = 64, Hmm = 46;
+    const c = document.createElement('canvas');
+    c.width = Wmm * PX; c.height = Hmm * PX;
+    const x = c.getContext('2d')!;
+    x.fillStyle = '#000'; x.fillRect(0, 0, c.width, c.height);
+    x.strokeStyle = '#fff'; x.fillStyle = '#fff'; x.lineWidth = 0.12 * PX; x.lineJoin = 'miter';
+    const P = (mx: number, mz: number): [number, number] => [(mx - X0) * PX, (mz - Z0) * PX];
+    chips.forEach(([cx, cz, hx, hz], i) => {
+      const [a, b] = P(cx - hx - 0.35, cz - hz - 0.35);
+      x.strokeRect(a, b, (hx * 2 + 0.7) * PX, (hz * 2 + 0.7) * PX);
+      const [d, e] = P(cx - hx - 0.8, cz - hz - 0.8);
+      x.beginPath(); x.arc(d, e, 0.18 * PX, 0, Math.PI * 2); x.fill();
+      x.font = `600 ${0.9 * PX}px IT`;
+      const [tx, tz] = P(cx - hx, cz + hz + 1.35);
+      x.fillText(i === 0 ? 'U1' : `U${i + 3}`, tx, tz);
+    });
+    const names = ['C', 'R', 'L'], count = [100, 1, 1];
+    parts.forEach((p, i) => {
+      if (rnd() > 0.22) return;
+      const k = kinds[i]!;
+      const len = p.l * 1.25, wid = p.w * 1.9;
+      const [a, b] = P(p.x - (p.rot ? wid : len) / 2, p.z - (p.rot ? len : wid) / 2);
+      x.lineWidth = 0.07 * PX;
+      x.strokeRect(a, b, (p.rot ? wid : len) * PX, (p.rot ? len : wid) * PX);
+      if (rnd() < 0.7) {
+        x.font = `600 ${0.42 * PX}px IT`;
+        const n = count[k]!++;
+        const [tx, tz] = P(p.x + (p.rot ? wid : len) / 2 + 0.12, p.z + 0.18);
+        x.fillText(`${names[k]}${n}`, tx, tz);
+      }
+    });
+    x.font = `600 ${0.8 * PX}px IT`;
+    { const [tx, tz] = P(52.6, 2.4); x.fillText('ANT1', tx, tz); }
+    { const [tx, tz] = P(9.8, 20.4); x.fillText('J3', tx, tz); }
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.NoColorSpace; t.anisotropy = 8;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(Wmm, Hmm).rotateX(-Math.PI / 2).translate(X0 + Wmm / 2, 0.006, Z0 + Hmm / 2),
+      new THREE.MeshStandardMaterial({ color: 0xd4d2c8, alphaMap: t, transparent: true, depthWrite: false, roughness: 0.85, polygonOffset: true, polygonOffsetFactor: -1 }));
+    m.receiveShadow = true;
+    s.add(m);
+    // three fiducials: bare gold dots in a clear ring of mask
+    const gold = new THREE.MeshStandardMaterial({ color: col(LIN.gold), roughness: 0.25, metalness: 1.0 });
+    for (const [fx, fz] of [[4.5, 4.5], [61.5, 44], [4.5, 44]] as const) {
+      const f = new THREE.Mesh(new THREE.CircleGeometry(0.5, 32).rotateX(-Math.PI / 2), gold); f.position.set(fx, 0.008, fz); s.add(f);
+    }
   }
 
   /** Pulse state at film time t: birth time b (the flash), decay over ~1.2 s. */
@@ -219,6 +333,15 @@ class Board {
       b.position.copy(this.pathPts[Math.round(f * (this.pathPts.length - 1))]!).add(V(0, 0.6, 0));
       b.intensity = on && reveal >= f ? 5 * Math.exp(-age / 0.7) + 0.6 * Math.exp(-age / 2.5) : 0;
     });
+    // the feed keeps glowing after the flash: one transmit slot lasts ~0.5–1 ms, 9–18 s of film at ×18.750
+    const feed = on && reveal >= 1 ? 1 : 0;
+    this.feedDot.visible = this.feedGlow.visible = feed > 0;
+    (this.feedDot.material as THREE.MeshBasicMaterial).color.copy(col(LIN.ice).multiplyScalar(2.5 + 5 * Math.exp(-age / 0.3)));
+    this.feedGlow.position.copy(FEED); this.feedGlow.scale.setScalar(1.3);
+    (this.feedGlow.material as THREE.SpriteMaterial).opacity = 0.7 * feed;
+    this.feedLight.position.set(GAP_X + 0.3, FEED.y, -0.75);
+    this.feedLight.intensity = 2.5 * feed;
+    this.plasticMat.uniforms.k!.value = feed;
   }
 
   render(ctx: Ctx, cam: Cam, t: number, birth: number, out: THREE.WebGLRenderTarget) {

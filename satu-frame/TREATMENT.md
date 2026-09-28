@@ -22,7 +22,8 @@ Default brand: void `#000`, paper `#F5F5F5`, mute `#9CA3AF`, blue `#3B82F6`, blu
 Penyimpangan (disengaja):
 - **Subpixel merah dan hijau** hanya di makro layar (S1, S2 awal, S8 akhir, keluar-loop), karena layar memang tersusun dari emitor R/G/B. R `#FF3B2F`, G `#3DFF7A`, B `#2F5BFF`. Tidak pernah dipakai untuk teks atau UI.
 - **Logam redup** (emas pad `#B8A987`, tembaga `#A08A7A`) hanya sebagai material.
-- **Lampu kota** = putih hangat samar (LED), tidak oranye sodium.
+- **Lampu kota** = putih hangat samar (LED), tidak oranye sodium. Awan di atas Jakarta memantulkannya sedikit lebih dalam (hangat-gelap), tetap bukan oranye.
+- **Meja kayu walnut yang hampir hitam** (S3 awal, S8 akhir, S9) dan **keramik kapasitor coklat-krem** di papan (S2) hanya sebagai material.
 
 Tipografi:
 - Inter Tight saja (`fonts/it.woff2`).
@@ -79,8 +80,8 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
   - Kamera makro di tepi atas layar (di atas bezel), 16 piksel-pitch di atas kaca, menatap *ke bawah layar* (pitch 20°).
   - Frame 0: medan subpixel mati, gelap berkilau. Garis es tipis menandai baris 0.
   - 0,17: baris 0 **menyala tepat di depan lensa** (flash tulis). Garis refresh lalu menjauh naik ke frame (±6 baris/detik). Fokus menunggang garis itu. Latar depan: bokeh R/G/B. Dekat garis: berlian R/B dan oval G tajam.
-  - Kaca penutup: pantulan ruang gelap, sidik jari samar dan debu yang menyala oleh baris di bawahnya.
-  - Lubang kamera depan (punch-hole) di tengah atas layar, sebagai detail nyata.
+  - Kaca penutup: pantulan ruang gelap, sidik jari samar dan debu yang menyala oleh baris di bawahnya. *(berubah)* Punggung sidik jari berjarak ±0,45 mm (7 pitch piksel), melengkung tak beraturan dan terputus, di dalam noda lembut, bukan cincin konsentris.
+  - Lubang kamera depan (punch-hole) di tengah atas layar, sebagai detail nyata. *(berubah)* Lensa: kaca hitam dalam laras (dua undakan tipis), kilau lapisan antipantul ungu-hijau yang samar, satu titik spekular.
 - **Gerak:** dolly maju sangat pelan. 7,03–7,5: menunduk dan jatuh ke kaca, di atas baris yang sudah menyala.
 - **SFX:** dentang kaca saat nyala pertama, tik kaca per baris (±6/s), dengung refresh yang naik, whoosh jatuh, "tembus kaca".
 
@@ -88,9 +89,10 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
 - **Teks:** 10,31 – 12,6: **HP-mu memanggil server.** (y 520).
 - **Label:** `kaca · 0,5 mm` · `sensor sentuh` · `OLED` · `transistor · baris {n}` (nomor hidup dari jam) · `papan sirkuit`.
 - **Gerak:** turun lurus menembus lapisan, satu per ketukan, dengan roll pelan: kaca → jaring logam sensor sentuh → emitor → backplane TFT (garis gate yang sedang di-scan menyala biru) → substrat → pelat belakang. Lapisan di bawah emitor sengaja direnggangkan (skala aslinya mikron) supaya terbaca.
-- **Papan sirkuit (mm):** solder mask hitam, jalur tembaga 45°, pad & via emas, ratusan pasif 01005/0201/0402, SoC package-on-package, kaleng pelindung terbuka, koaksial ke rel aluminium. Satu lampu kunci rendah dengan bayangan nyata, DOF makro.
-- **10,3125:** permintaan lahir. Kilat biru di jalur SoC → RF → koaksial → titik umpan antena sekaligus (pada ×18.700 listrik tetap instan), lalu memudar. Kamera whip mengikuti jejaknya.
-- **Transisi keluar:** masuk celah plastik antena (gelap) → ruangan.
+- **Papan sirkuit (mm):** solder mask hitam, jalur tembaga 45°, pad & via emas, ratusan pasif 01005/0201/0402, SoC package-on-package, kaleng pelindung terbuka, koaksial ke rel aluminium. Satu lampu kunci rendah dengan bayangan nyata, DOF makro. *(berubah)* Pasif sesuai jenisnya: kapasitor MLCC keramik coklat-krem, resistor bertutup hitam, beberapa induktor gelap. Sablon putih di atas mask: garis tepi chip dengan tanda pin-1, garis tepi dan kode komponen (C…, R…, L…, U1, J3, ANT1), tiga fiducial emas.
+- **Backplane TFT** *(berubah)*: garis gate/data logam Mo/Al abu-perak, pulau silikon transistor, pelat kapasitor, elektroda piksel ITO berkilau samar di atas kaca gelap (bukan coklat).
+- **10,3125:** permintaan lahir. Kilat biru di jalur SoC → RF → koaksial → titik umpan antena sekaligus (pada ×18.700 listrik tetap instan), lalu memudar. Kamera whip mengikuti jejaknya. *(berubah)* Titik umpan (pegas emas yang menyentuh rel) **tetap menyala biru**: antena masih memancar sepanjang bab ini (satu slot kirim 0,5–1 ms = 9–18 s film).
+- **Transisi keluar** *(berubah)*: celah antena adalah lorong nyata selebar 1,5 mm. Plastik pengisinya mundur 0,6 mm dari muka rel, dan tepi celah dibevel. Lensa melebar (50° → 84°) saat masuk. Dinding aluminium tersikat disinari biru dari titik umpan. Di ujung lorong, plastik tembus cahaya berpendar biru tua dengan satu sudut bocor terang di sisi umpan. Kamera menembus pendar itu (kabut biru tua, bukan layar hitam), lalu keluar ke ruangan.
 - **SFX:** 4 hit lapisan, dengung papan, zap kelahiran, whoosh whip kiri→kanan, klik celah.
 
 ### S3 · Hujan · 13,125 – 20,625 *(berubah: cara menampilkan gelombang)*
@@ -98,7 +100,9 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
   - 13,59 – 15,2: **Hujan pun berhenti.**
   - 15,47 – 18,28: **Sinyalnya tidak.**
 - **Frame kunci:**
-  - Keluar dari celah antena, melintasi meja, menembus kaca jendela berbutir air, ke hujan beku.
+  - Keluar dari celah antena, melintasi meja, menembus kaca jendela berbutir air, ke hujan beku. *(berubah)* Tepi HP masih memancarkan cahaya biru samar ke meja dan kusen sampai kubah radio lahir dari titik yang sama (14,53), sehingga ruangan terbaca dan tidak ada frame hitam kosong.
+  - *(berubah)* Jendela-jendela yang menyala di gedung kita sendiri berupa kaca hangat bertirai dengan kusen, bukan titik cahaya bulat.
+  - *(berubah)* Dilihat dari atas, lampu jalan melemparkan genangan cahaya hangat samar ke jalan-jalan kampung.
   - Butir hujan diam: tajam di bidang fokus, bokeh di depan/belakang, dan hanya sebagian yang berkilau lampu kota.
   - Kota: ribuan atap kampung, gedung dengan jendela menyala, menara seluler rangka baja di ±1,3 km.
   - 14,06: ramp ke ×1.000.000.
@@ -113,7 +117,7 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
 - **Frame kunci:**
   - Di pangkal menara, kabel menyala seperti sinar-X di bawah jalan, belok, lalu lurus ke utara melewati pelabuhan.
   - Garis itu **terus keluar ke laut beku** (air hitam mengkilap yang memantulkan lampu pantai, dari tangkapan cube map adegan asli) sampai ke cakrawala.
-  - Kamera terbang rendah mengikutinya, menunduk, dan tenggelam tepat di bar 13 (24,375).
+  - Kamera terbang rendah mengikutinya, menunduk, dan tenggelam tepat di bar 13 (24,375). *(berubah)* Dilihat dari sangat dekat, pendar kabel tetap berupa garis dan tidak membanjiri layar dengan biru. Di bawah permukaan, garis kabel terus terlihat menembus air keruh dan berbelok ke posisi kabel di dasar laut, sampai kabel dan paket S5 sendiri muncul (±24,9).
 - *Alasan perubahan:* ombak pecah yang membeku tidak terbaca di malam gelap tanpa sumber cahaya. Garis kabel yang keluar ke laut lebih bersih dan lebih bermakna.
 - **SFX:** angin tipis, napas, boom bawah air.
 
@@ -128,9 +132,11 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
   - Air keruh gelap total. Satu-satunya cahaya adalah **paket data ±80 m cahaya** (500 B pada 10 Gb/s = 400 ns cahaya) di satu serat, bersinar menembus kabel dan menghamburi air.
   - Kamera ikut paket (±76 km per detik film). Dasar laut menjadi garis-garis blur; benda di kabel lewat dalam satu frame.
   - Tiap 2 ketukan paket melewati **penguat**: kilat biru, dan terangnya pulih (gigi gergaji).
-- **28,6–30:** kabel terkupas lapis demi lapis (selubung PE → kawat baja heliks → tembaga → tabung baja) sampai berkas serat.
+- *(berubah)* Kabel selalu terbaring di atas dasar laut (di sepanjang kabel dasarnya tergerus), jadi kamera yang turun ke kabel tidak pernah masuk ke dalam pasir.
+- **28,6–30:** kabel terkupas lapis demi lapis (selubung PE → kawat baja heliks → tembaga → tabung baja) sampai berkas serat. *(berubah)* Tepi potongan setiap lapisan menangkap cahaya yang keluar dari dalam. Kawat baja, tembaga, dan tabung punya kilap sendiri. Selubung berpendar biru di sekitar paket. Serat-serat yang gelap tetap tampak sebagai untaian kaca bening (kilau dan tepi Fresnel dari cahaya paket), bukan batang hitam.
 - **30–34,5:** **di dalam satu serat.** Inti menyala (mode ±10,4 µm, sedikit melampaui inti) dengan riak halus sepanjang gelombang di kaca. Dinding kelongsong memantulkannya secara total, sehingga inti tampak berulang. Orbit pelan mengelilingi inti.
-- **34,5–37,5:** kembali ke skala kabel. Dasar laut naik, cahaya dari atas mulai terasa (mendekati Singapura).
+- **34,5–37,5:** kembali ke skala kabel. Dasar laut naik, cahaya dari atas mulai terasa (mendekati Singapura). *(berubah)* Air berangsur terang ke biru-batu, riak pasir tersinari dari atas, dan ada berkas cahaya miring yang samar (membeku seperti yang lain).
+- **Transisi keluar** *(berubah, dulu cut keras)*: pada 0,35 s terakhir kamera mengikuti serat yang menyala naik ke stasiun pendaratan. Air keruh menutup, garis biru berayun ke tempat serat itu menyusuri baki kabel di lorong S6, lalu lorong terbuka di sekelilingnya.
 - **SFX:** hamparan tekanan bawah air, desir paket, ping penguat yang naik nadanya tiap kali, sapuan kupas, nada kaca tinggi, riser.
 
 ### S6 · Server · 37,5 – 46,875
@@ -143,9 +149,10 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
   - Lorong dingin pusat data: rak hitam dengan LED putih (satu biru), lantai berlubang, lampu strip. Serat biru di baki kabel masuk ke satu server.
   - Menembus bezel ke prosesor: substrat dengan kapasitor, lalu die telanjang (blok inti, cache, baris sel).
   - 38,9: tape-stop.
-  - 39,375–43,125, 8 ketukan: **H-tree jam** (12 level). Di setiap ketukan, sisi jam menyala dari akar ke cabang, ±18 ms film per level (≈ 13 ps nyata), lalu flip-flop di ujungnya menyala.
+  - 39,375–43,125, 8 ketukan: **H-tree jam** (12 level). Di setiap ketukan, sisi jam menyala dari akar ke cabang, ±18 ms film per level (≈ 13 ps nyata), lalu flip-flop di ujungnya menyala. *(berubah)* Semua level digambar utuh sekaligus, jadi batang pohon lurus bersih (dulu tergigit cabang halus).
+  - *(berubah)* Keterbacaan: selama caption tampil, kilat pohon diredupkan (hingga 85 %) di pita caption dan pojok HUD, dengan tepi lembut. Yang diredupkan hanya cahayanya: permukaan die tetap terlihat, dan tidak ada bentuk yang mengikuti huruf (bukan halo/outline).
   - 43,3: jawaban pergi, seluruh pohon menyala.
-- **Tarik mundur:** die → server → lorong → **tembus atap (sekejap gelap)** → 150 km di atas Singapura → 900 km.
+- **Tarik mundur:** die → server → lorong → **tembus atap (sekejap gelap)** → 150 km di atas Singapura → 900 km. *(berubah)* Dari 150 km, lampu Singapura tidak lagi kotak-kotak: tekstur 500 m disampel bicubic, lubang satu-texel di inti kota yang jenuh ditambal dari mip berikutnya, dan eksposur lampu diturunkan di bawah ±500 km supaya inti kota tidak putih rata.
 - **SFX:** kipas ruang server, sapuan masuk die, tape-stop; lalu hanya jam (kick kering + klik logam) dengan mekaran akor di setiap kilat; reverse swell, riser naik, lepas "udara".
 
 ### S7 · Orbit · 46,875 – 54,375
@@ -161,8 +168,9 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
 ### S8 · Pulang · 54,375 – 63,75
 - **Teks:** 61,875 – 63,5: **Sampai. Pas satu frame.** (y 520, di atas cakrawala layar).
 - **Frame kunci:**
-  - Menukik ke Jakarta, masuk **lapisan awan di atas kota**, yang disinari lampu kota dari bawah (sedang hujan).
-  - Keluar di bawah awan: karpet lampu kota. Hujan beku muncul di bawah ±400 m.
+  - Menukik ke Jakarta, masuk **lapisan awan di atas kota**, yang disinari lampu kota dari bawah (sedang hujan). *(berubah)* Dilihat dari atas pada malam hari, awan tidak punya cahaya sendiri. Bagian yang tebal gelap, bagian yang tipis berpendar hangat dari lampu kota di bawahnya (±5× lebih gelap dari sebelumnya, tidak lagi abu-abu terang), dan kota terlihat di celah-celahnya.
+  - Keluar di bawah awan: karpet lampu kota. Hujan beku muncul di bawah ±400 m. *(berubah)* Lampu-lampu berbaris di sepanjang jaringan jalan yang terpaku ke tanah, dengan genangan cahaya di jalan di antara atap rumah yang gelap. Lampu di jalan melintang juga menyala.
+  - *(berubah)* Tukikan dari 1,5 km ke meja memakai jalur kamera monoton: kamera tidak lagi sempat menembus tanah (dulu y −1,5 m di 57,27) atau melewati HP.
   - **57,656: gelombang radio jawaban melintasi kota di dalam satu frame** (pada ×2.500 radio 1,3 km = 4 µs). Tampil jujur sebagai satu kilat biru pada butir hujan.
   - Jendela yang sama, meja, HP dari atas (atas putih, sepertiga bawah masih hitam), menembus kaca ke baris-baris terakhir.
   - Garis refresh datang dari kejauhan ke lensa dan **mendarat di baris 2.400 tepat 61,875**. Semua putih.
@@ -172,7 +180,7 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
 - **Teks:** 64,69 – 67,2: **Terakhir: 30 cm ke matamu.** (y 520, di atas meja gelap).
 - **Label:** `30 cm ÷ c = 1 ns`.
 - **Frame kunci:**
-  - Mundur keluar kaca ke posisi mata penonton, 30 cm di atas HP yang layarnya putih penuh.
+  - Mundur keluar kaca ke posisi mata penonton, 30 cm di atas HP yang layarnya putih penuh. *(berubah)* HP berupa lempeng bersudut membulat dengan tepi melandai (rangka aluminium), tombol samping, muka kaca hitam, dan layar bersudut membulat dengan bezel tipis serta punch-hole. Meja berupa kayu walnut hampir hitam dengan finishing satin.
   - 63,9: tape-stop ke ×2.800.000.000.
   - 64,66: satu foton lepas dari subpixel biru di tengah layar dan menempuh 30 cm ke lensa dalam 1 ns (posisinya dari jam fisik). Karena lurus menuju lensa, ia diam di layar dan membesar.
   - **67,5: white-out.**
@@ -210,8 +218,10 @@ Yang baru:
   | `datacenter` | m | S6 |
   | `die` | mm | S6 |
   | `earth` | km | S6, S7, S8 |
-- **Data asli**, dipanggang sekali oleh `tools/bake_earth.py`: NASA Black Marble (500 m) dan Natural Earth. Hanya S7 yang memakai data Bumi di ketinggian di mana data itu tajam (≥150 km). Di bawahnya, awan dan kota prosedural mengambil alih.
-- **Optik bokeh per butir** (hujan, lampu): setiap titik cahaya membesar ke lingkaran kaburnya dengan energi tetap.
+- **Data asli**, dipanggang sekali oleh `tools/bake_earth.py`: NASA Black Marble (500 m) dan Natural Earth. Hanya S7 yang memakai data Bumi di ketinggian di mana data itu tajam (≥150 km). Di bawahnya, awan dan kota prosedural mengambil alih. *(berubah)* Di ketinggian 150–300 km (tarik mundur S6, awal tukikan S8), texel 500 m yang diperbesar disampel bicubic. Lubang satu-texel di inti kota yang jenuh ditambal dari mip berikutnya. Di inti yang jenuh ada variasi lingkungan ±3 km yang halus (rata-rata 1, sehingga total cahayanya tetap milik NASA). Lebih rendah lagi, cahaya pecah menjadi lampu tunggal di sepanjang jaringan jalan, terpaku ke tanah (dulu ikut bergeser bersama kamera).
+- **Optik bokeh per butir** (hujan, lampu): setiap titik cahaya membesar ke lingkaran kaburnya dengan energi tetap. *(berubah)* Piringan bokeh bertepi lembut, sedikit lebih terang di pinggirnya, dengan cincin onion yang samar dan jejak pinggiran warna.
+- **Jalur kamera monoton** *(baru)*: tukikan S3 (keluar jendela) dan S8 (1,5 km → meja) memakai `mcamPath` (Fritsch–Carlson per komponen, ketinggian log di atas lantai). Kunci yang berjarak jauh tidak lagi membuat spline berayun balik ke ruangan, menembus meja, atau menembus tanah.
+- **Tanpa cut** *(dicek)*: semua batas bab bersambung di dalam gerak. Satu-satunya cut keras (S5 → S6) sudah diganti serah terima lewat serat.
 
 ## 8. Closing + CTA (STYLE.md §1, edukasi)
 
@@ -244,6 +254,8 @@ Yang baru:
 | Jam distribusi H-tree, ±13 ps per level | struktur umum distribusi jam chip, disederhanakan |
 | 3 GHz ÷ 1.406.250.000 = 2,133 Hz = 128 BPM | aritmetika |
 | Radio melintasi kota dalam satu frame di S8 | 1,3 km ÷ c = 4,3 µs → pada ×2.500 = 11 ms film |
+| Antena masih memancar saat kamera masuk celahnya (S2 akhir – S3 awal) | satu slot kirim LTE/5G ±0,5–1 ms. Permintaan lahir di ±0,46 ms jam fisik; celah (12,6 s) ±0,57 ms; kubah radio (14,53 s) ±0,63 ms, jadi semuanya masih di dalam satu slot |
+| Jarak punggung sidik jari ±0,45 mm | ±7 pitch piksel (63,5 µm) di layar |
 | 30 cm ke mata = 1 ns | 0,3 m ÷ 3×10⁸ m/s |
 | Hujan/laut beku | tetes jatuh ±9 m/s ÷ ≥1.400 → ≤ 7 mm/s di layar |
 

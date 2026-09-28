@@ -1,7 +1,8 @@
 // S2 · Chip · 7.5–13.125. Straight down through the display stack, one layer per beat (glass, touch mesh,
 // emitters, the TFT row being scanned), out under the back plate onto the logic board; low FPV glide to
 // the SoC; on 10.3125 the request is born and lights SoC → RF → coax → antenna gap at once; the camera
-// whips along the afterglow and goes out through the plastic antenna gap (dark) into the room (S3).
+// whips along the afterglow into the antenna slot, lit blue by the feed that goes on transmitting, and
+// through the glowing plastic into the room (S3).
 import * as THREE from 'three';
 import { CH, CUE } from '../cues';
 import { scanRow } from '../clock';
@@ -11,6 +12,7 @@ import { v3, type Cam } from '../r3';
 import { track, camPath } from '../path';
 import { P } from '../motion';
 import { clamp } from '../engine/util';
+import { gapHaze } from '../fx';
 import type { Chapter } from '../world';
 
 const [T0, T1] = CH.chip;
@@ -38,8 +40,10 @@ const BOARD_KEYS = [
   { t: 11.85, pos: v3(56.8, 3.4, 19.5), look: v3(56.5, 1.0, 8), focus: 7, fov: 50, ap: 14, up: v3(0, 1, 0) },
   { t: 12.3, pos: v3(55, 3.0, 9.5), look: v3(50.5, 1.2, 1), focus: 7, fov: 50, ap: 12, up: v3(0, 1, 0) },
   { t: 12.66, pos: v3(50.4, 1.6, 3.4), look: v3(GAP_X, 0.9, -1.5), fov: 50, ap: 8, up: v3(0, 1, 0) },
-  { t: 12.95, pos: v3(GAP_X, 0.95, -0.2), look: v3(GAP_X, 0.9, -6), fov: 50, ap: 3, up: v3(0, 1, 0) },
-  { t: T1, pos: v3(GAP_X, 0.9, -1.1), look: v3(GAP_X, 0.9, -8), fov: 50, ap: 3, up: v3(0, 1, 0) },
+  // into the slot: brushed walls lit blue from the feed, the glowing plastic ahead
+  // (the lens widens as it enters, so the walls run to the plastic like a corridor)
+  { t: 12.95, pos: v3(GAP_X - 0.2, 0.95, -0.3), look: v3(GAP_X + 0.1, 0.9, -6), fov: 74, focus: 0.7, ap: 3, up: v3(0, 1, 0) },
+  { t: T1, pos: v3(GAP_X - 0.1, 0.9, -0.9), look: v3(GAP_X + 0.1, 0.9, -8), fov: 84, focus: 0.1, ap: 3, up: v3(0, 1, 0) },
 ];
 
 export const boardCam = (t: number) => camPath(BOARD_KEYS, t);
@@ -60,9 +64,9 @@ const s2: Chapter = {
       return;
     }
     board.render(ctx, boardCam(t), t, BIRTH, out);
-    // inside the plastic gap: the last frames go dark before the room opens (S3)
-    const dark = P(t, 12.93, 0.12);
-    if (dark > 0) ctx.post.fade = Math.max(ctx.post.fade ?? 0, dark * 0.96);
+    // into the lit plastic of the gap: its blue haze takes the frame, and S3 opens out of it into the room
+    const k = P(t, 12.99, T1 - 12.99);
+    gapHaze(ctx.renderer, out, k * k);
   },
 };
 export default s2;

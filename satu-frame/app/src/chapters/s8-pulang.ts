@@ -10,7 +10,7 @@ import { city, PHONE, DESK_Y, TOWER, TOWER_H } from '../sets/city';
 import { screen } from '../sets/screen';
 import { macroCam } from './s1-layar';
 import { v3, mixCam, type Cam } from '../r3';
-import { camPath, mtrack, type Key } from '../path';
+import { mcamPath, mtrack, type Key } from '../path';
 import { P, eIO } from '../motion';
 import { clamp } from '../engine/util';
 import type { Chapter } from '../world';
@@ -19,6 +19,7 @@ const [T0, T1] = CH.pulang;
 const S8 = CUE.pulang;
 const BOT = PHONE.center.z + PHONE.l / 2;       // the screen's bottom edge (row 2400), metres
 
+// the dive onto the desk: monotone (a far key cannot swing the camera through the ground or past the phone)
 const CITY: Key[] = [
   { t: 56.15, pos: v3(-40, 1500, -380), look: v3(0, 8, -1), fov: 48, focus: 1500, ap: 2 },
   { t: 56.9, pos: v3(-7, 140, -48), look: v3(0, 8.4, -1), fov: 48, focus: 60, ap: 8 },
@@ -28,6 +29,8 @@ const CITY: Key[] = [
   { t: 59.6, pos: v3(0.0, 7.84, BOT - 0.03), look: v3(0, DESK_Y, BOT - 0.012), fov: 50, focus: 0.08, ap: 10, up: v3(0, 0, -1) },
   { t: S8.glass + 0.12, pos: v3(0.0005, DESK_Y + 0.0095, BOT - 0.0006), look: v3(0.0005, DESK_Y, BOT - 0.0007), fov: 50, focus: 0.001, ap: 6, up: v3(0, 0, -1) },
 ];
+
+const cityCam = (t: number) => mcamPath(CITY, t, DESK_Y);
 
 /** In the display (units: pixel pitch): over the last rows, facing up the screen toward the oncoming line. */
 function dispCam(t: number): Cam {
@@ -56,13 +59,13 @@ const s8: Chapter = {
     };
     if (t < S8.cloud + 0.25) {                     // through the cloud deck
       earthDive(ctx, t, r3.a);
-      city.render(ctx, camPath(CITY, t), cityState(), r3.b);
+      city.render(ctx, cityCam(t), cityState(), r3.b);
       r3.mix(r3.a.texture, r3.b.texture, out, P(t, S8.cloud, 0.25));
       return;
     }
-    if (t < S8.glass) { city.render(ctx, camPath(CITY, t), cityState(), out); return; }
+    if (t < S8.glass) { city.render(ctx, cityCam(t), cityState(), out); return; }
     if (t < S8.glass + 0.14) {                     // into the glass of the phone
-      city.render(ctx, camPath(CITY, t), cityState(), r3.a);
+      city.render(ctx, cityCam(t), cityState(), r3.a);
       screen.render(ctx, dispCam(t), { scan: scanRow(t), lineGlow: 0.6, touch: 0 }, r3.b);
       r3.mix(r3.a.texture, r3.b.texture, out, P(t, S8.glass, 0.14));
       return;

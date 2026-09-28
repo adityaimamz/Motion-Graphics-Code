@@ -41,8 +41,24 @@ export function camPath(keys: Key[], t: number): Cam {
   return { pos, look, up, fov: sc((k) => k.fov, 40), focus: sc((k) => k.focus ?? k.pos.distanceTo(k.look), 1), ap: sc((k) => k.ap, 0), roll: sc((k) => k.roll, 0) };
 }
 
-/** Monotone cubic track (Fritsch–Carlson): never overshoots between keys. `log` interpolates in log space (zooms). */
-export function mtrack(keys: [number, number][], t: number, log = false) {
+/**
+ * A camera along timed keys that never overshoots: every component of position and target is a monotone
+ * track, so a key that is far away (a dive from 1.5 km onto a desk) cannot swing the camera past its
+ * neighbours. It starts and ends at rest, like camPath. With `floorY` the height is interpolated in log space
+ * above that floor (a geometric descent).
+ */
+export function mcamPath(keys: Key[], t: number, floorY?: number): Cam {
+  const comp = (f: (k: Key) => number, log = false) => mtrack(keys.map((k) => [k.t, f(k)]), t, log, true);
+  const y = floorY === undefined ? comp((k) => k.pos.y) : floorY + comp((k) => k.pos.y - floorY, true);
+  const pos = new THREE.Vector3(comp((k) => k.pos.x), y, comp((k) => k.pos.z));
+  const look = new THREE.Vector3(comp((k) => k.look.x), comp((k) => k.look.y), comp((k) => k.look.z));
+  const up = keys.some((k) => k.up) ? vtrack(keys.map((k) => [k.t, k.up ?? new THREE.Vector3(0, 1, 0)]), t).normalize() : undefined;
+  return { pos, look, up, fov: comp((k) => k.fov ?? 40), focus: comp((k) => k.focus ?? k.pos.distanceTo(k.look), true), ap: comp((k) => k.ap ?? 0), roll: comp((k) => k.roll ?? 0) };
+}
+
+/** Monotone cubic track (Fritsch–Carlson): never overshoots between keys. `log` interpolates in log space (zooms);
+ *  `easeEnds` starts and ends at rest. */
+export function mtrack(keys: [number, number][], t: number, log = false, easeEnds = false) {
   const n = keys.length;
   const xs = keys.map((k) => k[0]), ys = keys.map((k) => (log ? Math.log(k[1]) : k[1]));
   if (t <= xs[0]!) return keys[0]![1];
@@ -52,6 +68,7 @@ export function mtrack(keys: [number, number][], t: number, log = false) {
   m.push(dy[0]!);
   for (let i = 1; i < n - 1; i++) m.push(dy[i - 1]! * dy[i]! <= 0 ? 0 : (3 * (dx[i - 1]! + dx[i]!)) / ((2 * dx[i]! + dx[i - 1]!) / dy[i - 1]! + (dx[i]! + 2 * dx[i - 1]!) / dy[i]!));
   m.push(dy[n - 2]!);
+  if (easeEnds) { m[0] = 0; m[n - 1] = 0; }
   let i = 0;
   while (i < n - 2 && t > xs[i + 1]!) i++;
   const h = dx[i]!, u = (t - xs[i]!) / h;

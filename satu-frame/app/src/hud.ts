@@ -86,6 +86,16 @@ export function drawLabels(c: CanvasRenderingContext2D, t: number) {
   });
 }
 
+/** Where the caption on screen sits (centre y of its letters) and how present it is, 0..1, a little ahead
+ *  of its entrance and after its exit: lets a world keep its brightest light from behind the type (S6). */
+export function captionBand(t: number): { y: number; k: number } | null {
+  for (const l of CUE.teks) {
+    if (t < l.in - 0.3 || t > l.out + 0.35 || l.in >= CUE.ch.closing[0]) continue;
+    return { y: l.y - 28, k: P(t, l.in - 0.3, 0.3) * (1 - P(t, l.out + 0.05, 0.3)) };
+  }
+  return null;
+}
+
 /** The captions (cues.teks): one line at a time, centred in the safe area (x 150–930). */
 export function drawCaptions(c: CanvasRenderingContext2D, t: number) {
   for (const l of CUE.teks) {

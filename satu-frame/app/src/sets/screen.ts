@@ -46,13 +46,16 @@ float flashOf(float row) { float a = floor(scan) - row - 1.0; return a < 0.0 ? 0
 // light scattered by a fingerprint film and dust on the glass top, lit by the emission under it
 float litBelow(float row) { return smoothstep(floor(scan) + 6.0, floor(scan) - 6.0, row); }
 vec3 glassTop(vec2 p, float fp) {
-  // fingerprint: ridge whorl masked by a soft blob
+  // fingerprint: ridges ~0.45 mm apart (7 pixel pitches), bent and broken like a real print (not rings), a
+  // soft greasy smear around them; the ridges fade out before they are too small to draw
   vec2 c = vec2(505.0, 26.0);
   vec2 d = (p - c) * vec2(1.0, 1.35);
-  float ridges = 0.5 + 0.5 * sin(length(d) * 3.4 + snoise(p * 0.05) * 3.0);
-  float blob = smoothstep(46.0, 10.0, length(d) + snoise(p * 0.03) * 10.0);
-  float smear = smoothstep(0.35, 0.8, ridges) * blob * 0.6 + blob * 0.08;
-  smear *= 1.0 - smoothstep(0.4, 1.2, fp);
+  float warp = snoise(p * 0.011) * 4.5 + snoise(p * 0.045) * 0.9;
+  float ridges = 0.5 + 0.5 * sin((length(d) + d.x * 0.35 + warp) * 0.8976);
+  float breaks = smoothstep(-0.45, 0.1, snoise(p * 0.11 + 4.0));
+  float blob = smoothstep(95.0, 20.0, length(d) + snoise(p * 0.02) * 22.0);
+  float lines = smoothstep(0.55, 0.85, ridges) * breaks * (1.0 - smoothstep(0.8, 2.2, fp));
+  float smear = (lines * 0.2 + 0.07) * blob;
   // dust: one speck in some 7x7 cells
   vec2 dc = floor(p / 7.0);
   vec2 h = hash22(dc);
@@ -73,10 +76,13 @@ vec3 inactive(vec2 p, float fp, vec3 d, out float isIn) {
   float r = length(p - HOLE);
   if (r < HOLE_R + 1.2) {
     isIn = 1.0;
-    // lens: dark glass with concentric barrel rings and a small cool specular
-    float rings = 0.5 + 0.5 * cos(r * 1.6);
+    // lens: black glass in its barrel (two thin steps of the lens stack), the anti-reflection coating's
+    // faint violet-green sheen across the element, and one small cool specular
     float edge = exp(-abs(r - HOLE_R) / 0.6);
-    vec3 c = vec3(0.004) + vec3(0.02, 0.022, 0.026) * rings * smoothstep(HOLE_R, 4.0, r) + vec3(0.05) * edge;
+    float steps = exp(-abs(r - HOLE_R * 0.78) / 0.35) + 0.6 * exp(-abs(r - HOLE_R * 0.5) / 0.3);
+    vec2 q = (p - HOLE) / HOLE_R;
+    vec3 ar = mix(vec3(0.012, 0.004, 0.018), vec3(0.004, 0.014, 0.008), smoothstep(-0.6, 0.6, q.x + q.y * 0.4)) * smoothstep(0.75, 0.2, length(q));
+    vec3 c = vec3(0.003) + vec3(0.018, 0.019, 0.022) * steps + ar + vec3(0.05) * edge;
     c += vec3(0.6, 0.7, 0.9) * exp(-length(p - HOLE - vec2(-6.0, -7.0)) / 1.4) * 0.5;
     // the lit rows reflected in the lens rim
     c += ${v3c(LIN.paper)} * edge * 0.25 * litBelow(HOLE.y + HOLE_R) * newLevel;
@@ -131,7 +137,9 @@ vec3 emitters(vec2 p, float fp, out float cover) {
   return mix(near, far, smoothstep(0.22, 0.75, fp));
 }
 
-// TFT backplane: gate lines (rows), data lines (columns), transistors; the scanned gate line glows
+// TFT backplane: gate lines (rows) and data lines (columns) in molybdenum/aluminium, a transistor island
+// (dark silicon under its gate) at each crossing, the storage capacitor, and the pixel's transparent ITO
+// electrode over the dark glass; the gate line being scanned glows
 vec3 tft(vec2 p, float fp) {
   vec2 f = fract(p), ci = floor(p);
   float aa = max(fp, 0.003);
@@ -139,9 +147,18 @@ vec3 tft(vec2 p, float fp) {
   float data = 1.0 - smoothstep(0.018 - aa, 0.018 + aa, abs(f.x - 0.08));
   float tr = 1.0 - smoothstep(-aa, aa, sdBox(f - vec2(0.2, 0.16), vec2(0.07, 0.045)));
   float cap = 1.0 - smoothstep(-aa, aa, sdBox(f - vec2(0.55, 0.55), vec2(0.2, 0.16)));
-  float metal = max(max(gate, data), max(tr, cap * 0.6));
+  float ito = 1.0 - smoothstep(-aa, aa, sdBox(f - vec2(0.56, 0.56), vec2(0.37, 0.35)));
+  float via = 1.0 - smoothstep(0.03 - aa, 0.03 + aa, length(f - vec2(0.31, 0.2)));
+  float metal = max(gate, data);
   float onRow = ci.y == floor(scan) ? 1.0 : 0.0;
-  vec3 col = METAL * metal * 0.16 * tftK + vec3(0.03, 0.02, 0.009) * (1.0 - metal) * tftK;
+  vec3 glass = vec3(0.004, 0.005, 0.007);
+  vec3 col = glass;
+  col = mix(col, vec3(0.012, 0.016, 0.022) * (0.9 + 0.2 * hash12(ci)), ito);            // ITO: a faint cool sheen
+  col = mix(col, vec3(0.05, 0.052, 0.058), cap * 0.8);                                  // storage capacitor plate
+  col = mix(col, vec3(0.085, 0.088, 0.095), metal);                                     // Mo/Al lines
+  col = mix(col, vec3(0.018, 0.017, 0.02), tr);                                          // the transistor's silicon island
+  col = mix(col, vec3(0.06), via * 0.7);
+  col *= tftK;
   col += ${v3c(LIN.ice)} * (gate * 5.0 + tr * 2.5) * onRow * tftK;
   return col;
 }

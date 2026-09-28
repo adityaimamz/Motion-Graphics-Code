@@ -10,7 +10,9 @@ import { seabed } from '../sets/seabed';
 import { fiber } from '../sets/fiber';
 import { v3, type Cam } from '../r3';
 import { track, vtrack } from '../path';
-import { P } from '../motion';
+import { P, eOut, eIO } from '../motion';
+import { underwater } from '../fx';
+import { FIBRE_A, FIBRE_B, LANDING } from './s6-server';
 import { clamp } from '../engine/util';
 import type { Chapter } from '../world';
 
@@ -78,7 +80,17 @@ const s5: Chapter = {
     };
     const drawFiber = (target: THREE.WebGLRenderTarget) => fiber.render(ctx, fiberCam(t), { pK: pk.pK, phase: t * 0.9, flash: pk.flash }, target);
     // hand-offs at the lit fibre: in (29.85–30.05) and out (34.55–34.75)
-    if (t < 29.85 || t >= 34.75) { drawSeabed(out); return; }
+    if (t < 29.85 || t >= 34.75) {
+      drawSeabed(out);
+      // the first moments: the line from the surface (S4) still carries the frame until the seabed's own
+      // cable and packet come out of the murk
+      underwater(ctx.renderer, out, 1 - eOut(P(t, T0, 0.55)), [0.33, -0.05], [0.52, 0.55]);
+      // the landing: the camera follows the lit fibre up out of the water and into the building; the murk
+      // closes in and the line swings to where it runs along the aisle's cable tray (S6 opens around it)
+      const k = eIO(P(t, T1 - LANDING, LANDING)), s = eIO(P(t, T1 - LANDING * 0.8, LANDING * 0.8));
+      underwater(ctx.renderer, out, k, [0.46 + (FIBRE_A[0] - 0.46) * s, -0.05 + (FIBRE_A[1] + 0.05) * s], [0.5 + (FIBRE_B[0] - 0.5) * s, 0.33 + (FIBRE_B[1] - 0.33) * s]);
+      return;
+    }
     if (t >= 30.05 && t < 34.55) { drawFiber(out); return; }
     const k = t < 32 ? P(t, 29.85, 0.2) : 1 - P(t, 34.55, 0.2);
     drawSeabed(r3.a); drawFiber(r3.b);

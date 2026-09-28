@@ -1,7 +1,9 @@
 // Jakarta at night, in metres (S3 rain, S8 dive home, S9 the room). y up. The viewer's phone lies on a desk
 // by a window on the second floor of a small building at the origin, top edge toward −z. Out the window:
 // frozen rain, a sea of kampung roofs, a few towers, the lattice cell tower ~1.3 km away (placed where the
-// radio wavefront, radius c·Δt from the physical clock, is at the moment it is hit), a far carpet of lights.
+// radio wavefront, radius c·Δt from the physical clock, is at the moment it is hit), a far carpet of lights,
+// and the pools of light the lamps throw on the streets. In the room: a walnut desk, the phone (rounded
+// slab, black glass, the display with its punch-hole), the lit windows of our own building outside.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { LIN } from '../engine/palette';
@@ -55,6 +57,41 @@ void main() {
 import type { Ctx } from '../world';
 
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+/** A rectangle w × l centred on the origin with circular corners of radius r (x across, y along). */
+function roundedRect(w: number, l: number, r: number) {
+  const s = new THREE.Shape(), x = w / 2 - r, y = l / 2 - r;
+  s.moveTo(-x, -l / 2); s.lineTo(x, -l / 2); s.absarc(x, -y, r, -Math.PI / 2, 0, false);
+  s.lineTo(w / 2, y); s.absarc(x, y, r, 0, Math.PI / 2, false);
+  s.lineTo(-x, l / 2); s.absarc(-x, y, r, Math.PI / 2, Math.PI, false);
+  s.lineTo(-w / 2, -y); s.absarc(-x, -y, r, Math.PI, Math.PI * 1.5, false);
+  return s;
+}
+/** The desk: a very dark walnut veneer in a satin finish, grain along x, tileable (integer frequencies), with
+ *  a roughness map so the sheen breaks softly along the grain. Deterministic. */
+function woodTexture(rnd: () => number) {
+  const W = 1024, Hh = 256;
+  const cc = document.createElement('canvas'), cr = document.createElement('canvas');
+  cc.width = cr.width = W; cc.height = cr.height = Hh;
+  const xc = cc.getContext('2d')!, xr = cr.getContext('2d')!;
+  const ic = xc.createImageData(W, Hh), ir = xr.createImageData(W, Hh);
+  const waves = Array.from({ length: 7 }, (_, i) => ({ k: 3 + i * 5 + Math.floor(rnd() * 4), a: 0.5 / (1 + i), ph: rnd() * 6.283 }));
+  const warp = Array.from({ length: 3 }, () => ({ k: 1 + Math.floor(rnd() * 3), a: 0.012 + rnd() * 0.02, ph: rnd() * 6.283 }));
+  const pores = Array.from({ length: 40 }, () => [Math.floor(rnd() * W), Math.floor(rnd() * Hh), 20 + rnd() * 90] as const);
+  for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
+    const u = x / W, v = y / Hh;
+    let vv = v; for (const w of warp) vv += w.a * Math.sin(6.283 * w.k * u + w.ph);
+    let g = 0; for (const w of waves) g += w.a * Math.sin(6.283 * w.k * vv + w.ph);
+    const line = Math.pow(0.5 + 0.5 * Math.sin(6.283 * 37 * vv + 3 * g), 3);
+    let pore = 0; for (const [px, py, len] of pores) { const dx = Math.min(Math.abs(x - px), W - Math.abs(x - px)), dy = Math.min(Math.abs(y - py), Hh - Math.abs(y - py)); if (dx < len && dy < 1.2) pore = Math.max(pore, 1 - dx / len); }
+    const l = 0.6 + 0.18 * g - 0.18 * line - 0.2 * pore;
+    const i4 = (y * W + x) * 4;
+    ic.data[i4] = Math.round(34 * l); ic.data[i4 + 1] = Math.round(26 * l); ic.data[i4 + 2] = Math.round(21 * l); ic.data[i4 + 3] = 255;
+    const rg = Math.round(255 * (0.62 + 0.1 * line + 0.15 * pore)); ir.data[i4] = ir.data[i4 + 1] = ir.data[i4 + 2] = rg; ir.data[i4 + 3] = 255;
+  }
+  xc.putImageData(ic, 0, 0); xr.putImageData(ir, 0, 0);
+  const mk = (c: HTMLCanvasElement, srgb: boolean) => { const t = new THREE.CanvasTexture(c); t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2.5, 6.3); t.anisotropy = 8; return t; };
+  return { map: mk(cc, true), rough: mk(cr, false) };
+}
 const col = (c: [number, number, number], k = 1) => new THREE.Color().setRGB(c[0] * k, c[1] * k, c[2] * k);
 
 // the room and the phone
@@ -98,6 +135,8 @@ export interface CityState {
   screenK?: number;
   /** the photon (S9): position and intensity */
   photon?: { pos: THREE.Vector3; k: number } | null;
+  /** the phone's antenna still transmitting (S3 start): a blue glow at the gap, lighting the desk (0..1) */
+  ant?: number;
 }
 
 class City {
@@ -114,6 +153,8 @@ class City {
   private towerGlow = glowSprite(LIN.ice);
   private photonHalo = glowSprite(LIN.ice);
   private photonCore = glowSprite([0.9, 1.6, 4.0]);
+  private antLight = new THREE.PointLight(col(LIN.ice), 0, 2.5, 2);
+  private antGlow = glowSprite(LIN.ice);
   private streak!: THREE.Mesh;
   private streakMat!: THREE.MeshBasicMaterial;
 
@@ -122,9 +163,10 @@ class City {
     s.fog = new THREE.FogExp2(FOG, 0.0011);
     s.add(new THREE.HemisphereLight(0x1a2030, 0x040404, 0.9));
     const glow = new THREE.DirectionalLight(0x6f7f9f, 0.22); glow.position.set(0.3, 1, -0.4); s.add(glow);
-    s.add(this.roomLight, this.towerFlash, this.towerGlow, this.photonHalo, this.photonCore);
+    s.add(this.roomLight, this.towerFlash, this.towerGlow, this.photonHalo, this.photonCore, this.antLight, this.antGlow);
     const rnd = mulberry32(21);
     const R = (a: number, b: number) => a + (b - a) * rnd();
+    const rnd2 = mulberry32(22);
 
     // sky: overcast lit from below by the city
     const sky = new THREE.Mesh(new THREE.SphereGeometry(20000, 48, 24), new THREE.ShaderMaterial({
@@ -158,12 +200,16 @@ class City {
     const houses: THREE.Matrix4[] = [], roofs: THREE.Matrix4[] = [];
     const pts: number[] = [], pcol: number[] = [], prad: number[] = [];
     const light = (x: number, y: number, z: number, c: [number, number, number], k: number, r: number) => { pts.push(x, y, z); pcol.push(c[0] * k, c[1] * k, c[2] * k); prad.push(r); };
+    // the light each lamp and window throws on the ground around it (painted once, below)
+    const pools: [number, number, number, number][] = [];   // x, z, strength, radius (m)
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p3 = new THREE.Vector3();
     const warm: [number, number, number] = [1.0, 0.93, 0.82];
     for (let gx = -40; gx <= 40; gx++) for (let gz = -175; gz <= 30; gz++) {
       const x0 = gx * 10.5, z0 = gz * 10.5;
       if (gx % 6 === 0 || gz % 7 === 0) {   // streets: lamps every other block
-        if (gx % 6 === 0 && gz % 2 === 0 && rnd() < 0.7) light(x0 + 2.5, 6.2, z0, warm, 3.2, 0.12);
+        if (gx % 6 === 0 && gz % 2 === 0 && rnd() < 0.7) { light(x0 + 2.5, 6.2, z0, warm, 3.2, 0.12); pools.push([x0 + 2.5, z0, 1, 9]); }
+        // the cross streets have lamps too (own draw, so the rest of the city keeps its layout)
+        if (gz % 7 === 0 && gx % 6 !== 0 && gx % 2 === 0 && rnd2() < 0.6) { light(x0, 6.2, z0 + 2.5, warm, 3.0, 0.12); pools.push([x0, z0 + 2.5, 0.9, 9]); }
         continue;
       }
       if (Math.abs(x0) < 9 && z0 > -6 && z0 < 14) continue;          // our building
@@ -178,7 +224,9 @@ class City {
       for (let k = 0; k < nw; k++) {
         const side = rnd() < 0.5 ? 1 : -1, along = R(-0.35, 0.35);
         const lx = x + Math.cos(ry) * along * w + Math.sin(ry) * side * (d * 0.5 + 0.3), lz = z - Math.sin(ry) * along * w + Math.cos(ry) * side * (d * 0.5 + 0.3);
-        light(lx, R(1.4, h - 0.8), lz, warm, R(0.25, 1.1), 0.35);
+        const wk = R(0.25, 1.1);
+        light(lx, R(1.4, h - 0.8), lz, warm, wk, 0.35);
+        pools.push([lx + Math.sin(ry) * side * 1.2, lz + Math.cos(ry) * side * 1.2, wk * 0.35, 3.5]);
       }
     }
     const wallMat = new THREE.MeshStandardMaterial({ color: 0x2b2927, roughness: 0.85 });
@@ -215,8 +263,11 @@ class City {
       const onRoad = rnd() < 0.6;
       const x = onRoad ? ga : a, z = onRoad ? gb : Math.round(b / 110) * 110 + Math.sin(a * 0.003) * 50;
       if (Math.abs(x) < 450 && z > -1850 && z < 330) continue;
-      light(x, 5, z, warm, R(0.6, 3.5), 0.4);
+      const k = R(0.6, 3.5);
+      light(x, 5, z, warm, k, 0.4);
+      pools.push([x, z, k / 3.2, 8]);
     }
+    this.groundGlow(pools, warm);
     this.lights = new LightPoints(new Float32Array(pts), new Float32Array(pcol), new Float32Array(prad));
     s.add(this.lights.mesh, this.rainNear.mesh, this.rainMid.mesh, this.rainFar.mesh);
     for (const r of [this.rainNear, this.rainMid, this.rainFar]) { (r.u.keepOut!.value as THREE.Vector4).set(-4.3, 4.3, WIN.z - 0.25, 8.3); r.u.keepOutY!.value = 10.9; }
@@ -282,7 +333,8 @@ class City {
     box(-4.2, 4.2, 10.5, 10.8, Z0 - 0.3, 8.2, roofMat);            // roof slab
     box(-4, 4, FLOOR_Y - 0.2, FLOOR_Y, Z1, 8);                      // floor of the room
     box(-4, 4, 10.3, 10.5, Z1, 8);                                  // ceiling
-    const deskMat = new THREE.MeshStandardMaterial({ color: 0x151312, roughness: 0.55 });
+    const deskTex = woodTexture(mulberry32(31));
+    const deskMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: deskTex.map, roughnessMap: deskTex.rough, roughness: 1, metalness: 0 });
     box(-0.75, 0.75, DESK_Y - 0.04, DESK_Y, -0.9, 0.05, deskMat);
     // window frame + pane with drops frozen on it
     const frameMat = new THREE.MeshStandardMaterial({ color: 0x2c2d30, roughness: 0.4, metalness: 0.6 });
@@ -307,9 +359,20 @@ class City {
     }));
     pane.position.set(0, (WIN.y0 + WIN.y1) / 2, WIN.z - 0.09);
     s.add(pane);
-    // the phone: aluminium body, glass top showing the frame being painted
-    const body = new THREE.Mesh(new THREE.BoxGeometry(PHONE.w, PHONE.h, PHONE.l), new THREE.MeshStandardMaterial({ color: 0x2a2c30, roughness: 0.3, metalness: 0.9 }));
-    body.position.copy(PHONE.center); s.add(body);
+    // the phone: a slab with rounded corners and eased edges (aluminium frame), side buttons, a black glass
+    // front; the display under it has rounded corners of its own, a thin border and the camera punch-hole
+    const frameAlu = new THREE.MeshStandardMaterial({ color: 0x2a2c30, roughness: 0.3, metalness: 0.9 });
+    const EDGE = 0.0012;
+    const bodyG = new THREE.ExtrudeGeometry(roundedRect(PHONE.w - 2 * EDGE, PHONE.l - 2 * EDGE, 0.0088), { depth: PHONE.h - 2 * EDGE, bevelEnabled: true, bevelThickness: EDGE, bevelSize: EDGE, bevelSegments: 4, curveSegments: 20 })
+      .rotateX(-Math.PI / 2).translate(PHONE.center.x, PHONE.center.y - PHONE.h / 2 + EDGE, PHONE.center.z);
+    s.add(new THREE.Mesh(bodyG, frameAlu));
+    const glassTop = new THREE.Mesh(new THREE.ShapeGeometry(roundedRect(PHONE.w - 0.0009, PHONE.l - 0.0009, 0.0092), 20).rotateX(-Math.PI / 2),
+      new THREE.MeshStandardMaterial({ color: 0x020203, roughness: 0.06, metalness: 0.0 }));
+    glassTop.position.set(PHONE.center.x, PHONE.center.y + PHONE.h / 2 + 0.0001, PHONE.center.z); s.add(glassTop);
+    for (const [sx, z, len] of [[1, -0.02, 0.016], [-1, -0.047, 0.011], [-1, -0.032, 0.011]] as const) {
+      const btn = new THREE.Mesh(new THREE.BoxGeometry(0.0009, 0.0024, len), frameAlu);
+      btn.position.set(PHONE.center.x + sx * (PHONE.w / 2 + 0.0002), PHONE.center.y + 0.0004, PHONE.center.z + z); s.add(btn);
+    }
     this.screenMat = new THREE.ShaderMaterial({
       uniforms: { scan: { value: 0 }, k: { value: 1 } }, fog: false,
       vertexShader: `varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
@@ -319,20 +382,82 @@ class City {
           float lit = row < scan ? 1.0 : 0.0;
           float line = exp(-abs(row - scan) / 6.0) * 0.8;
           vec3 c = vec3(0.95) * lit * k + vec3(0.37, 0.64, 0.98) * line * 0.5 + vec3(0.003);
+          // the front camera's punch-hole (row 58, 24 px radius, as in the macro display): black, a faint rim
+          float r = length((vU - vec2(0.5, 1.0 - 58.0 / 2400.0)) * vec2(1080.0, 2400.0));
+          c = mix(c, vec3(0.004) + vec3(0.05) * exp(-abs(r - 22.0) / 1.2), smoothstep(25.0, 23.0, r));
           gl_FragColor = vec4(c, 1.0);
         }`,
     });
-    const scr = new THREE.Mesh(new THREE.PlaneGeometry(PHONE.w * 0.985, PHONE.l * 0.99).rotateX(-Math.PI / 2), this.screenMat);
+    // the display's active area: 1.4 mm border, its own rounded corners; uv across that area
+    const SW = PHONE.w - 0.0028, SL = PHONE.l - 0.0032;
+    const scrG = new THREE.ShapeGeometry(roundedRect(SW, SL, 0.0078), 20);
+    const sp = scrG.attributes.position as THREE.BufferAttribute, suv = scrG.attributes.uv as THREE.BufferAttribute;
+    for (let i = 0; i < sp.count; i++) suv.setXY(i, sp.getX(i) / SW + 0.5, sp.getY(i) / SL + 0.5);
+    const scr = new THREE.Mesh(scrG.rotateX(-Math.PI / 2), this.screenMat);
     scr.position.set(PHONE.center.x, PHONE.center.y + PHONE.h / 2 + 0.0002, PHONE.center.z);
     s.add(scr);
-    // lit windows on our own building (the room's window stays dark but for the phone)
-    const own: number[] = [], ownC: number[] = [], ownR: number[] = [];
-    for (const [x, y] of [[-2.6, 4.2], [2.4, 4.3], [-2.5, 8.7], [2.7, 1.6], [-1.2, 1.5]] as const) { own.push(x, y, WIN.z - 0.5); ownC.push(1.1, 1.0, 0.88); ownR.push(0.5); }
-    const ownL = new LightPoints(new Float32Array(own), new Float32Array(ownC), new Float32Array(ownR)); s.add(ownL.mesh); this.own = ownL;
+    // lit windows on our own building (the room's window stays dark but for the phone): warm panes behind
+    // curtains, with frames and a sash bar, on the facade (not points: up close they are rectangles)
+    const panes: THREE.BufferGeometry[] = [];
+    ([[-2.6, 4.2], [2.4, 4.3], [-2.5, 8.7], [2.7, 1.6], [-1.2, 1.5]] as const).forEach(([x, y], i) => {
+      const g = new THREE.PlaneGeometry(1.1, 1.3).rotateY(Math.PI).translate(x, y, Z0 - 0.004);
+      g.setAttribute('wid', new THREE.Float32BufferAttribute(new Array(4).fill(i), 1));
+      panes.push(g);
+    });
+    s.add(new THREE.Mesh(mergeGeometries(panes), new THREE.ShaderMaterial({
+      fog: false,
+      vertexShader: `attribute float wid; varying vec2 vU; varying float vId; void main(){ vU = uv; vId = wid; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: /* glsl */ `varying vec2 vU; varying float vId;
+        void main(){
+          float x = vU.x, y = vU.y;
+          // curtains: soft folds, parted a little somewhere; the room light near the ceiling
+          float folds = 0.72 + 0.28 * sin(x * 41.0 + vId * 2.3) * sin(x * 13.0 + vId);
+          float gap = smoothstep(0.07, 0.015, abs(x - 0.3 - 0.4 * fract(vId * 0.618)));
+          float lum = mix(folds * 0.5, 1.0, gap) * (0.7 + 0.3 * y);
+          // the frame and one sash bar
+          float inside = step(0.05, x) * step(x, 0.95) * step(0.05, y) * step(y, 0.95) * step(0.012, abs(x - 0.5));
+          gl_FragColor = vec4(vec3(1.0, 0.85, 0.66) * 0.5 * lum * inside, 1.0);
+        }`,
+    })));
     this.roomLight.position.set(PHONE.center.x, DESK_Y + 0.25, PHONE.center.z);
+    this.antLight.position.set(ANT.x, ANT.y + 0.006, ANT.z - 0.004);
+    this.antGlow.position.set(ANT.x, ANT.y, ANT.z - 0.0008);
     this.towerFlash.position.set(TOWER.x, TOWER_H + 2, TOWER.z + 4);
     this.towerGlow.position.set(TOWER.x, TOWER_H - 1.2, TOWER.z);
     this.captureWaterEnv(ctx);
+  }
+  /** The pools of light the lamps and windows throw on the ground: painted once into two textures (the
+   *  kampung at 1 m a texel, the far city at ~3.4 m) laid on the ground, additive. Seen from above they are
+   *  the lit streets between the points of the lamps; they also fade with the fog. */
+  private groundGlow(pools: [number, number, number, number][], warm: [number, number, number]) {
+    const spot = document.createElement('canvas');
+    spot.width = spot.height = 64;
+    const sx = spot.getContext('2d')!;
+    const g = sx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.35, 'rgba(255,255,255,0.45)'); g.addColorStop(0.7, 'rgba(255,255,255,0.1)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    sx.fillStyle = g; sx.fillRect(0, 0, 64, 64);
+    const layer = (x0: number, x1: number, z0: number, z1: number, mPerPx: number, inside: (x: number, z: number) => boolean, y: number, gain: number) => {
+      const c = document.createElement('canvas');
+      c.width = Math.round((x1 - x0) / mPerPx); c.height = Math.round((z1 - z0) / mPerPx);
+      const x = c.getContext('2d')!;
+      x.fillStyle = '#000'; x.fillRect(0, 0, c.width, c.height);
+      x.globalCompositeOperation = 'lighter';
+      for (const [px, pz, k, r] of pools) {
+        if (!inside(px, pz)) continue;
+        const rp = Math.max(1.5, r / mPerPx);
+        x.globalAlpha = Math.min(1, 0.22 * k);
+        x.drawImage(spot, (px - x0) / mPerPx - rp, (pz - z0) / mPerPx - rp, rp * 2, rp * 2);
+      }
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.NoColorSpace; t.anisotropy = 8;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0).rotateX(-Math.PI / 2).translate((x0 + x1) / 2, y, (z0 + z1) / 2),
+        new THREE.MeshBasicMaterial({ map: t, color: col(warm, gain), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, toneMapped: false }));
+      // (canvas row 0 = z0: the plane's top edge, v = 1, lies toward −z)
+      this.scene.add(m);
+    };
+    const inK = (x: number, z: number) => Math.abs(x) < 430 && z > -1850 && z < 330;
+    layer(-430, 430, -1850, 330, 1, inK, 0.04, 0.38);
+    layer(-7000, 7000, -2650, 7000, 3.4, (x, z) => !inK(x, z), 0.03, 0.3);
   }
   private beacon!: LightPoints;
   private cableMat!: THREE.ShaderMaterial;
@@ -348,7 +473,7 @@ class City {
     cc.position.set(-189, 0.5, SHORE_Z - 60);
     this.scene.add(cc);
     const c90: Cam = { pos: cc.position.clone(), look: cc.position.clone().add(V(0, 0, 1)), fov: 90, ap: 0 };
-    for (const l of [this.lights, this.yard, this.beacon, this.own]) l.update(c90, 0.0006);
+    for (const l of [this.lights, this.yard, this.beacon]) l.update(c90, 0.0006);
     this.rainNear.mesh.visible = this.rainMid.mesh.visible = this.rainFar.mesh.visible = false;
     this.seaMesh.visible = false;
     cc.update(ctx.renderer, this.scene);
@@ -403,9 +528,10 @@ class City {
     // the cable under the street: an x-ray glow line (additive, just above the asphalt)
     this.cableMat = new THREE.ShaderMaterial({
       uniforms: { k: { value: 0 }, head: { value: 0 }, ice: { value: new THREE.Vector3(...LIN.ice) } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
-      vertexShader: `attribute float along; varying float vA; varying vec2 vC; void main(){ vA = along; vC = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `uniform float k, head; uniform vec3 ice; varying float vA; varying vec2 vC;
-        void main(){ float x = abs(vC.y - 0.5) * 2.0; float core = exp(-x * x * 60.0) * 3.0 + exp(-x * x * 5.0) * 0.35; float lit = step(vA, head);
+      vertexShader: `attribute float along; varying float vA; varying vec2 vC; varying float vD; void main(){ vA = along; vC = uv; vec4 mv = modelViewMatrix * vec4(position, 1.0); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
+      // seen from right above it (the plunge) the glow stays a line instead of washing the whole frame blue
+      fragmentShader: `uniform float k, head; uniform vec3 ice; varying float vA; varying vec2 vC; varying float vD;
+        void main(){ float x = abs(vC.y - 0.5) * 2.0; float core = (exp(-x * x * 60.0) * 3.0 + exp(-x * x * 5.0) * 0.35) * mix(0.22, 1.0, smoothstep(0.6, 6.0, vD)); float lit = step(vA, head);
           gl_FragColor = vec4(ice * core * k * lit, 1.0); }`,
     });
     const cp: number[] = [], cuv: number[] = [], ca: number[] = [], ci: number[] = [];
@@ -427,7 +553,6 @@ class City {
     cg.setIndex(ci);
     const cm = new THREE.Mesh(cg, this.cableMat); cm.renderOrder = 25; cm.layers.set(1); s.add(cm);
   }
-  private own!: LightPoints;
 
   render(ctx: Ctx, cam: Cam, st: CityState, out: THREE.WebGLRenderTarget) {
     const fogD = st.fogD ?? 0.0011;
@@ -447,6 +572,10 @@ class City {
       (this.photonHalo.material as THREE.SpriteMaterial).color.setRGB(LIN.ice[0] * ph.k * 0.6, LIN.ice[1] * ph.k * 0.6, LIN.ice[2] * ph.k * 0.6);
       (this.photonCore.material as THREE.SpriteMaterial).color.setRGB(0.9 * ph.k, 1.6 * ph.k, 4.0 * ph.k);
     }
+    const ant = st.ant ?? 0;
+    this.antLight.intensity = 0.45 * ant;
+    this.antGlow.visible = ant > 0.001; this.antGlow.scale.setScalar(0.006);
+    (this.antGlow.material as THREE.SpriteMaterial).opacity = Math.min(1, ant);
     const [dp, dk] = st.down ?? [0, 0];
     this.streak.visible = dk > 0.001;
     this.streak.scale.set(1, Math.max(0.01, dp * (TOWER_H - 1)), 1);
@@ -457,7 +586,6 @@ class City {
 
     this.lights.update(cam, fogD * 0.55, st.lightsGain ?? 1);
     this.beacon.update(cam, fogD * 0.5);
-    this.own.update(cam, fogD * 0.6);
     this.yard.update(cam, fogD * 0.6);
     const [ch, ck] = st.cable ?? [0, 0];
     this.cableMat.uniforms.head!.value = ch * this.cableLen; this.cableMat.uniforms.k!.value = ck;
