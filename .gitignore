@@ -6,6 +6,9 @@
 video_noaudio*.mp4
 *.zip
 
+# Render output & still pengecekan per proyek
+out/
+
 # Audio cache & temporary renders
 score_temp*.wav
 
