@@ -1,0 +1,26 @@
+# Satu baris = satu file. Nama file = kolom pertama + .wav/.mp3/...
+# Teks sudah disiapkan untuk TTS (tanpa tanda kutip & tanda pisah). Arahan suara: VOSCRIPT.md
+# (baru) = kalimat baru. Nomor file bergeser: 08 ke atas beda dengan naskah lama (lihat VOSCRIPT.md, "Sudah punya file VO dari naskah lama?")
+
+01-hook         Kenapa desain website terus berubah?
+02-1991a        Dulu, internet cuma teks.
+03-1991b        Orang cuma butuh informasi, bukan tampilan.
+04-1998a        Lalu semua orang pengen rame.
+05-1998b        Makin heboh, makin keren.
+06-2002a        Era pamer teknologi,
+07-2002b        bahkan kalau harus mengorbankan kecepatan dan kegunaan.
+08-2007a        Semua didesain biar kelihatan mahal.
+09-2007b        Soalnya orang masih asing sama layar,          (baru)
+10-2007c        tombol harus kelihatan bisa dipencet.          (baru)
+11-2015a        Sampai orang sadar:
+12-2015b        simpel itu lebih dipercaya.
+13-2015c        Orang udah terbiasa sama layar,                (baru)
+14-2015d        tombol nggak perlu pura-pura timbul lagi.      (baru)
+15-2023a        Sekarang bukan soal ramai atau simpel,
+16-2023b        tapi soal terasa pas untuk penggunanya.
+17-2023c        Karena websitenya udah kenal kamu:             (baru)
+18-2023d        kopi langganan, cukup sekali tap.              (baru)
+19-closing-a    Kalau website kamu masih kelihatan seperti salah satu era di atas,
+20-closing-b    itu tandanya sudah waktunya berubah.
+21-brand        Beyond Studio.   (opsional)
+22-follow       Follow, biar tahu kenapa lainnya.              (baru)

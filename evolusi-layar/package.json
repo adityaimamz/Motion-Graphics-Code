@@ -1,0 +1,19 @@
+{
+  "name": "evolusi-layar",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Evolusi Layar \u2014 video edukasi vertikal Beyond Studio, 100% code-rendered (Canvas2D), deterministik per frame.",
+  "scripts": {
+    "preview": "node render.mjs serve",
+    "render": "node render.mjs video --samples auto --out out/evolusi-layar.mp4",
+    "render:draft": "node render.mjs video --samples 1 --preset veryfast --crf 20 --out out/draft.mp4",
+    "stills": "node render.mjs stills --t 1.2,5.6,12.5,18.9,26.9,34.7,44.4,55.9",
+    "sheet": "node render.mjs sheet --n 36 --cols 9",
+    "audio": "node render.mjs audio --out out/evolusi-layar.wav",
+    "vo": "node render.mjs vo"
+  },
+  "dependencies": {
+    "playwright": "^1.56.0"
+  }
+}

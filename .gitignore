@@ -1,0 +1,30 @@
+# Video binaries (ignore large renders to stay within GitHub 100MB file limit)
+*.mp4
+*.mov
+*.avi
+*.mkv
+video_noaudio*.mp4
+*.zip
+
+# Audio cache & temporary renders
+score_temp*.wav
+
+# Python & Node environment
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+node_modules/
+
+# Chrome / Browser headless temp directories
+.chrome_*
+.local-chromium/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# External research repositories
+pdoom-video-main/
