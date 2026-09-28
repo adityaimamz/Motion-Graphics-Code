@@ -1,6 +1,6 @@
 ---
 name: beyond-video
-description: Use when creating or substantially revising a Beyond Studio TikTok / Reels video in this repo (edukasi tech, promosi, motion graphics, konten vertikal 9:16), including when the user gives only a topic or idea ("bikin video tentang ...", "konten baru", "video promo").
+description: Use when creating or revising (any size, even one scene or one color) a Beyond Studio TikTok / Reels video in this repo (edukasi tech, promosi, motion graphics, konten vertikal 9:16), including when the user gives only a topic or idea ("bikin video tentang ...", "konten baru", "video promo", "ganti scene ...", "percepat hook").
 ---
 
 # Beyond Video
@@ -24,7 +24,13 @@ Aturan repo (dari `CLAUDE.md`) tetap berlaku: kerja di `master`, jangan render M
    2. Tone (turunan dari STYLE.md)
    3. Palet & tipografi (default brand, atau alasan kenapa menyimpang)
    4. Motif/benang merah visual
-   5. Tabel scene: id, jendela waktu, teks, visual, transisi
+   5. **Storyboard**, satu blok per scene:
+      - id + jendela waktu;
+      - teks/VO;
+      - frame kunci: komposisi dan posisi elemen di layar 9:16 (atas/tengah/bawah, ukuran, warna);
+      - gerak/kamera;
+      - transisi keluar;
+      - SFX.
    6. Audio: mode, sumber waktu, daftar SFX
    7. Engine & alasannya
    8. Closing + CTA
@@ -32,7 +38,7 @@ Aturan repo (dari `CLAUDE.md`) tetap berlaku: kerja di `master`, jangan render M
    → **GERBANG 2: treatment disetujui.**
 3. **Engine.** Pilih yang paling cocok dengan treatment, lalu *salin* pola dari proyek yang paling dekat:
    - `evolusi-layar/`: Canvas2D, VO elastis, audio sintetis, render paralel;
-   - `beyond-studio/`: DOM/CSS, Python;
+   - `beyond-studio/`: three.js 3D (studio, perangkat dengan layar Canvas2D, DOF, motion blur adaptif), Node + Chrome headless, `cues.json` dibaca gambar & `audio.py`;
    - `celestial-scrolls/`: satu file HTML;
    - `pdoom-video-main/`: three.js, timeline dari analisis lagu, motion blur adaptif.
 
@@ -46,6 +52,18 @@ Aturan repo (dari `CLAUDE.md`) tetap berlaku: kerja di `master`, jangan render M
    5. `<slug>/README.md` berisi perintah preview, render draft, render final, dan file audio/VO yang harus user siapkan.
 5. **Cek sendiri.** Jalankan preview, ekspor still per scene + closing ke `<slug>/out/`, lalu *lihat gambarnya*. Cocokkan dengan checklist "Siap render" di STYLE.md. Perbaiki sampai lolos.
 6. **Serah terima**, dengan format persis seperti di bawah.
+
+## Jalur revisi (video yang sudah ada)
+Revisi apa pun, termasuk yang kecil, tidak langsung diedit.
+1. Baca `TREATMENT.md` dan kode scene yang terdampak.
+2. Ajukan di chat:
+   - apa yang diubah;
+   - scene/detik yang terdampak;
+   - efek berantai ke timeline, audio/VO, dan closing;
+   - bagian `TREATMENT.md` yang ikut berubah.
+
+   → **GERBANG: revisi disetujui.**
+3. Edit, perbarui `TREATMENT.md`, lalu jalankan langkah 5–6 (cek sendiri + serah terima).
 
 ## Format serah terima
 
@@ -73,7 +91,8 @@ Untuk revisi, gunakan `fix(<slug>)` atau `refactor(<slug>)`; untuk perubahan ski
 ## Kesalahan umum
 | Salah | Benar |
 |---|---|
-| Langsung coding dari topik | Naskah dulu, lalu treatment (gerbang 1–2) |
+| Langsung coding dari topik | Naskah dulu, lalu treatment + storyboard (gerbang 1–2) |
+| "Cuma revisi kecil, langsung edit saja" | Ajukan revisi dulu (jalur revisi), edit setelah disetujui |
 | Waktu scene ditulis di dalam scene | Semua waktu dibaca dari timeline |
 | `Math.random()` / `Date.now()` / rAF sebagai jam | `hash(i, seed)`, frame = f(t) |
 | Closing dibuat ulang "kreatif" | Geometri & urutan closing mengikuti STYLE.md |

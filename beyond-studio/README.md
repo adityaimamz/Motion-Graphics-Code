@@ -1,99 +1,130 @@
-# Beyond Studio — Motion Promo 30 detik (1920×1080, 60fps)
+# Beyond Studio — Motion Promo 45 detik (3D, three.js)
 
-Satu film dalam dua bahasa dan dua format, plus dua potongan pendek. Semua flag bisa digabung.
+Film promo Beyond Studio yang dibangun dengan three.js. Filmnya berupa pemotretan produk di sebuah studio gelap:
+- perangkat 3D (laptop, HP, jendela browser) menampilkan website klien asli;
+- panah logo mendarat di layar dan menjadi kursor;
+- kamera crane naik dari satu set ke set berikutnya.
 
-| Output | Perintah | File hasil |
-|---|---|---|
-| 16:9 Inggris | `python render.py` | `beyond-studio-30s.mp4` |
-| 16:9 Indonesia | `python render.py --id` | `beyond-studio-30s-id.mp4` |
-| 9:16 vertikal (Reels/TikTok/Shorts) | `python render.py --v` | `beyond-studio-30s-vertical.mp4` |
-| 9:16 Indonesia | `python render.py --id --v` | `beyond-studio-30s-id-vertical.mp4` |
-| Logo sting 3 s | `python render.py --cut sting` | `beyond-studio-sting.mp4` |
-| Bumper 6,5 s | `python render.py --cut bumper` | `beyond-studio-bumper.mp4` |
+Konsep dan storyboard lengkap ada di [TREATMENT.md](TREATMENT.md).
 
-Contoh gabungan: `python render.py --cut bumper --id --v` → `beyond-studio-bumper-id-vertical.mp4`.
-
-**Preview dengan suara:** buka `site/index.html` (atau `index-id.html`, `index-v.html`, `index-id-v.html`) di Chrome. Ada player review: tombol play, timeline yang bisa digeser, Spasi untuk play/pause, ←/→ maju-mundur 1 frame, Shift+←/→ 1 detik. Musik ikut diputar sinkron.
+Film ini tersedia dalam dua bahasa (ID/EN) dan dua format (9:16/16:9), ditambah dua potongan pendek (sting dan bumper). Setiap frame adalah fungsi murni dari waktu, jadi hasil preview selalu identik dengan hasil render.
 
 ## Kebutuhan
-Python 3.10+, ffmpeg di PATH, lalu:
+- **Node.js 22.6+** (disarankan 24). Node menjalankan `scripts/render.ts` secara langsung.
+- **Google Chrome**. Render berjalan headless memakai GPU.
+- **ffmpeg** (dengan libx264) di PATH.
+- **Python 3.10+** dengan `numpy scipy`, hanya untuk membuat ulang audio. Untuk membuat ulang QR, tambahkan `segno`.
+
+Sekali saja:
 ```
-pip install playwright numpy scipy pillow
-pip install segno        # opsional, hanya untuk membuat ulang QR WhatsApp
-python -m playwright install chromium
+cd beyond-studio/app
+npm install
 ```
+
+## Preview
+```
+cd beyond-studio/app
+npx vite
+```
+Buka salah satu alamat berikut:
+
+| Varian | Alamat |
+|---|---|
+| 9:16 Indonesia | `http://localhost:5173/?fmt=v&lang=id` |
+| 9:16 English | `http://localhost:5173/?fmt=v&lang=en` |
+| 16:9 Indonesia | `http://localhost:5173/?fmt=h&lang=id` |
+| 16:9 English | `http://localhost:5173/?fmt=h&lang=en` |
+
+Untuk mulai dari detik tertentu, tambahkan `&t=12.5` di akhir alamat.
+
+Tombol di player:
+
+| Tombol | Fungsi |
+|---|---|
+| Spasi / klik gambar | Play/pause dengan musik |
+| ← / → | Mundur/maju 1 frame |
+| Shift + ← / → | Mundur/maju 1 detik |
+| `[` / `]` | Pindah ke bab sebelumnya/berikutnya |
+| `L` | Loop bab yang sedang tampil |
+| `H` | Sembunyikan panel |
+
+Preview live bisa terlihat patah-patah di laptop yang lemah. Itu hanya karena kecepatan tampilan; waktu dan suara tetap sinkron, dan hasil render tidak terpengaruh.
 
 ## Render
-```
-python render.py          # Inggris
-python render.py --id     # Indonesia
-```
-Default-nya memakai **motion blur sub-frame**: setiap frame dirender 6 kali di titik waktu yang sedikit berbeda lalu dirata-ratakan dalam linear light, persis seperti shutter kamera 180°. Hasilnya jauh lebih sinematik, tapi render sekitar 6× lebih lama (perkiraan 15–30 menit di laptop biasa, tergantung CPU).
+Semua perintah dijalankan dari `beyond-studio/app`. Hasil disimpan di `beyond-studio/out/`.
 
-| Kebutuhan | Perintah (PowerShell: `$env:MB=1; python render.py`) |
-|---|---|
-| Draft cepat, tanpa blur | `MB=1 python render.py` (3–6 menit) |
-| Final (default) | `python render.py` |
-| Paling halus | `MB=12 python render.py` |
-| Blur lebih panjang/dramatis | `SHUTTER=270 python render.py` |
-| Tepi teks paling halus | `SCALE=2 python render.py` (render 4K lalu diperkecil, ~3× lebih lama lagi) |
+| Kebutuhan | Perintah | File hasil |
+|---|---|---|
+| **Final 9:16 Indonesia (TikTok)** | `node scripts/render.ts video --fmt v --lang id --samples auto` | `beyond-studio-45s-id-vertical.mp4` |
+| Final 9:16 English | `node scripts/render.ts video --fmt v --lang en --samples auto` | `beyond-studio-45s-en-vertical.mp4` |
+| Final 16:9 Indonesia | `node scripts/render.ts video --fmt h --lang id --samples auto` | `beyond-studio-45s-id.mp4` |
+| Final 16:9 English | `node scripts/render.ts video --fmt h --lang en --samples auto` | `beyond-studio-45s-en.mp4` |
+| Draft cepat (tanpa motion blur) | `node scripts/render.ts video --fmt v --lang id --samples 1 --preset veryfast` | sama seperti di atas |
+| Logo sting 3 s | tambahkan `--cut sting` | `beyond-studio-sting-…mp4` |
+| Bumper 7,5 s | tambahkan `--cut bumper` | `beyond-studio-bumper-…mp4` |
+| Sebagian saja (cek satu bab) | tambahkan `--from 13.1 --to 18.8` | — |
 
-Render sebagian (untuk cek satu scene): `python render.py test.mp4 480 660` (angka = nomor frame, detik × 60; tambah `--id` untuk versi Indonesia). Mode ini tanpa audio.
+**Motion blur.** Dengan `--samples auto`, setiap frame dirata-rata dari 4, 12, atau 36 sub-frame, tergantung seberapa cepat gerakannya. Hasilnya sama seperti shutter kamera 180°: frame yang diam cukup 4 sub-frame, sedangkan whip dan crane memakai 36. Opsi tambahan:
+- `--max-samples 108` membuat blur lebih halus, tapi render lebih lama.
+- `--scale 2` merender pada 2× resolusi lalu memperkecilnya, sehingga tepi lebih halus.
 
-Kalau render terhenti di tengah jalan, file mp4 setengah jadi pasti rusak: jalankan ulang saja. Hasil render selalu identik, jadi bisa juga dipecah per bagian lalu digabung:
+**Perkiraan waktu** (laptop dengan GPU terintegrasi):
+- draft ±5 menit;
+- final ±45–75 menit per varian.
+
+**Audio** otomatis diambil dari `app/public/audio/score.wav` lalu dinormalisasi ke −14 LUFS / −1 dBTP. Untuk potongan sting/bumper, audionya ikut dipotong.
+
+**Cek tanpa membuat file.** Tambahkan `--dry` untuk menguji pipeline dan mengukur kecepatan tanpa menghasilkan MP4.
+
+**Still dan contact sheet** untuk cek visual:
 ```
-ffmpeg -f concat -safe 0 -i list.txt -c copy video_noaudio.mp4      # list.txt: satu baris "file 'a.mp4'" per bagian
-ffmpeg -i video_noaudio.mp4 -i score.wav -map 0:v -map 1:a -c:v copy -af loudnorm=I=-14:TP=-1.0:LRA=11 -c:a aac -b:a 256k -shortest beyond-studio-30s.mp4
+node scripts/render.ts stills --fmt v --t 9.2,20.5
+node scripts/render.ts sheet  --fmt h --from 0 --to 45 --n 24
 ```
 
 ## Audio
-`audio.py` menghasilkan tiga file sekaligus (sudah disertakan, jalankan ulang hanya kalau mengubah suara):
-- `score.wav` — mix final yang dipakai `render.py`
-- `score_music.wav` — stem musik saja
-- `sfx.wav` — stem efek suara saja
+`python audio.py` menghasilkan tiga file di `app/public/audio/`:
+- `score.wav`: mix final yang dipakai preview dan render;
+- `score_music.wav`: stem musik saja;
+- `sfx.wav`: stem efek suara saja.
 
-Efek suara dikunci ke frame: setiap klik kursor, pendaratan dan lepas landas panah, perubahan UI, sapuan teks, dan wipe punya suaranya sendiri. Posisi stereo whoosh ikut bergerak mengikuti posisi panah di layar. Musik otomatis turun sekitar 3,5 dB saat efek besar berbunyi (ducking). Karena stemnya terpisah, musik bisa diganti dengan lagu berlisensi tanpa kehilangan sound design: mix lagu baru dengan `sfx.wav`, simpan sebagai `score.wav`, lalu render.
+Detail suaranya:
+- Musik 128 BPM, 24 bar, dengan breakdown sebelum drop di 30,0 s.
+- Setiap klik, pendaratan dan lepas landas panah, centang, odometer, logo mengunci, dan wipe punya bunyi sendiri. Whoosh-nya bergerak di stereo.
 
-## CTA WhatsApp
-End card menampilkan tombol WhatsApp **0819-2707-0239** di samping alamat website, plus QR code di pojok kanan bawah (versi 16:9) yang langsung membuka chat `wa.me/6281927070239` dengan pesan pembuka sesuai bahasa. Di versi vertikal, QR disembunyikan (penonton sudah di HP) dan tombol WhatsApp ditumpuk di bawah URL. Nomor, cara penulisan, dan pesan pembuka diatur di `kontak.json`, lalu `python build.py`.
+**Mengganti musik:** mix lagu berlisensi dengan `sfx.wav`, simpan hasilnya sebagai `score.wav`, lalu render ulang.
 
-## Kamera & komposisi
-Ketiga bab perangkat kini punya bahasa kamera berbeda: bab bisnis memakai dolly-in pelan; bab portofolio dibuka close-up di tombol "See projects" (HP di belakang blur) lalu mundur memperlihatkan semuanya; bab akademik mendorong ke kartu skripsi dan diagnosis sementara browser di belakangnya blur (rack focus). Di gauge diagnosis, panah logo ikut berputar di ujung cincin, jadi cincin + panah = logo. Kamera diatur di array `CAM` di `engine.js`.
-
-## Panah sebagai benang merah
-Panah dari logo menjadi "karakter" yang memandu seluruh film:
-
-| Waktu (detik) | Yang dilakukan panah |
-|---|---|
-| 0–3,75 | Terbang masuk, mengunci ke cincin logo, lalu meluncur menembus wordmark |
-| 5,8–6,5 | Naik dari bawah dan menembus "Launched." / "Diluncurkan."; huruf terlontar dari tengah ke luar |
-| 7,5–8,55 | Naik bersama perangkat, lalu mendarat di layar laptop dan berubah menjadi kursor |
-| 8,55–10,7 | Kursor memilih ukuran M, menambah jumlah jadi 2, klik "Tambah ke keranjang" bersamaan dengan tap di HP |
-| 10,7–12,05 | Lepas landas ke atas menarik bab berikutnya, lalu mendarat di browser portofolio |
-| 12,05–14,5 | Klik "See projects", halaman meluncur ke studi kasus Celestial Scrolls (HP ikut scroll) |
-| 14,5–15,55 | Pindah ke SIMALA |
-| 15,55–18 | Klik "Jelajahi"; progres skripsi dan gauge diagnosis bereaksi |
-| 18–19,2 | Pindah ke situs demo Nexora |
-| 19,2–22 | Kursor mengikuti tombol "Get started" / "Mulai sekarang" selama layout berubah desktop → HP, lalu klik → ledakan biru |
-| 25,95 | Wipe berbentuk mata panah raksasa dengan tepi bercahaya |
-| 26,7 | Panah terbang masuk dan mengunci lagi ke logo di layar penutup |
-
-Serah-terima antara panah pemandu dan kursor dihitung per frame dari posisi kursor yang sebenarnya, jadi tidak ada lompatan.
+## Waktu & teks
+- **`cues.json`** adalah satu-satunya sumber waktu: bab, klik, lock logo, flood, wipe, CTA, dan potongan sting/bumper. Nilainya dibaca oleh gambar (app) maupun suara (`audio.py`). Setelah mengubahnya, jalankan `python audio.py`.
+- **`app/src/text.ts`** berisi semua teks ID dan EN.
+- **`kontak.json`** berisi nomor WhatsApp dan pesan pembuka. Nomor dibaca langsung oleh app. Jika nomor atau pesan berubah, jalankan `python build.py` untuk membuat ulang QR 16:9.
 
 ## Isi folder
-- `site/template.html` — markup + CSS (teks Inggris); `site/engine.js` — seluruh animasi
-- `site/index.html`, `site/index-id.html` — hasil build (jangan diedit langsung)
-- `teks-id.json` — terjemahan Indonesia (kiri: teks asli di template, kanan: teks Indonesia) + penyesuaian CSS di `_css`
-- `build.py` — jalankan setelah mengedit `template.html` atau `teks-id.json`
-- `render.py`, `preview.py` (ambil still: `python preview.py 8.9,12.66 [prefix] [--id] [--v]`), `audio.py`
-- `kontak.json` — nomor & pesan WhatsApp untuk end card dan QR
-- `MOTION-GUIDE.md` — panduan motion brand (easing, durasi, aturan logo & panah, suara, format, area aman 9:16)
-- `site/assets/`, `site/fonts/`, `icons/` — screenshot asli, font Inter Tight, ikon Lucide
+```
+beyond-studio/
+├── TREATMENT.md         konsep, tone, storyboard per scene (hasil review)
+├── MOTION-GUIDE.md      panduan motion brand
+├── cues.json            sumber waktu tunggal (gambar + suara)
+├── kontak.json          WhatsApp end card
+├── audio.py             sintesis musik + SFX → app/public/audio/
+├── build.py             QR WhatsApp → app/public/assets/
+└── app/                 film (three.js + Vite)
+    ├── scripts/render.ts   stills / sheet / video (headless Chrome → ffmpeg)
+    ├── public/             screenshot klien, font Inter Tight, ikon Lucide, audio
+    └── src/
+        ├── engine/         render loop, motion blur adaptif, post (bloom, grain, vignette); port dari pdoom-video (MIT)
+        ├── stage/          studio (lantai, cahaya, pantulan, DOF), logo 3D, perangkat & layar, huruf 3D, tipe, motion
+        ├── scenes/         s1-logo … s8-closing (satu modul per bab), headline, layout (framing & crane)
+        ├── fmt.ts text.ts cues.ts
+        └── main.ts         player preview + API export
+```
 
 ## Mengedit
-- **Jalur kursor dan klik:** objek `CUR` di `engine.js`. Koordinat memakai piksel screenshot asli (1240 px lebar); klik diletakkan di ketukan musik (grid 128 BPM, kelipatan 0,46875 detik dari 7,5).
-- **Jalur terbang panah:** array `GS` di `engine.js`.
-- **Efek suara:** bagian "new SFX" di `audio.py`. Kalau mengubah waktu klik di `engine.js`, ubah juga di sini.
-- **Teks:** `site/template.html` untuk versi Inggris, `teks-id.json` untuk versi Indonesia, lalu `python build.py`.
+- **Waktu:** ubah di `cues.json`, bukan di dalam scene.
+- **Framing kamera:** setiap set punya `HOME` di `scenes/layout.ts`. Crane antar-set dan pendaratan panah memakai helper yang sama di file itu.
+- **Isi layar:** fungsi `draw…` di setiap scene. Semua koordinat memakai piksel screenshot asli (1240 px).
+- **9:16 vs 16:9:** setiap nilai yang berbeda ditulis sebagai `pick(nilai9x16, nilai16x9)`.
 
-Catatan: angka omzet, hasil diagnosis, dan situs Nexora adalah ilustrasi tampilan, bukan data klien. Ganti dengan data yang disetujui klien sebelum dipublikasikan.
+Catatan: angka 80+, 98%, Rp 12,4 jt, hasil diagnosis, dan situs Nexora adalah ilustrasi tampilan, bukan data klien. Ganti dengan data yang disetujui klien sebelum dipublikasikan.
+
+Engine di `app/src/engine/` diadaptasi dari pdoom-video karya Giacomo Magnanini (lisensi MIT, lihat `app/src/engine/LICENSE-pdoom.txt`).

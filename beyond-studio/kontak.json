@@ -1,5 +1,5 @@
 {
-  "_petunjuk": "Kontak WhatsApp untuk end card. 'nomor' dalam format internasional tanpa + (62...), 'tampil' = cara nomor ditulis di layar. Setelah mengedit, jalankan: python build.py (butuh: pip install segno untuk membuat ulang QR).",
+  "_petunjuk": "Kontak WhatsApp untuk end card. 'nomor' dalam format internasional tanpa + (62...), 'tampil' = cara nomor ditulis di layar (dibaca langsung oleh app). Bila nomor/pesan berubah, jalankan: python build.py (butuh: pip install segno) untuk membuat ulang QR.",
   "nomor": "6281927070239",
   "tampil": "0819-2707-0239",
   "pesan_en": "Hi Beyond Studio, I'd like a free consultation for a website.",

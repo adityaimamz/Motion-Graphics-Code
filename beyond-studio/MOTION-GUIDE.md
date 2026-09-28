@@ -1,6 +1,6 @@
 # Beyond Studio — Panduan Motion
 
-Aturan ini dipakai di video promo 30 detik dan sebaiknya diikuti di semua konten Beyond Studio berikutnya (reels, intro YouTube, presentasi), supaya gerak brand terasa konsisten.
+Aturan ini dipakai di video promo 45 detik (3D) dan sebaiknya diikuti di semua konten Beyond Studio berikutnya (reels, intro YouTube, presentasi), supaya gerak brand terasa konsisten.
 
 ## 1. Prinsip
 - **Satu karakter, satu arah.** Panah dari logo adalah "karakter" brand. Ia selalu bergerak ke depan (kanan) atau ke atas, tidak pernah mundur. Panah membuka, memimpin, dan menutup; elemen lain mengikutinya.
@@ -50,9 +50,11 @@ Jangan memakai linear untuk gerak elemen (hanya untuk ticker/odometer yang meman
 
 ## 8. Kamera & kedalaman
 - Setiap bab punya gerak kamera berbeda: dolly-in pelan, close-up lalu mundur, atau dorong ke detail.
-- Saat kamera fokus ke satu elemen, elemen lain diberi blur 3–4 px (rack focus).
+- Antar-bab kamera crane naik mengikuti panah (set ditumpuk vertikal di satu studio), lalu mengendap menatap set berikutnya.
+- Saat kamera fokus ke satu elemen, elemen lain jatuh ke depth of field (rack focus sungguhan di 3D).
 - Zoom kamera yang besar disembunyikan di dalam gerak cepat (whip pan) agar tidak terasa melompat.
-- Motion blur sub-frame (shutter 180°) selalu aktif di render final.
+- Motion blur sub-frame adaptif (shutter 180°, 4–36 sub-frame per frame) selalu aktif di render final.
+- Putih (teks, logo) tidak pernah ber-bloom; glow hanya untuk biru dan jejak panah.
 
 ## 9. Suara
 - Setiap gerak penting punya suara: whoosh untuk panah (posisi stereo mengikuti layar), klik untuk kursor, pop untuk tombol, bel untuk logo mengunci.
@@ -66,5 +68,5 @@ Jangan memakai linear untuk gerak elemen (hanya untuk ticker/odometer yang meman
 | 16:9 | 1920×1080 | Website, YouTube, presentasi. QR WhatsApp di pojok kanan bawah. |
 | 9:16 | 1080×1920 | Reels, TikTok, Shorts. Judul di atas, perangkat di bawah, tanpa QR (penonton sudah di HP). |
 | Sting | 3 s | Intro/outro konten lain (logo saja). |
-| Bumper | 6,5 s | Iklan pendek: tiga kata + end card WhatsApp. |
+| Bumper | 7,5 s | Iklan pendek: tiga kata + end card WhatsApp (2 bar + 2 bar). |
 Area aman teks 9:16: hindari 250 px teratas dan 350 px terbawah (tertutup UI aplikasi).

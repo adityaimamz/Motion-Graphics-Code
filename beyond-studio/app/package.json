@@ -1,0 +1,21 @@
+{
+  "name": "beyond-studio-45",
+  "private": true,
+  "type": "module",
+  "description": "Beyond Studio promo 45 s — three.js, deterministik per frame. Engine di-port dari pdoom-video (MIT).",
+  "scripts": {
+    "dev": "vite",
+    "stills": "node scripts/render.ts stills",
+    "sheet": "node scripts/render.ts sheet",
+    "render": "node scripts/render.ts video --samples auto"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0",
+    "playwright-core": "^1.56.0",
+    "typescript": "5",
+    "vite": "^7.0.0"
+  },
+  "dependencies": {
+    "three": "^0.186.0"
+  }
+}

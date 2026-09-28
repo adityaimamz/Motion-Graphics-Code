@@ -8,12 +8,13 @@ Koleksi proyek **programmatic motion graphics** berbasis web (HTML5 Canvas, CSS 
 
 ```text
 Motion-Grapich-Code/
-├── beyond-studio/                       # Suite Promosi Komersial Beyond Studio (Python/Playwright)
-│   ├── site/                            # Animasi web (16:9, 9:16 Vertikal, player review)
+├── beyond-studio/                       # Promo 3D Beyond Studio 45 detik (three.js/Node)
+│   ├── app/                             # Film three.js: engine, studio 3D, scene per bab, player & renderer
+│   ├── cues.json                        # Sumber waktu tunggal untuk gambar & suara
 │   ├── audio.py                         # Synthesizer audio DSP 48kHz (SciPy/NumPy)
-│   ├── render.py                        # Headless render engine dengan sub-frame motion blur 180°
-│   ├── build.py                         # Builder konfigurasi QR & kontak
-│   ├── kontak.json                      # Konfigurasi nomor WhatsApp & QR code otomatis
+│   ├── build.py                         # Generator QR WhatsApp dari kontak.json
+│   ├── kontak.json                      # Konfigurasi nomor WhatsApp end card
+│   ├── TREATMENT.md                     # Konsep & storyboard per scene
 │   ├── MOTION-GUIDE.md                  # Panduan standar motion brand resmi
 │   └── README.md                        # Dokumentasi teknis & panduan render Beyond Studio
 │
@@ -43,11 +44,12 @@ Motion-Grapich-Code/
 ## 🚀 Fitur Unggulan Proyek
 
 ### 1. Beyond Studio (`beyond-studio/`)
-Suite video promosi agensi siap tayang untuk kampanye pemasaran multi-kanal:
-* **Multi-Format & Rasio**: 16:9 Horizontal (YouTube/Web) dan 9:16 Vertikal (Instagram Reels, TikTok, YouTube Shorts).
-* **Multi-Durasi**: Full Cut 30 detik, Bumper Ad 6,5 detik, dan Logo Sting 3 detik.
-* **Bilingual Penuh**: Pilihan bahasa Inggris dan bahasa Indonesia (`--id`).
-* **Sub-Frame Motion Blur Optik**: Setiap frame di-render 6× pada pecahan waktu mikro berbeda lalu digabung dalam *linear light space*, menyimulasikan shutter kamera film 180°.
+Video promosi agensi 3D (three.js) — "pemotretan produk di studio gelap": perangkat 3D menampilkan website klien asli, panah logo menjadi kursor, kamera crane antar-set:
+* **Multi-Format & Rasio**: 16:9 Horizontal (YouTube/Web) dan 9:16 Vertikal (Instagram Reels, TikTok, YouTube Shorts) dari satu film (`--fmt h|v`).
+* **Multi-Durasi**: Full Cut 45 detik (24 bar @ 128 BPM), Bumper Ad 7,5 detik, dan Logo Sting 3 detik.
+* **Bilingual Penuh**: Bahasa Indonesia dan Inggris (`--lang id|en`).
+* **3D Sinematik**: Depth of field (rack focus), pantulan lantai, bloom hanya untuk biru, grain & vignette; engine diadaptasi dari pdoom-video (MIT).
+* **Motion Blur Adaptif**: 4–36 sub-frame per frame dirata-rata dalam *linear light*, sebanyak yang dibutuhkan geraknya (shutter 180°).
 * **Audio Engineering Broadcast-Grade**: 3 stem terpisah (`score.wav`, `score_music.wav`, `sfx.wav`) dengan standar loudness EBU R128 ($-14\text{ LUFS}$) dan *dynamic spatial stereo panning* mengikuti posisi panah di layar.
 * **Integrasi Konversi Langsung**: Tombol WhatsApp resmi + QR code dinamis yang langsung membuka chat WhatsApp pre-filled.
 * **In-Browser Review Player**: Player internal dengan playback audio sinkron, scrub timeline per frame, dan shortcut keyboard (`Space`, `←/→`).
@@ -78,17 +80,18 @@ Animasi kinetik sinematik 30,0 detik (1920×1080 @ 60 FPS) bertema Xianxia & Fan
 
 Pastikan perangkat Anda telah terpasang:
 * **Python 3.10+**
-* **Node.js 18+**
+* **Node.js 22.6+** (disarankan 24; renderer Beyond Studio menjalankan `.ts` langsung)
+* **Google Chrome** (render headless Beyond Studio)
 * **FFmpeg** (dengan pustaka `libx264`) sudah terdaftar di `PATH` sistem
 
 ### Instalasi Dependensi
 
-#### Untuk Beyond Studio (Python)
+#### Untuk Beyond Studio (Node.js + Google Chrome)
 ```bash
-cd beyond-studio
-pip install playwright numpy scipy pillow segno
-python -m playwright install chromium
-cd ..
+cd beyond-studio/app
+npm install
+cd ../..
+pip install numpy scipy segno   # hanya untuk membuat ulang audio / QR
 ```
 
 #### Untuk Evolusi Layar (Node.js)
@@ -106,12 +109,11 @@ cd ..
 ### 1. Beyond Studio (`beyond-studio/`)
 | Kebutuhan | Perintah | Keterangan |
 |---|---|---|
-| **Preview Browser** | Buka `site/index.html` di Google Chrome | Review player interaktif dengan timeline & audio |
-| **16:9 ID (Final)** | `python render.py --id` | Output: `beyond-studio-30s-id.mp4` |
-| **16:9 ID (Draft Cepat)** | `MB=1 python render.py --id` *(PowerShell: `$env:MB=1; python render.py --id`)* | Tanpa motion blur (3–6 menit) |
-| **9:16 Vertikal (Reels/TikTok)** | `python render.py --id --v` | Output: `beyond-studio-30s-id-vertical.mp4` |
-| **Bumper Ad 6,5 Detik** | `python render.py --cut bumper --id` | Output: `beyond-studio-bumper-id.mp4` |
-| **Logo Sting 3 Detik** | `python render.py --cut sting` | Output: `beyond-studio-sting.mp4` |
+| **Preview Browser** | `cd beyond-studio/app && npx vite` → `http://localhost:5173/?fmt=v&lang=id` | Player interaktif dengan timeline bab & audio |
+| **9:16 ID (Final, TikTok)** | `node scripts/render.ts video --fmt v --lang id --samples auto` | Output: `beyond-studio/out/beyond-studio-45s-id-vertical.mp4` |
+| **16:9 ID (Final)** | `node scripts/render.ts video --fmt h --lang id --samples auto` | Output: `beyond-studio/out/beyond-studio-45s-id.mp4` |
+| **Draft Cepat** | tambahkan `--samples 1 --preset veryfast` | Tanpa motion blur (±5 menit) |
+| **Bumper 7,5 Detik / Sting 3 Detik** | tambahkan `--cut bumper` / `--cut sting` | Output: `beyond-studio-bumper-…` / `beyond-studio-sting-…` |
 
 ### 2. Evolusi Layar (`evolusi-layar/`)
 | Kebutuhan | Perintah | Keterangan |
@@ -136,7 +138,8 @@ cd ..
 Pelajari panduan teknis mendalam pada masing-masing sub-proyek:
 
 * **Beyond Studio**:
-  * [beyond-studio/README.md](beyond-studio/README.md): Dokumentasi lengkap opsi parameter render, audio DSP, dan end card CTA WhatsApp.
+  * [beyond-studio/README.md](beyond-studio/README.md): Dokumentasi lengkap preview, opsi render, audio DSP, dan end card CTA WhatsApp.
+  * [beyond-studio/TREATMENT.md](beyond-studio/TREATMENT.md): Konsep "studio gelap", tone, dan storyboard per scene (9:16 & 16:9).
   * [beyond-studio/MOTION-GUIDE.md](beyond-studio/MOTION-GUIDE.md): Pedoman motion brand Beyond Studio (aturan kurva easing, tempo 128 BPM, safe zones 9:16, hierarki tipografi).
 
 * **Evolusi Layar**:
