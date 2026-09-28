@@ -1,0 +1,94 @@
+{
+  "_petunjuk": "Satu sumber waktu (detik film) untuk gambar (app/src) dan suara (audio.py). 128 BPM: 1 ketukan = 0.46875, 1 bar = 1.875. Setelah mengubah angka di sini: jalankan `python audio.py` lalu cek preview.",
+  "bpm": 128,
+  "dur": 75,
+  "ch": {
+    "layar": [0, 7.5],
+    "chip": [7.5, 13.125],
+    "hujan": [13.125, 20.625],
+    "pantai": [20.625, 24.375],
+    "laut": [24.375, 37.5],
+    "server": [37.5, 46.875],
+    "orbit": [46.875, 54.375],
+    "pulang": [54.375, 63.75],
+    "foton": [63.75, 67.5],
+    "closing": [67.5, 75]
+  },
+
+  "jam": {
+    "_petunjuk": "Jam fisik. anchors = [detik film, ms nyata] yang pasti dicapai. segs = [t0, t1, perlambatan, tetap?]: laju konstan; celah di antara segmen = ramp log halus. Segmen 'tetap' dipakai persis (klaim fisik: radio 300 m/s, jam 3 GHz = 128 BPM, foton 1 ns); segmen lain di tiap selang anchor diskalakan bersama supaya anchor tercapai.",
+    "frameMs": 16.6667,
+    "scanMs": 16.0,
+    "rows": 2400,
+    "anchors": [[0, 0], [7.5, 0.3], [13.125, 0.6], [20.625, 1.8], [24.375, 2.3], [37.5, 7.2], [46.875, 8.1], [54.375, 13.0], [61.875, 16.0], [67.5, 16.6667]],
+    "segs": [
+      [0, 7.3, 25000],
+      [7.7, 13.0, 18750],
+      [13.25, 14.06, 18750],
+      [14.53, 18.6, 1000000, true],
+      [19.1, 20.5, 1250],
+      [20.75, 24.25, 7500],
+      [24.5, 37.35, 2800],
+      [37.65, 38.9, 5000],
+      [39.375, 43.125, 1406250000, true],
+      [43.6, 46.75, 4500],
+      [47.0, 54.25, 1600],
+      [54.5, 61.8, 2100],
+      [61.95, 63.9, 3000],
+      [64.66, 67.46, 2800000000, true],
+      [67.5, 75, 3000]
+    ]
+  },
+
+  "fisik": {
+    "_petunjuk": "Angka fisik yang dipakai gambar. km/s = kecepatan cahaya di serat; ruteKm diisi dari app/public/data/earth.json.",
+    "seratKmS": 204000,
+    "radioMS": 299792458,
+    "fotonMm": 300,
+    "jamGHz": 3.0
+  },
+
+  "teks": [
+    { "s": "Video ini cuma satu frame.", "in": 0.3, "out": 3.45, "y": 600 },
+    { "s": "1/60 detik. Diperlambat.", "in": 3.75, "out": 7.05, "y": 600 },
+    { "s": "HP-mu memanggil server.", "in": 10.3125, "out": 12.6, "y": 520 },
+    { "s": "Hujan pun berhenti.", "in": 13.59375, "out": 15.2, "y": 1380 },
+    { "s": "Sinyalnya tidak.", "in": 15.46875, "out": 18.28, "y": 1380 },
+    { "s": "Dasar Laut Jawa.", "in": 24.84375, "out": 27.66, "y": 520 },
+    { "s": "Cahaya. Di dalam kaca.", "in": 28.59375, "out": 31.4, "y": 1380 },
+    { "s": "Tercepat di alam semesta,", "in": 31.875, "out": 33.5, "y": 1380 },
+    { "s": "tetap butuh 5 milidetik.", "in": 33.75, "out": 36.9, "y": 1380 },
+    { "s": "Singapura.", "in": 37.96875, "out": 39.0, "y": 1400 },
+    { "s": "Kami perlambat lagi.", "in": 39.375, "out": 40.6, "y": 1400 },
+    { "s": "Beat ini = jam prosesor.", "in": 40.78125, "out": 43.0, "y": 1400 },
+    { "s": "Lalu pulang.", "in": 47.34375, "out": 50.0, "y": 1400 },
+    { "s": "Tiap klik = perjalanan ini.", "in": 50.625, "out": 53.8, "y": 1400 },
+    { "s": "Sampai. Pas satu frame.", "in": 61.875, "out": 63.5, "y": 520 },
+    { "s": "Terakhir: 30 cm ke matamu.", "in": 64.6875, "out": 67.2, "y": 520 },
+    { "s": "Kami bedah balik layarnya.", "in": 70.78125, "out": 99, "y": 1180 }
+  ],
+
+  "label": [
+    { "s": "kaca · 0,5 mm", "in": 7.5, "out": 8.2 },
+    { "s": "sensor sentuh", "in": 7.97, "out": 8.7 },
+    { "s": "OLED", "in": 8.44, "out": 9.15 },
+    { "s": "transistor · baris {row}", "in": 8.9, "out": 9.6 },
+    { "s": "papan sirkuit", "in": 9.4, "out": 10.2 },
+    { "s": "λ 1550 nm · inframerah · warna palsu", "in": 28.59375, "out": 37.3 },
+    { "s": "di kaca: 204.000 km/s (⅔ c)", "in": 31.875, "out": 37.3 },
+    { "s": "kaca 125 µm · inti 9 µm", "in": 30.4, "out": 34.4 },
+    { "s": "3 GHz ÷ 1.406.250.000 = 128 BPM", "in": 40.78125, "out": 43.3 },
+    { "s": "30 cm ÷ c = 1 ns", "in": 64.6875, "out": 67.3 }
+  ],
+
+  "layar": { "ignite": 0.17, "plunge": [7.03, 7.5] },
+  "chip": { "layers": [7.5, 7.96875, 8.4375, 8.90625, 9.375], "birth": 10.3125, "whip": 11.25, "gap": 12.1875 },
+  "hujan": { "window": 13.125, "ramp": [14.06, 14.53], "wave": 14.53, "passCam": 15.0, "tower": 18.75, "descend": [18.9, 20.625] },
+  "pantai": { "shore": 22.5, "lip": 23.9, "plunge": 24.375 },
+  "laut": { "pass": 26.25, "rep0": 28.125, "repEvery": 0.9375, "peel": [28.6, 30.0], "fiber": [30.0, 33.75], "exit": [33.75, 35.2], "rise": [35.6, 37.5] },
+  "server": { "aisle": 38.0, "die": 38.9, "clock0": 39.375, "ticks": 8, "pullout": [43.6, 46.875] },
+  "orbit": { "depart": 47.0, "dive": 52.5 },
+  "pulang": { "cloud": 56.1, "rain": [56.3, 58.5], "radio": 57.65625, "window": 58.6, "glass": 60.15, "land": 61.875 },
+  "foton": { "emit": 64.66, "back": [63.75, 64.4], "hit": 67.5 },
+  "closing": { "ring": [67.7, 68.9], "fly": 68.4, "lock": 69.375, "wm": 69.6, "cta": 70.78125, "follow": 71.25, "tap": 72.65625, "loopout": 74.4 }
+}
