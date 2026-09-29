@@ -52,7 +52,9 @@ node scripts/render.ts video --samples 1 --preset veryfast
 node scripts/render.ts video --samples auto
 ```
 
-- Output: `satu-frame/out/satu-frame-75s.mp4` (H.264, audio AAC, loudness −14 LUFS / −1 dBTP diterapkan saat encode).
+- Output: `satu-frame/out/satu-frame-75s_<tanggal>_<jam>_<draft|final>.mp4`, misalnya `satu-frame-75s_2026-09-29_1432_final.mp4` (H.264, audio AAC, loudness −14 LUFS / −1 dBTP diterapkan saat encode). Render sebagian mendapat rentangnya di nama (`…_final_24-38s.mp4`).
+- **Tidak pernah menimpa.** Setiap render mendapat nama baru. Kalau `--out` menunjuk file yang sudah ada, hasilnya ditulis ke `…-2.mp4`, `…-3.mp4`, dan seterusnya. Pakai `--overwrite` kalau memang ingin menimpa.
+- **Progress di terminal:** bar per frame berisi persen, nomor frame, detik film, bab, sub-frame frame itu, fps sesaat dan rata-rata, waktu berlalu, sisa, dan perkiraan jam selesai. Satu baris ringkasan muncul setiap bab selesai (lama render dan rata-rata sub-frame), ditambah tahap persiapan (server, Chrome, memuat film) dan penutupan encode. Kalau output di-pipe ke file log, progress ditulis satu baris tiap ±10 detik.
 - Opsi:
   - `--max-samples 324`: blur lebih halus di bagian tercepat;
   - `--scale 2`: render 2× lalu diperkecil;

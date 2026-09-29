@@ -10,6 +10,7 @@
     "render": "node scripts/render.ts video --samples auto"
   },
   "devDependencies": {
+    "@types/node": "^24.19.0",
     "@types/three": "^0.186.0",
     "playwright-core": "^1.56.0",
     "typescript": "5",

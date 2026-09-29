@@ -67,7 +67,8 @@ function setupExport() {
         used[k] = (used[k] ?? 0) + 1;
         const buf = await engine.readPixelsAsync();
         // sequential POSTs keep the frames in order; up to `inflight` are queued behind the encoder
-        chain = chain.then(() => fetch(opts.url, { method: 'POST', body: new Blob([buf as Uint8Array<ArrayBuffer>]) }));
+        // (x-sub: how many sub-frames this frame took, for the terminal's progress)
+        chain = chain.then(() => fetch(opts.url, { method: 'POST', headers: { 'x-sub': String(k) }, body: new Blob([buf as Uint8Array<ArrayBuffer>]) }));
         pending.push(chain);
         if (pending.length >= (opts.inflight ?? 4)) await pending.shift();
       }

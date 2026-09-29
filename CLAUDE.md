@@ -16,4 +16,5 @@ Setiap video baru maupun revisi (sekecil apa pun) wajib memakai skill `beyond-vi
 - `beyond-studio/`: promo 45 s 3D (three.js + Vite, render Node + Chrome headless; `cues.json` = sumber waktu).
 - `evolusi-layar/`: edukasi vertikal (Node + Canvas2D, VO elastis, audio sintetis).
 - `celestial-scrolls/`: promo sinematik satu file HTML (CDP).
+- `satu-frame/`: edukasi vertikal 75 s, satu refresh layar diperlambat tanpa cut (three.js + Vite, `cues.json` = sumber waktu, jam fisik, audio sintetis; render tidak menimpa file lama).
 - `pdoom-video-main/`: benchmark eksternal (gitignored, hanya ada lokal). Rujukan kualitas, bukan untuk diedit.

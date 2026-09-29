@@ -35,6 +35,14 @@ Motion-Grapich-Code/
 │   ├── celestial-scrolls-audio.mp3      # Audio soundtrack film
 │   └── ANALISIS_CELESTIAL_SCROLLS_FILM.md # Bedah teknis arsitektur 5 layer rendering
 │
+├── satu-frame/                          # Edukasi vertikal 75 detik "Satu Frame" (three.js/Node)
+│   ├── app/                             # Film three.js: dunia per skala (piksel → km), bab S1–S10, player & renderer
+│   ├── cues.json                        # Sumber waktu tunggal: bab, cue, jam fisik, teks
+│   ├── audio.py                         # Musik + SFX sintetis (tape-stop mengikuti jam fisik)
+│   ├── tools/bake_earth.py              # NASA Black Marble + Natural Earth → tekstur Bumi
+│   ├── TREATMENT.md                     # Konsep, storyboard, jam fisik, catatan fakta
+│   └── README.md                        # Dokumentasi teknis & panduan render Satu Frame
+│
 ├── .gitignore                           # Proteksi dari file biner video/audio besar & cache
 └── README.md                            # Dokumentasi induk repositori
 ```
@@ -74,6 +82,17 @@ Animasi kinetik sinematik 30,0 detik (1920×1080 @ 60 FPS) bertema Xianxia & Fan
   5. *Post-Processing*: Screen flash overlay & procedural 24 FPS film grain.
 * **Chrome DevTools Protocol (CDP) Rendering**: Deterministic frame capture langsung melalui antarmuka CDP Chrome Headless untuk memastikan setiap frame sinkron sempurna dengan audio.
 
+### 4. Satu Frame (`satu-frame/`)
+Video edukasi vertikal 1080×1920 @ 60 FPS, 75 detik (40 bar @ 128 BPM). Seluruh video adalah **satu kali layar HP menyegarkan gambar** (16,667 ms) yang diperlambat ribuan sampai miliaran kali. Selama satu frame itu, permintaan dari HP pulang-pergi ke server di Singapura: layar → chip → hujan beku → menara → kabel di bawah jalan → dasar Laut Jawa → serat kaca → prosesor → orbit → pulang → satu foton ke mata.
+* **Satu Kamera, Tanpa Cut**: Melintasi sepuluh orde besaran dengan serah terima di dalam gerak (menembus kaca, celah antena, air, awan, atap), lalu kembali ke frame 0 sebagai loop mulus.
+* **Jam Fisik yang Jujur**: HUD menampilkan milidetik nyata dan laju perlambatan. Angka fisikanya tepat: radio 300 m/s, jam prosesor 3 GHz ÷ 1.406.250.000 = 128 BPM (ketukan musik = jam prosesor), foton 30 cm = 1 ns.
+* **Dunia per Skala**: Layar (piksel), papan sirkuit (mm), kota (m), dasar laut (m), serat (µm), prosesor (mm), Bumi (km), masing-masing dalam satuannya sendiri.
+* **Data Asli**: Lampu malam NASA Black Marble dan garis pantai Natural Earth; rute kabel 996 km dicek tidak melewati daratan.
+* **Kota Malam Hujan Termotivasi**: Setiap cahaya punya sumber (langit mendung berpendar, lampu jalan, pantulan jalan basah planar), kampung Jakarta dengan kabel listrik antartiang, toren, dan parabola yang diarahkan ke satelit sungguhan, serta satu tetes hujan beku yang menjadi lensa (kota terbalik di dalamnya).
+* **Motion Blur Adaptif**: 4–108 sub-frame per frame; setiap frame = f(t), deterministik piksel per piksel.
+* **Audio 100% Sintetis**: Bus jam, musik, dan SFX; musik ter-*tape-stop* persis mengikuti ramp jam fisik; EBU R128 ($-14\text{ LUFS}$).
+* **Renderer Aman**: Hasil render tidak pernah menimpa file lama (nama bertanggal) dan progress per frame tampil di terminal (bab, sub-frame, sisa waktu, jam selesai).
+
 ---
 
 ## 🛠️ Prasyarat Lingkungan
@@ -92,6 +111,14 @@ cd beyond-studio/app
 npm install
 cd ../..
 pip install numpy scipy segno   # hanya untuk membuat ulang audio / QR
+```
+
+#### Untuk Satu Frame (Node.js + Google Chrome)
+```bash
+cd satu-frame/app
+npm install
+cd ../..
+pip install numpy scipy pillow   # hanya untuk membuat ulang audio / data Bumi
 ```
 
 #### Untuk Evolusi Layar (Node.js)
@@ -131,6 +158,18 @@ cd ..
 | **Preview Langsung** | Buka `celestial-scrolls-film.html` di browser | Pemutaran interaktif 60 FPS di layar monitor |
 | **Render MP4 60 FPS** | `node render_to_video.js` | Headless Chrome CDP frame capture + FFmpeg muxing |
 
+### 4. Satu Frame (`satu-frame/`)
+Jalankan dari `satu-frame/app`:
+
+| Kebutuhan | Perintah | Keterangan |
+|---|---|---|
+| **Preview Browser** | `npx vite` → `http://localhost:5173/?t=40` | Player dengan audio sinkron; `[`/`]` pindah bab, `L` loop bab |
+| **Render Final** | `node scripts/render.ts video --samples auto` | Output: `satu-frame/out/satu-frame-75s_<tanggal>_<jam>_final.mp4` (tidak menimpa) |
+| **Draft Cepat** | `node scripts/render.ts video --samples 1 --preset veryfast` | Tanpa motion blur; `--from 24 --to 38` untuk sebagian |
+| **Still / Contact Sheet** | `node scripts/render.ts stills --t 15,30.5` / `sheet --n 48` | Ke `satu-frame/out/stills/` / `out/sheet.png` |
+| **Cek Loop** | `node scripts/render.ts loop` | Frame terakhir + frame 0 berdampingan |
+| **Sintesis Audio** | `cd .. && python audio.py` | Jalankan ulang setiap `cues.json` berubah |
+
 ---
 
 ## 📖 Indeks Dokumentasi Teknis
@@ -150,3 +189,7 @@ Pelajari panduan teknis mendalam pada masing-masing sub-proyek:
 
 * **Celestial Scrolls**:
   * [celestial-scrolls/ANALISIS_CELESTIAL_SCROLLS_FILM.md](celestial-scrolls/ANALISIS_CELESTIAL_SCROLLS_FILM.md): Bedah komprehensif arsitektur rendering 5-layer, matematika animasi kinetik, dan pipeline CDP video rendering.
+
+* **Satu Frame**:
+  * [satu-frame/README.md](satu-frame/README.md): Preview, opsi render (tidak menimpa, progress), audio, data Bumi, dan struktur kode.
+  * [satu-frame/TREATMENT.md](satu-frame/TREATMENT.md): Konsep satu frame, jam fisik per bab, storyboard S1–S10, dan catatan fakta beserta penyederhanaan yang disadari.
