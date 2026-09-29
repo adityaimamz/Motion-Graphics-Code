@@ -84,7 +84,8 @@ class Board {
     s.environmentIntensity = 0.1;
     // product-macro light: one low raking key with real shadows, a blue rim from behind, almost no fill
     ctx.renderer.shadowMap.enabled = true;
-    ctx.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // (three r18x removed PCFSoftShadowMap and fell back to this with a warning: same look)
+    ctx.renderer.shadowMap.type = THREE.PCFShadowMap;
     const key = new THREE.DirectionalLight(0xe4ecff, 3.2);
     key.position.set(-6, 14, 58); key.target.position.set(36, 0, 22);
     key.castShadow = true;

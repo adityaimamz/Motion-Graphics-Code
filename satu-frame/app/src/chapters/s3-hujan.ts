@@ -5,11 +5,11 @@
 // tower into the ground and the camera follows it down (S4 takes it along the cable to the sea).
 import { CH, CUE } from '../cues';
 import { scanRow } from '../clock';
-import { city, ANT, TOWER, TOWER_H, EMIT, radioR } from '../sets/city';
+import { city, cityExposure, ANT, TOWER, TOWER_H, EMIT, radioR } from '../sets/city';
 import { gapHaze } from '../fx';
 import { v3 } from '../r3';
 import { mcamPath, type Key } from '../path';
-import { P, eOut, damp } from '../motion';
+import { P, eOut, eIO, damp } from '../motion';
 import type { Chapter } from '../world';
 
 const [T0, T1] = CH.hujan;
@@ -59,6 +59,8 @@ const s3: Chapter = {
     }, out);
     ctx.post.bloom = 0.7;
     ctx.post.bloomThreshold = 1.2;
+    // (the room is lit by the phone alone: the city's exposure comes in on the way to the window)
+    ctx.post.exposure = cityExposure(eIO(P(t, T0, 13.6 - T0)));
     ctx.post.shake = [damp(t, HIT, 5, 55, 9), damp(t, HIT, 4, 43, 9)];
     // out of the glowing plastic of the antenna gap (S2) into the room
     gapHaze(ctx.renderer, out, 1 - eOut(P(t, T0, 0.22)));

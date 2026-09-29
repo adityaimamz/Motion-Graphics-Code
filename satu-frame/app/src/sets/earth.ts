@@ -84,10 +84,12 @@ vec3 bicubic(sampler2D tex, vec2 uv, vec2 size, float lvl) {
   float sx = s.x / (s.x + s.y), sy = s.z / (s.z + s.w);
   return mix(mix(e, d, sx), mix(b, a, sx), sy);
 }
+// (one exit: the D3D compiler warns (X4000) about early returns here)
 vec3 sampleMap(vec2 ll, float lod) {
   vec2 uc = vec2((ll.y - coreBox.x) / (coreBox.z - coreBox.x), (ll.x - coreBox.y) / (coreBox.w - coreBox.y));
   vec2 uw = vec2((ll.y - wideBox.x) / (wideBox.z - wideBox.x), (ll.x - wideBox.y) / (wideBox.w - wideBox.y));
   vec3 w = (uw.x > 0.0 && uw.x < 1.0 && uw.y > 0.0 && uw.y < 1.0) ? textureLod(wideTex, uw, max(lod - 3.3, 0.0)).rgb : vec3(0.0, 0.3, 0.0);
+  vec3 res = w;
   if (uc.x > 0.01 && uc.x < 0.99 && uc.y > 0.01 && uc.y < 0.99) {
     vec3 c = textureLod(coreTex, uc, lod).rgb;
     if (lod < 1.0) {
@@ -99,9 +101,9 @@ vec3 sampleMap(vec2 ll, float lod) {
       c = mix(b, c, lod);
     }
     float edge = smoothstep(0.01, 0.05, min(min(uc.x, 1.0 - uc.x), min(uc.y, 1.0 - uc.y)));
-    return mix(w, c, edge);
+    res = mix(w, c, edge);
   }
-  return w;
+  return res;
 }
 // distance (km) from lat/lon to the thread, and the arc length at the nearest point
 vec2 threadDist(vec2 ll) {

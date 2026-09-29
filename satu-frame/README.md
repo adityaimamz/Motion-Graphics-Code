@@ -58,8 +58,8 @@ node scripts/render.ts video --samples auto
   - `--scale 2`: render 2× lalu diperkecil;
   - `--from 24 --to 38`: sebagian;
   - `--dry`: uji pipeline tanpa file.
-- Waktu render di GPU Intel terintegrasi (i7-1360P): ±0,6 frame/s dengan maks. 36 sub-frame, jadi final penuh bisa beberapa jam. Di GPU diskrit jauh lebih cepat. Bagian terberat: S5 (dasar laut 76 km/s) dan S6 (tarik mundur).
-- Log browser berisi peringatan `X4122 … double precision` dari kompiler shader ANGLE. Itu aman diabaikan.
+- Waktu render di GPU Intel terintegrasi (i7-1360P): final penuh (`--samples auto`, maks. 108) ±11–12 jam (sebelum revisi cahaya kota: 10,4 jam, 0,12 frame/s). Di GPU diskrit jauh lebih cepat. Bagian terberat: S5 (dasar laut 76 km/s), S6 (tarik mundur), dan S3/S4/S8 (pantulan jalan basah di resolusi penuh, ±7 s per frame pada 36 sub-frame).
+- Log browser hanya berisi peringatan `X4122 … double precision` dari kompiler shader ANGLE. Itu aman diabaikan. (Peringatan X4000, X3577, dan PCFSoftShadowMap sudah dibereskan.)
 
 ## Audio & data
 

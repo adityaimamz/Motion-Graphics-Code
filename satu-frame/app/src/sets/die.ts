@@ -57,18 +57,20 @@ float typeDim() {
   return 1.0 - 0.85 * max(b, hc);
 }
 
-vec3 dieSurface(vec2 p, float fp, out float emis) {
-  emis = 0.0;
+// (the package and the die in two functions with one exit each: the D3D compiler warns (X4000) about
+// early returns from a function with an out parameter)
+vec3 packageSurface(vec2 p, float fp) {
   // package substrate + capacitors around the die
-  if (abs(p.x) > DW || abs(p.y) > DH) {
-    vec3 c = vec3(0.012, 0.014, 0.012);
-    vec2 cp = vec2(mod(p.x + 0.5, 1.4) - 0.7, mod(p.y, 1.1) - 0.55);
-    float ring = step(DW + 0.8, abs(p.x)) * step(abs(p.x), DW + 4.0) + step(DH + 0.8, abs(p.y)) * step(abs(p.y), DH + 4.0);
-    float cap = (1.0 - smoothstep(-fp, fp, sdBox(cp, vec2(0.3, 0.16)))) * clamp(ring, 0.0, 1.0);
-    c = mix(c, vec3(0.2, 0.2, 0.21), cap);
-    if (abs(p.x) > 26.0 || abs(p.y) > 26.0) c = vec3(0.004);
-    return c;
-  }
+  vec3 c = vec3(0.012, 0.014, 0.012);
+  vec2 cp = vec2(mod(p.x + 0.5, 1.4) - 0.7, mod(p.y, 1.1) - 0.55);
+  float ring = step(DW + 0.8, abs(p.x)) * step(abs(p.x), DW + 4.0) + step(DH + 0.8, abs(p.y)) * step(abs(p.y), DH + 4.0);
+  float cap = (1.0 - smoothstep(-fp, fp, sdBox(cp, vec2(0.3, 0.16)))) * clamp(ring, 0.0, 1.0);
+  c = mix(c, vec3(0.2, 0.2, 0.21), cap);
+  if (abs(p.x) > 26.0 || abs(p.y) > 26.0) c = vec3(0.004);
+  return c;
+}
+vec3 dieCore(vec2 p, float fp, out float emis) {
+  emis = 0.0;
   // die: dark silicon; cores (2 x 4) with cache arrays, standard-cell rows everywhere
   vec3 c = vec3(0.022, 0.024, 0.03);
   vec2 cell = vec2(floor((p.x + DW) / 6.0), floor((p.y + DH) / 9.0));
@@ -93,6 +95,13 @@ vec3 dieSurface(vec2 p, float fp, out float emis) {
   float dL = since - float(NL) * LDT;
   emis += leaf * (dL >= 0.0 ? exp(-dL / 0.14) * 4.0 : 0.0);
   c = mix(c, vec3(0.05), leaf);
+  return c;
+}
+vec3 dieSurface(vec2 p, float fp, out float emis) {
+  emis = 0.0;
+  vec3 c = vec3(0.0);
+  if (abs(p.x) > DW || abs(p.y) > DH) c = packageSurface(p, fp);
+  else c = dieCore(p, fp, emis);
   return c;
 }
 

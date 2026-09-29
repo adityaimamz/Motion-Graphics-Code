@@ -71,8 +71,10 @@ vec3 glassTop(vec2 p, float fp) {
 
 const vec2 HOLE = vec2(540.0, 58.0); const float HOLE_R = 24.0;
 // outside the active area and inside the punch-hole: black glass, the lens, the metal frame lip
+// (one exit: the D3D compiler warns (X4000) about early returns from a function with an out parameter)
 vec3 inactive(vec2 p, float fp, vec3 d, out float isIn) {
   isIn = 0.0;
+  vec3 res = vec3(0.0);
   float r = length(p - HOLE);
   if (r < HOLE_R + 1.2) {
     isIn = 1.0;
@@ -86,18 +88,17 @@ vec3 inactive(vec2 p, float fp, vec3 d, out float isIn) {
     c += vec3(0.6, 0.7, 0.9) * exp(-length(p - HOLE - vec2(-6.0, -7.0)) / 1.4) * 0.5;
     // the lit rows reflected in the lens rim
     c += ${v3c(LIN.paper)} * edge * 0.25 * litBelow(HOLE.y + HOLE_R) * newLevel;
-    return c;
-  }
-  if (p.x < 0.0 || p.x > 1080.0 || p.y < 0.0 || p.y > 2400.0) {
+    res = c;
+  } else if (p.x < 0.0 || p.x > 1080.0 || p.y < 0.0 || p.y > 2400.0) {
     isIn = 1.0;
     float dout = max(max(-p.x, p.x - 1080.0), max(-p.y, p.y - 2400.0));
     vec3 c = vec3(0.0035) * (0.8 + 0.2 * snoise(p * 0.7));
     // the frame's polished lip, ~50 px beyond the active area
     c += ${v3c(LIN.paper)} * exp(-abs(dout - 52.0) / 1.2) * 0.06;
     if (dout > 54.0) c = vec3(0.0);
-    return c;
+    res = c;
   }
-  return vec3(0.0);
+  return res;
 }
 
 // emission of the emitter plane at p (display units), with the footprint fp for filtering

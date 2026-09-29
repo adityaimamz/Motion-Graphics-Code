@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { CH, CUE } from '../cues';
 import { scanRow } from '../clock';
 import { earthDive } from './s7-orbit';
-import { city, PHONE, DESK_Y, TOWER, TOWER_H } from '../sets/city';
+import { city, cityExposure, PHONE, DESK_Y, TOWER, TOWER_H } from '../sets/city';
 import { screen } from '../sets/screen';
 import { macroCam } from './s1-layar';
 import { v3, mixCam, type Cam } from '../r3';
@@ -48,11 +48,13 @@ const s8: Chapter = {
     const r3 = ctx.r3;
     ctx.post.bloomThreshold = 1.3;
     if (t < S8.cloud) { earthDive(ctx, t, out); return; }
+    // under the cloud deck the city's exposure comes in; through the window, over the desk, it goes again
+    ctx.post.exposure = cityExposure(eIO(P(t, S8.cloud, 0.25)) * (1 - eIO(P(t, S8.window, 0.7))));
     const cityState = () => {
       const flash = t >= S8.radio ? Math.exp(-(t - S8.radio) / 0.05) : 0;
       return {
         scan: scanRow(t), glow: 0.03 + 0.35 * clamp(scanRow(t) / 2400),
-        fogD: mtrack([[56.15, 0.00022], [57.0, 0.0005], [58.0, 0.0011]], t, true), lightsGain: mtrack([[56.15, 2.2], [57.2, 1]], t),
+        fogD: mtrack([[56.15, 0.00045], [57.0, 0.0005], [58.0, 0.0008]], t, true), lightsGain: mtrack([[56.15, 2.2], [57.2, 1]], t),
         // the answer's radio wave: gone across the city inside a frame; drawn as that frame's flash
         wave: flash > 0.01 ? { origin: v3(TOWER.x, TOWER_H, TOWER.z), R: 1300, width: 900, k: 5 * flash, sheet: false } : null,
       };

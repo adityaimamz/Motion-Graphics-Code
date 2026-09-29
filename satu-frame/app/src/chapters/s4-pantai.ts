@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { CH, CUE } from '../cues';
 import { scanRow } from '../clock';
-import { city, TOWER, SHORE_Z, CABLE_X } from '../sets/city';
+import { city, cityExposure, TOWER, SHORE_Z, CABLE_X } from '../sets/city';
 import { v3 } from '../r3';
 import { camPath, type Key } from '../path';
 import { P, eIO } from '../motion';
@@ -34,11 +34,13 @@ const s4: Chapter = {
   render(t, ctx, out) {
     const cam = camPath(KEYS, t);
     city.render(ctx, cam, {
-      scan: scanRow(t), glow: 0.03, fogD: 0.0009,
+      scan: scanRow(t), glow: 0.03, fogD: 0.0005,
       cable: [1, 0.35 + 1.1 * Math.exp(-(t - T0) / 0.9)],
     }, out);
     ctx.post.bloom = 0.7;
     ctx.post.bloomThreshold = 1.2;
+    // (back to the film's exposure as the camera goes under: S5 starts there)
+    ctx.post.exposure = cityExposure(1 - eIO(P(t, 24.06, T1 - 24.06)));
     // through the frozen surface into black water, the cable's line going on down through the murk (and
     // turning to where S5's seabed camera sees it)
     const k = clamp(P(t, 24.06, 0.12));
