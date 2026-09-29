@@ -37,6 +37,19 @@ function hudAlpha(t: number) {
   return 1 - P(t, CUE.foton.hit - 0.08, 0.12);
 }
 
+/** Where the picture under the HUD is bright (0..1): lit emitters as the lens falls onto the screen (S1–S2)
+ *  and backs off it again (S9), the white phone screen in the dive (S8), Snell's window (S5). The corner's
+ *  falloff deepens there, so the readout stays legible on white without a halo on the type. */
+function backdrop(t: number) {
+  const w = (a: number, b: number) => clamp(P(t, a - 0.1, 0.1)) * (1 - clamp(P(t, b, 0.1)));
+  return Math.max(
+    w(CUE.layar.plunge[0] + 0.17, CUE.chip.layers[2]! - 0.1),
+    w(CUE.laut.rise[0] + 1.2, CUE.laut.rise[1] - 0.15) * 0.35,
+    w(CUE.pulang.window + 0.45, CUE.pulang.glass - 0.1),
+    w(CUE.foton.back[0] + 0.12, CUE.foton.back[1] - 0.12),
+  );
+}
+
 export function drawHud(c: CanvasRenderingContext2D, tt: number) {
   const a = hudAlpha(tt);
   if (a <= 0.001) return;
@@ -47,9 +60,10 @@ export function drawHud(c: CanvasRenderingContext2D, tt: number) {
   c.save();
   c.globalAlpha = a;
   // a soft corner vignette under the readout (a photographic falloff, not a halo on the type)
-  const g = c.createRadialGradient(X + 60, Y + 40, 0, X + 60, Y + 40, 520);
-  g.addColorStop(0, 'rgba(0,0,0,0.42)'); g.addColorStop(0.45, 'rgba(0,0,0,0.22)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-  c.fillStyle = g; c.fillRect(0, 0, 700, 900);
+  const bk = backdrop(tt);
+  const g = c.createRadialGradient(X + 60, Y + 40, 0, X + 60, Y + 40, 520 + 140 * bk);
+  g.addColorStop(0, `rgba(0,0,0,${0.42 + 0.4 * bk})`); g.addColorStop(0.45, `rgba(0,0,0,${0.22 + 0.4 * bk})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = g; c.fillRect(0, 0, Math.max(700, X + 60 + 520 + 140 * bk), Math.max(900, Y + 40 + 520 + 140 * bk));
   // the phone icon: 22x39 hairline, painted part above the refresh line
   const iw = 22, ih = 39, ix = X, iy = Y + 2;
   const f = clamp(row / ROWS);

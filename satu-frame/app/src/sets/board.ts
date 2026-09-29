@@ -16,10 +16,14 @@ import type { Ctx } from '../world';
 const col = (c: [number, number, number]) => new THREE.Color().setRGB(...c);
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 
-/** The request's path, SoC to the antenna feed at the gap (board mm). */
+/** The request's path, SoC to the antenna feed at the gap (board mm): trace to the RF chip, trace to J2,
+ *  through the plug into the coax, along it to J4 by the rail, down into the board and along the short
+ *  50 Ω line to the spring's pad, up the spring to the rail. */
 export const PULSE_PATH = [
   V(36, 1.16, 20), V(41.7, 0.04, 20), V(45.5, 0.04, 20), V(48.5, 0.04, 23), V(52.3, 0.04, 23), V(55, 0.64, 26),
-  V(57.2, 0.2, 22.2), V(58.5, 0.62, 18), V(58.2, 1.15, 12), V(55.2, 1.35, 5.2), V(51.6, 1.2, 1.3), V(50.9, 0.8, 0.6),
+  V(56.4, 0.04, 23.3), V(57.4, 0.04, 22.3), V(58.5, 0.04, 21.2), V(58.5, 0.06, 19.15), V(58.5, 0.62, 18), V(58.5, 0.62, 15.7),
+  V(58.2, 1.05, 12.5), V(57.4, 1.25, 9.4), V(56.4, 1.12, 6.4), V(55.46, 0.62, 3.45), V(55, 0.62, 1.2), V(53.85, 0.06, 1.2),
+  V(53.25, 0.04, 1.2), V(52.8, 0.04, 0.75), V(51.2, 0.06, 0.75), V(50.9, 0.12, 0.62), V(50.9, 0.84, -0.36),
 ];
 export const GAP_X = 49.5;
 /** Where the feed spring touches the rail, right of the gap (board mm). */
@@ -61,7 +65,7 @@ void main() {
 
 class Board {
   scene = new THREE.Scene();
-  private trail = new Trail(96);
+  private trail = new Trail(190);
   private glowA = glowSprite(LIN.ice);
   private glowB = glowSprite(LIN.ice);
   private flash = new THREE.PointLight(col(LIN.ice), 0, 30, 1.6);
@@ -100,10 +104,11 @@ class Board {
     const rnd = mulberry32(7);
     const R = (a: number, b: number) => a + (b - a) * rnd();
 
-    // board: black solder mask (glossy), FR4 edge
+    // board: black solder mask (glossy), FR4 edge; it runs right up to the frame rail (the spring's pad sits
+    // on its edge, in the antenna's keep-out: bare mask, no parts)
     const mask = new THREE.MeshStandardMaterial({ color: 0x050607, roughness: 0.3, metalness: 0.0 });
-    const pcb = new THREE.Mesh(new THREE.BoxGeometry(64, 0.8, 46), mask);
-    pcb.position.set(34, -0.4, 25);
+    const pcb = new THREE.Mesh(new THREE.BoxGeometry(64, 0.8, 48.4), mask);
+    pcb.position.set(34, -0.4, 23.8);
     pcb.receiveShadow = true;
     s.add(pcb);
 
@@ -143,6 +148,9 @@ class Board {
     }
     // the request's own route (surface trace SoC -> RF)
     ribbon([[41.7, 20], [45.5, 20], [48.5, 23], [52.3, 23], [53.4, 24.2]], 0.16);
+    // RF -> J2 (under the can's wall), and J4 -> the spring's pad: a short 50 Ω microstrip, wider
+    ribbon([[56.4, 23.3], [57.4, 22.3], [58.5, 21.2], [58.5, 19.4]], 0.16);
+    ribbon([[53.7, 1.2], [53.25, 1.2], [52.8, 0.75], [51.35, 0.75]], 0.3);
     const tg = new THREE.BufferGeometry();
     tg.setAttribute('position', new THREE.Float32BufferAttribute(tpos, 3));
     tg.computeVertexNormals();
@@ -222,13 +230,36 @@ class Board {
     frame(8, 27, 25, 43);
     frame(50, 20, 62, 33, 0.75);
 
-    // coax: connector on the board, cable up and along to the rail
-    const coaxCurve = new THREE.CatmullRomCurve3([V(58.5, 0.62, 18), V(58.4, 1.0, 14), V(57.5, 1.25, 9.5), V(55.2, 1.35, 5.2), V(52.6, 1.25, 2.2), V(51.3, 1.12, 0.9)]);
-    const coax = new THREE.Mesh(new THREE.TubeGeometry(coaxCurve, 80, 0.4, 18), new THREE.MeshStandardMaterial({ color: 0x0c0c0e, roughness: 0.5 }));
+    // coax (0.81 mm micro-coax) between two U.FL connectors: J2 by the RF chip, J4 by the rail. Each is a
+    // receptacle soldered to the board (LCP body, tinned ground tabs either side, the signal tab toward its
+    // trace) with the plug pressed on, 1.25 mm mated: a tinned shell, and the crimp ferrule the cable leaves
+    // by, sideways (the plug turns freely on the receptacle, so the cable leaves wherever it is routed).
+    const lcp = new THREE.MeshStandardMaterial({ color: 0x8c8475, roughness: 0.55 });
+    const tin = new THREE.MeshStandardMaterial({ color: 0x9a9da2, roughness: 0.3, metalness: 1.0 });
+    const part = (g: THREE.Object3D, geo: THREE.BufferGeometry, mat: THREE.Material, x: number, y: number, z: number) => {
+      const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; g.add(m); return m;
+    };
+    /** a mated U.FL at (x, z): the receptacle's signal tab toward angle `tab`, the cable leaving toward
+     *  `cable` (angles about y, 0 = +x); returns where the cable leaves the ferrule */
+    const ufl = (x: number, z: number, tab: number, cable: number) => {
+      const rec = new THREE.Group(); rec.position.set(x, 0, z); rec.rotation.y = tab + Math.PI;
+      part(rec, new THREE.BoxGeometry(2.0, 0.3, 2.0), lcp, 0, 0.15, 0);
+      for (const sz of [-1, 1]) part(rec, new THREE.BoxGeometry(1.6, 0.07, 0.4), tin, 0, 0.035, sz * 1.15);
+      part(rec, new THREE.BoxGeometry(0.45, 0.07, 0.5), tin, -1.15, 0.035, 0);
+      const plug = new THREE.Group(); plug.position.set(x, 0, z); plug.rotation.y = cable;
+      part(plug, new THREE.CylinderGeometry(0.93, 1.0, 0.72, 40), tin, 0, 0.66, 0);
+      part(plug, new THREE.TorusGeometry(0.6, 0.045, 8, 40).rotateX(-Math.PI / 2), tin, 0, 1.02, 0);
+      part(plug, new THREE.BoxGeometry(1.3, 0.72, 0.86), tin, 1.25, 0.62, 0);
+      part(plug, new THREE.CylinderGeometry(0.47, 0.47, 0.55, 24).rotateZ(Math.PI / 2), tin, 2.15, 0.62, 0);
+      s.add(rec, plug);
+      return V(x + 2.3 * Math.cos(cable), 0.62, z - 2.3 * Math.sin(cable));
+    };
+    const j2 = ufl(58.5, 18, -Math.PI / 2, Math.PI / 2);            // J2: tab toward the RF trace, cable toward the rail
+    const j4 = ufl(55, 1.2, Math.PI, Math.atan2(-0.98, 0.2));       // J4: tab toward the spring, cable back up the board
+    const coaxCurve = new THREE.CatmullRomCurve3([j2, V(58.46, 0.68, 14.9), V(58.2, 1.05, 12.5), V(57.4, 1.25, 9.4), V(56.4, 1.12, 6.4), V(55.62, 0.7, 4.4), j4]);
+    const coax = new THREE.Mesh(new THREE.TubeGeometry(coaxCurve, 120, 0.4, 18), new THREE.MeshStandardMaterial({ color: 0x0c0c0e, roughness: 0.5 }));
     coax.castShadow = coax.receiveShadow = true;
     s.add(coax);
-    const conn = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.6, 28), shieldMat);
-    conn.position.set(58.5, 0.33, 18); s.add(conn);
     // flex cable (polyimide, desaturated amber) to the display connector
     const flex = new THREE.Mesh(new THREE.BoxGeometry(9, 0.12, 14), new THREE.MeshStandardMaterial({ color: 0x3a3126, roughness: 0.45, metalness: 0.1 }));
     flex.position.set(14, 0.9, 14); flex.rotation.x = 0.06; s.add(flex);
@@ -257,14 +288,14 @@ class Board {
 
     // the pulse: trail + glows (FX layer, no depth)
     const curve = new THREE.CatmullRomCurve3(PULSE_PATH, false, 'centripetal', 0.2);
-    this.pathPts = curve.getSpacedPoints(95);
+    this.pathPts = curve.getSpacedPoints(189);
     s.add(this.trail.mesh, this.glowA, this.glowB, ...this.beads);
   }
 
   /** The silkscreen, printed in white ink on the mask: chip outlines with their pin-1 marks, outlines and
    *  reference designators for some of the passives, a few labels (U1 on the SoC, ANT1 at the feed). */
   private silkscreen(s: THREE.Scene, parts: { x: number; z: number; l: number; w: number; rot: boolean }[], kinds: number[], chips: [number, number, number, number][], rnd: () => number) {
-    const PX = 40, X0 = 2, Z0 = 2, Wmm = 64, Hmm = 46;
+    const PX = 40, X0 = 2, Z0 = -0.4, Wmm = 64, Hmm = 48.4;
     const c = document.createElement('canvas');
     c.width = Wmm * PX; c.height = Hmm * PX;
     const x = c.getContext('2d')!;
@@ -296,7 +327,9 @@ class Board {
       }
     });
     x.font = `600 ${0.8 * PX}px IT`;
-    { const [tx, tz] = P(52.6, 2.4); x.fillText('ANT1', tx, tz); }
+    { const [tx, tz] = P(51.3, 2.4); x.fillText('ANT1', tx, tz); }
+    { const [tx, tz] = P(56.35, 1.55); x.fillText('J4', tx, tz); }
+    { const [tx, tz] = P(59.8, 18.6); x.fillText('J2', tx, tz); }
     { const [tx, tz] = P(9.8, 20.4); x.fillText('J3', tx, tz); }
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.NoColorSpace; t.anisotropy = 8;

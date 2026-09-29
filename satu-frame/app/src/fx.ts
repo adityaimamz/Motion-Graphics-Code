@@ -93,8 +93,9 @@ let waterPass: FSPass | null = null;
  * from screen point a to b (uv, 0..1 from the bottom left), fading into the murk toward b. Laid over `out`
  * with presence k: it carries the line from the surface down to where the seabed takes it.
  */
-export function underwater(renderer: THREE.WebGLRenderer, out: THREE.WebGLRenderTarget, k: number, a: [number, number], b: [number, number]) {
+export function underwater(renderer: THREE.WebGLRenderer, out: THREE.WebGLRenderTarget, k: number, a: [number, number], b: [number, number], crisp = false) {
   if (k <= 0.001) return;
+  if (crisp) { fibreLine(renderer, out, k, a, b); return; }
   if (!waterPass) {
     waterPass = new FSPass(/* glsl */ `
       uniform float k; uniform vec2 a, b; uniform vec3 ice;
@@ -113,6 +114,30 @@ export function underwater(renderer: THREE.WebGLRenderer, out: THREE.WebGLRender
   const u = waterPass.u;
   u.k!.value = Math.min(1, k); (u.a!.value as THREE.Vector2).set(...a); (u.b!.value as THREE.Vector2).set(...b);
   waterPass.render(renderer, out);
+}
+
+/** The landing (S5 → S6): the same murk, but the fibre as it is, one hairline (±1.5 px) with a tight glow and
+ *  the murk's soft scatter around it (a separate program: the plain one above stays exactly as it was). */
+let linePass: FSPass | null = null;
+function fibreLine(renderer: THREE.WebGLRenderer, out: THREE.WebGLRenderTarget, k: number, a: [number, number], b: [number, number]) {
+  if (!linePass) {
+    linePass = new FSPass(/* glsl */ `
+      uniform float k; uniform vec2 a, b; uniform vec3 ice;
+      void main() {
+        vec2 p = vUv * vec2(${(1080 / 1920).toFixed(4)}, 1.0), pa = a * vec2(${(1080 / 1920).toFixed(4)}, 1.0), pb = b * vec2(${(1080 / 1920).toFixed(4)}, 1.0);
+        vec2 ab = pb - pa; float h = clamp(dot(p - pa, ab) / dot(ab, ab), 0.0, 1.0);
+        float d = length(p - pa - ab * h);
+        float along = 1.0 - h;                               // brighter near the lens, lost in the murk far off
+        float beam = (exp(-d * d / 6e-7) + 0.22 * exp(-d * d / 2.5e-5)) * (0.45 + 0.55 * along);
+        vec3 c = vec3(0.0006, 0.0014, 0.004) + ice * (beam * 0.9 + 0.02 * exp(-d / 0.05) * (0.3 + 0.7 * along));
+        fragColor = vec4(c * k, k);
+      }`, { k: { value: 0 }, a: { value: new THREE.Vector2() }, b: { value: new THREE.Vector2() }, ice: { value: new THREE.Vector3(...LIN.ice) } }, { blending: THREE.CustomBlending, transparent: true });
+    const m = linePass.mat;
+    m.blendEquation = THREE.AddEquation; m.blendSrc = THREE.OneFactor; m.blendDst = THREE.OneMinusSrcAlphaFactor;
+  }
+  const u = linePass.u;
+  u.k!.value = Math.min(1, k); (u.a!.value as THREE.Vector2).set(...a); (u.b!.value as THREE.Vector2).set(...b);
+  linePass.render(renderer, out);
 }
 
 /** An additive glow sprite in a linear colour. */

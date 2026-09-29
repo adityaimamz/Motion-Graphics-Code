@@ -4,11 +4,11 @@
 // the answer leaves, and a powers-of-ten pull-out climbs from the die to orbit (S7).
 import * as THREE from 'three';
 import { CH, CUE, BEAT } from '../cues';
-import { datacenter, TARGET, RACK } from '../sets/datacenter';
+import { datacenter, TARGET, RACK, TRAY_Y } from '../sets/datacenter';
 import { die } from '../sets/die';
 import { earthPull } from './s7-orbit';
 import { captionBand } from '../hud';
-import { v3, type Cam } from '../r3';
+import { v3, applyCam, type Cam } from '../r3';
 import { camPath, mtrack, type Key } from '../path';
 import { P, eIO } from '../motion';
 import { underwater } from '../fx';
@@ -16,9 +16,17 @@ import { clamp } from '../engine/util';
 import type { Chapter } from '../world';
 
 const [T0] = CH.server;
-/** The hand-off from the seabed (S5): the lit fibre on screen (uv from the bottom left, near end A, far end
- *  B) where it runs along the aisle's cable tray at T0, and how long the murk takes on either side. */
-export const FIBRE_A: [number, number] = [1.04, 0.69], FIBRE_B: [number, number] = [0.76, 0.75];
+/** The hand-off from the seabed (S5): the lit fibre on screen (uv from the bottom left) where it runs along
+ *  the aisle's cable tray, its near end A (never behind the lens) and far end B, as the aisle camera sees it
+ *  at t. The line in the murk follows it, so it stays on the real fibre as the camera moves. */
+const _pc = new THREE.PerspectiveCamera();
+export function fibreOnScreen(t: number): [[number, number], [number, number]] {
+  const cam = camPath(AISLE, t);
+  applyCam(_pc, cam);
+  const f = (z: number): [number, number] => { const p = v3(RACK.aisle + 0.4, TRAY_Y + 0.05, z).project(_pc); return [(p.x + 1) / 2, (p.y + 1) / 2]; };
+  return [f(Math.min(1, cam.pos.z - 0.6)), f(TARGET.z + 0.2)];
+}
+/** how long the murk takes on either side of the hand-off (s) */
 export const LANDING = 0.35;
 const S = CUE.server;
 const C0 = S.clock0, TICKS = S.ticks;
@@ -57,7 +65,8 @@ const s6: Chapter = {
     if (t < 38.75) {
       datacenter.render(ctx, camPath(AISLE, t), fibK, out);
       // out of the landing's dark along the fibre (S5 hands it over here)
-      underwater(ctx.renderer, out, 1 - eIO(P(t, T0, LANDING + 0.15)), FIBRE_A, FIBRE_B);
+      const [A, B] = fibreOnScreen(t);
+      underwater(ctx.renderer, out, 1 - eIO(P(t, T0, LANDING + 0.15)), A, B, true);
       return;
     }
     if (t < 38.95) {           // into the server's bezel: the aisle gives way to the processor

@@ -36,6 +36,8 @@ Penyimpangan (disengaja):
 - *(berubah)* **Warna kampung** hanya sebagai material: dinding kapur pucat dan cat pudar, atap genteng tanah liat, seng berkarat, dan semen. Ditambah toren oranye/biru/abu, gerbang besi hijau tua/hitam, dan jemuran berwarna pudar, semuanya diredam.
 - *(berubah)* **Cahaya layar HP di kamar** putih dingin (D65, `SCREEN_WHITE`), lebih dingin dari lampu mana pun di luar. Dinding kamar dicat putih pucat netral, sehingga kamar terbaca dingin di samping fasad yang hangat.
 - *(berubah)* **Coating serat biru** (serat nomor 1 dalam kode warna TIA-598) hanya sebagai material dinding terowongan di S5. Masih keluarga biru brand.
+- *(baru)* **Air Selat Singapura** dan pendar langit malam di jendela Snell (S5 akhir): biru-batu keruh yang diredam, dari pendar kota hangat-netral yang sama dengan S3 setelah disaring air. Hanya sebagai cahaya adegan.
+- *(baru)* **Konektor LC biru** di port server (S6): biru adalah kode warna konektor single-mode UPC, jadi keluarga biru brand ini memang ada di dunia nyata. Hanya sebagai material.
 - **Meja kayu walnut yang hampir hitam** (S3 awal, S8 akhir, S9) dan **keramik kapasitor coklat-krem** di papan (S2) hanya sebagai material.
 
 Tipografi:
@@ -53,6 +55,8 @@ Satu kalimat utama di layar. Area aman: y 250–1570, x 150–930.
    - `×…` (tepat untuk segmen fisika, 3 angka penting untuk sisanya).
 
    Hilang saat white-out, kembali saat keluar-loop dengan nilai frame berikutnya (`0,000 000 ms`).
+
+   *(berubah)* Di tempat gambar di bawah HUD terang, vinyet sudutnya menebal dan melebar, tanpa halo atau outline pada huruf. Tempat itu: emitor menyala saat lensa jatuh ke layar (S1 akhir–S2 awal) dan saat mundur darinya (S9), layar HP putih dalam tukikan S8, dan jendela Snell (S5, lebih ringan). Rentangnya diturunkan dari cue yang ada. Di luar rentang itu HUD identik per piksel.
 2. **Garis refresh = jam tersembunyi.** 2.400 baris dalam 16,0 ms, lalu blanking sampai 16,667. Terlihat di:
    - S1 (baris 0 → 45);
    - S2 (baris transistor yang menyala: "transistor · baris 61");
@@ -104,7 +108,12 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
 - **Gerak:** turun lurus menembus lapisan, satu per ketukan, dengan roll pelan: kaca → jaring logam sensor sentuh → emitor → backplane TFT (garis gate yang sedang di-scan menyala biru) → substrat → pelat belakang. Lapisan di bawah emitor sengaja direnggangkan (skala aslinya mikron) supaya terbaca.
 - **Papan sirkuit (mm):** solder mask hitam, jalur tembaga 45°, pad & via emas, ratusan pasif 01005/0201/0402, SoC package-on-package, kaleng pelindung terbuka, koaksial ke rel aluminium. Satu lampu kunci rendah dengan bayangan nyata, DOF makro. *(berubah)* Pasif sesuai jenisnya: kapasitor MLCC keramik coklat-krem, resistor bertutup hitam, beberapa induktor gelap. Sablon putih di atas mask: garis tepi chip dengan tanda pin-1, garis tepi dan kode komponen (C…, R…, L…, U1, J3, ANT1), tiga fiducial emas.
 - **Backplane TFT** *(berubah)*: garis gate/data logam Mo/Al abu-perak, pulau silikon transistor, pelat kapasitor, elektroda piksel ITO berkilau samar di atas kaca gelap (bukan coklat).
-- **10,3125:** permintaan lahir. Kilat biru di jalur SoC → RF → koaksial → titik umpan antena sekaligus (pada ×18.700 listrik tetap instan), lalu memudar. Kamera whip mengikuti jejaknya. *(berubah)* Titik umpan (pegas emas yang menyentuh rel) **tetap menyala biru**: antena masih memancar sepanjang bab ini (satu slot kirim 0,5–1 ms = 9–18 s film).
+- *(berubah)* **Koaksial punya dua ujung yang nyata.** Kabel mikro-koaksial 0,81 mm menghubungkan dua konektor U.FL:
+  - J2 di dekat chip RF, dan J4 di dekat rel;
+  - masing-masing berupa receptacle (badan LCP, tab ground timah di kedua sisi, tab sinyal menghadap jalurnya) dengan steker terpasang (cangkang timah, ferrule crimp tempat kabel keluar menyamping), tinggi 1,25 mm.
+
+  Dari J4, jalur microstrip 50 Ω yang pendek menuju pad pegas antena. Papan kini memanjang sampai rel (dulu pad pegas melayang di luar tepi papan). Sablon: `J2`, `J4`, `ANT1`.
+- **10,3125:** permintaan lahir. Kilat biru di jalur SoC → RF → J2 → koaksial → J4 → jalur → pegas → titik umpan antena sekaligus (pada ×18.700 listrik tetap instan), lalu memudar. Kamera whip mengikuti jejaknya. *(berubah)* Titik umpan (pegas emas yang menyentuh rel) **tetap menyala biru**: antena masih memancar sepanjang bab ini (satu slot kirim 0,5–1 ms = 9–18 s film).
 - **Transisi keluar** *(berubah)*: celah antena adalah lorong nyata selebar 1,5 mm. Plastik pengisinya mundur 0,6 mm dari muka rel, dan tepi celah dibevel. Lensa melebar (50° → 84°) saat masuk. Dinding aluminium tersikat disinari biru dari titik umpan. Di ujung lorong, plastik tembus cahaya berpendar biru tua dengan satu sudut bocor terang di sisi umpan. Kamera menembus pendar itu (kabut biru tua, bukan layar hitam), lalu keluar ke ruangan.
 - **SFX:** 4 hit lapisan, dengung papan, zap kelahiran, whoosh whip kiri→kanan, klik celah.
 
@@ -180,12 +189,25 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
 - *(berubah)* Kabel selalu terbaring di atas dasar laut (di sepanjang kabel dasarnya tergerus), jadi kamera yang turun ke kabel tidak pernah masuk ke dalam pasir.
 - **28,6–30:** kabel terkupas lapis demi lapis (selubung PE → kawat baja heliks → tembaga → tabung baja) sampai berkas serat. *(berubah)* Tepi potongan setiap lapisan menangkap cahaya yang keluar dari dalam. Kawat baja, tembaga, dan tabung punya kilap sendiri. Selubung berpendar biru di sekitar paket. Serat-serat yang gelap tetap tampak sebagai untaian kaca bening (kilau dan tepi Fresnel dari cahaya paket), bukan batang hitam.
 - **30–34,5:** **di dalam satu serat.** Inti menyala (mode ±10,4 µm, sedikit melampaui inti) dengan riak halus sepanjang gelombang di kaca. Dinding kelongsong memantulkannya secara total, sehingga inti tampak berulang. Orbit pelan mengelilingi inti. *(berubah)* Terowongannya kini terbaca:
-  - dari luar, serat adalah batang biru tembus cahaya (coating akrilat serat nomor 1) dengan kilau Fresnel dan inti yang menyala di dalamnya;
+  - dari luar, serat adalah batang biru tembus cahaya (coating akrilat serat nomor 1) dengan inti yang menyala di dalamnya. *(berubah)* Dulu terbaca sebagai baji datar, karena kilau Fresnel memantulkan "lingkungan" berwarna rata di seluruh batang. Sekarang bentuk silindernya terbaca dari cahayanya sendiri:
+    - gel di sekeliling gelap, jadi kilau luarnya samar;
+    - cangkang coating berpendar paling terang di tempat garis pandang menyinggung kaca (tali busur terpanjang);
+    - kaca paling terang di tengah;
+    - ketiga batas lapisan (kaca 125 µm, coating primer lunak ±190 µm, coating sekunder keras 250 µm) tampak sebagai garis-garis tipis sejajar, karena sinar yang menyinggungnya terpantul sepanjang batas itu.
+
+    Garis-garis itu menyempit ke titik hilang, sehingga batangnya terbaca sebagai silinder berlapis. Hanya batas di depan lensa yang digambar (tidak ada silang bintang);
   - dari dalam, muka dalam coating menjadi dinding tabung yang berpendar lembut oleh cahaya yang dihamburkan kaca dari mode (hamburan Rayleigh). Dinding lebih terang ke arah titik hilang, karena dilihat menyerempet, jalur cahaya di lapisan buram itu lebih panjang.
 
   Dulu ruang hitam dengan dua berkas yang terbaca seperti sinar laser.
-- **34,5–37,5:** kembali ke skala kabel. Dasar laut naik, cahaya dari atas mulai terasa (mendekati Singapura). *(berubah)* Air berangsur terang ke biru-batu, riak pasir tersinari dari atas, dan ada berkas cahaya miring yang samar (membeku seperti yang lain).
-- **Transisi keluar** *(berubah, dulu cut keras)*: pada 0,35 s terakhir kamera mengikuti serat yang menyala naik ke stasiun pendaratan. Air keruh menutup, garis biru berayun ke tempat serat itu menyusuri baki kabel di lorong S6, lalu lorong terbuka di sekelilingnya.
+- **34,5–37,5:** kembali ke skala kabel. Dasar laut naik dan air mendangkal dari ±40 m ke 7,5 m (mendekati Singapura). *(berubah lagi)* Riak pasir melintang dan berkas cahaya miring dihapus:
+  - Kamera ikut paket ±1,27 km per frame, jadi motion blur menghapus pola apa pun yang melintang arah gerak.
+  - Adegannya malam, jadi berkas ala matahari tidak punya sumber.
+
+  Gantinya, semua yang tahan kecepatan dan punya sumber:
+  - **Cahaya dari atas:** pendar langit malam Singapura (hangat-netral, sama dengan S3), meredup eksponensial dengan kedalaman dan disaring air Selat yang keruh (merah terserap lebih dulu). Air berangsur terang ke biru-batu. Eksposur lensa membuka pelan mengikutinya (paket tetap yang paling terang). Lensa juga diperkecil bukaannya supaya dasar laut dekat tetap tajam.
+  - **Pita pasir memanjang** (35,2 dan seterusnya): pasir pucat di atas kerikil-cangkang gelap, sejajar arus pasang Selat (kabel diletakkan sepanjang selat), dengan lineasi halus searah arus. Polanya berubah per kilometer, bukan diulang per 5 km, sehingga di MP4 ia bergeser pelan dari frame ke frame dan tidak berkedip. Kabel yang menyala berbaring di alurnya.
+  - **Jendela Snell** (±36,7 dan seterusnya): kamera mendongak (pitch sampai ±33°, lensa melebar 54° → 72°). Di atas, seluruh langit terkumpul dalam lingkaran 97°, paling terang di dekat tepinya (tempat cakrawala mendarat) dan ke arah Singapura. Di luar sudut kritis 48,6°, permukaan adalah cermin gelap (pantulan total). Tepinya sedikit bergelombang oleh alun beku yang puncaknya sejajar selat. Lingkaran ini bergerak bersama kamera, jadi tetap tajam di MP4.
+- **Transisi keluar** *(berubah, dulu cut keras; berubah lagi)*: pada 0,35 s terakhir, air keruh menutup dan serat yang menyala naik dari kabel di bawah frame. Garisnya setipis rambut (±1,5 px, cahaya ketat dan hamburan air yang lembut), bukan batang buram seperti dulu. Titik awalnya diproyeksikan dari kabel yang sebenarnya, lalu berayun ke posisi serat di baki kabel S6. Di S6, garis yang sama mengikuti proyeksi serat baki per frame sampai air hilang, jadi tidak ada garis ganda.
 - **SFX:** hamparan tekanan bawah air, desir paket, ping penguat yang naik nadanya tiap kali, sapuan kupas, nada kaca tinggi, riser.
 
 ### S6 · Server · 37,5 – 46,875
@@ -195,7 +217,12 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
   - 40,78 – 43,0: **Beat ini = jam prosesor.**
 - **Label:** `3 GHz ÷ 1.406.250.000 = 128 BPM`.
 - **Frame kunci:**
-  - Lorong dingin pusat data: rak hitam dengan LED putih (satu biru), lantai berlubang, lampu strip. Serat biru di baki kabel masuk ke satu server.
+  - Lorong dingin pusat data: rak hitam dengan LED putih (satu biru), lantai berlubang, lampu strip. Serat biru di baki kabel masuk ke satu server. *(berubah)* Dulu abu-abu monoton: lantai terang rata dan bercak cahaya di plafon dari lampu titik tanpa sumber. Sekarang semua cahaya berasal dari benda di ruangan:
+    - dua luminer strip memancar ke bawah (lampu area), sehingga plafon di atasnya tetap gelap;
+    - lantai naik berupa laminasi HPL gelap yang agak mengkilap (ubin berlubang di depan rak tempat udara dingin naik, ubin polos di tengah). Lantai memantulkan strip dan LED memanjang di sepanjang lorong, dari cube map lorong itu sendiri yang ditangkap sekali;
+    - di ujung lorong ada pintu kaca containment berbingkai aluminium, dengan LED lorong berikutnya samar di baliknya;
+    - serat patch yang menyala turun dari baki melewati tepi atas rak, menyusuri mukanya, lalu masuk ke port server lewat sangkar SFP dan **konektor LC biru** (single-mode UPC);
+    - LED aktivitas port menyala biru sejak paket kita tiba (pulsa LED ±50 ms bertahan ±5 menit film pada ×5.840, jadi menyala sepanjang bab).
   - Menembus bezel ke prosesor: substrat dengan kapasitor, lalu die telanjang (blok inti, cache, baris sel).
   - 38,9: tape-stop.
   - 39,375–43,125, 8 ketukan: **H-tree jam** (12 level). Di setiap ketukan, sisi jam menyala dari akar ke cabang, ±18 ms film per level (≈ 13 ps nyata), lalu flip-flop di ujungnya menyala. *(berubah)* Semua level digambar utuh sekaligus, jadi batang pohon lurus bersih (dulu tergigit cabang halus).
@@ -216,6 +243,7 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
 - **Frame kunci:**
   - ±900 km di atas Selat Malaka, menghadap tenggara (pitch ±40°). Lampu malam asli (NASA Black Marble): Jawa di dekat cakrawala, Sumatra di kanan, Singapura di bawah, pinggiran atmosfer biru tua di atas.
   - **Benang biru** rute kabel dengan **kepala pulsa** yang merambat naik dengan kecepatan fisik (996 km dalam 4,9 ms).
+  - *(berubah)* **Jakarta di bawah awan hujan**, menyambung dengan dek awan yang dimasuki S8 (dulu Jakarta tampak cerah dan tajam dari orbit, lalu mendadak berawan di tukikan). Dek hujan setebal beberapa km tidak meneruskan cahaya lurus, tapi secara difus (±15–40 %, bukan e^−τ) dan menyebarkannya ke samping sejauh tebal deknya. Kota di bawahnya jadi satu pendar hangat yang lembut, berbintik mengikuti sel-sel konvektif (±15–20 km: tipis lebih terang, inti tebal lebih redup). Lampu tajam hanya tampak di celah awan. Berlaku di skala orbit saja (> ±0,08 km/px), sehingga tukikan S8 di bawah itu identik.
   - 52,5: kamera mulai menukik ke Jakarta.
 - **SFX:** nada tinggi tipis untuk kepala pulsa, bell pada "Tiap klik".
 
@@ -307,6 +335,18 @@ Yang baru:
   - **Dasar laut**: iluminasi sumber garis analitik (selisih atan / r) untuk permukaan; hamburan air tetap memakai model lama supaya air tetap gelap.
   - **Serat**: coating (r 125 µm) sebagai cangkang tembus cahaya dari luar dan dinding buram yang berpendar dari dalam.
   - **Bumi**: `cityGrain` (distrik Voronoi 4 km, grid jalan per distrik, jalan tol dari isoline noise, taman) pada fp 0,03–0,5 km/px.
+- **Revisi koaksial–Singapura** *(baru)*:
+  - **Varian shader yang menjaga frame lama.** Kode baru yang dipasang di shader bersama membuat kompiler D3D mengurutkan ulang aritmetika, sehingga frame yang tak disentuh bergeser 1 LSB. Karena itu kode baru ditaruh di varian program sendiri (`#if`), dan varian lama adalah shader asli persis:
+    - `seabed` polos / `up` (dipilih bila `rise` atau `surf` > 0);
+    - `fiber` dalam / luar kaca (dipilih dari posisi kamera);
+    - `underwater` / `fibreLine` (garis serat serah terima).
+  - **Papan** (`board.ts`): `ufl()` membangun receptacle + steker. Kabel `TubeGeometry` di antara ferrule J2 dan J4. `PULSE_PATH` lewat kedua konektor, jalur, dan pegas. Jejak pulsa 190 titik supaya tikungan di konektor tetap tajam.
+  - **Dasar laut** `up`: `surfD` (kedalaman permukaan), `sKm` (jarak rute dalam km tanpa modulo, untuk pola pita pasir), atenuasi per kanal (`KC` pancaran, `KD` difus), refraksi dan Fresnel air–udara per piksel (jendela Snell), `upK()` (eksposur yang membuka). Kamera: pitch, fov, fokus, dan bukaan punya trek sendiri di 35,2–37,5.
+  - **Serah terima serat**: `cableOnScreen()` (S5) dan `fibreOnScreen()` (S6) memproyeksikan kabel atau serat yang sebenarnya ke layar setiap frame. Konstanta `FIBRE_A/B` dihapus.
+  - **Serat luar**: parameter tumbukan transversal → tali busur cangkang analitik + garis batas lapisan (125/190/250 µm) yang hanya dihitung untuk singgungan di depan lensa. Kilau luar diredam ke 15 %.
+  - **Bumi**: pada fp > 0,08 km/px, cahaya kota di bawah awan diambil dari mip ±12 km dan dikalikan transmisi difus `1 / (1 + 0,1125 τ)`, dengan τ dari sel konvektif (`fbm` ±18 km).
+  - **HUD**: `backdrop(t)` dari cue (`layar.plunge`, `chip.layers`, `laut.rise`, `pulang.window/glass`, `foton.back`) → vinyet sudut lebih gelap dan lebar.
+  - **Pusat data**: `RectAreaLight` per luminer, lantai HPL (roughness 0,2–0,28, metalness 0) dengan `envMap` dari `CubeCamera` sekali di `init`, pintu containment, LED lorong seberang, sangkar SFP + LC + LED aktivitas, serat patch lewat muka rak.
 - **Peringatan kompiler shader** *(dibereskan)*:
   - X4000: satu `return` per fungsi di screen, die, dan earth;
   - X3577: pengaman NaN memakai bit (`floatBitsToUint`), karena kompiler D3D membuang `isnan()`;
@@ -356,6 +396,15 @@ Yang baru:
 | Cahaya paket jatuh ±1/r ke dasar laut | sumber garis sepanjang 80 m: iradiansi ∝ sudut yang dibentang ÷ jarak |
 | Dari orbit, kota terbaca sebagai jaringan jalan | foto malam dari ISS. Data Black Marble 500 m tidak memuatnya, jadi ditambahkan prosedural dengan rata-rata cahaya dijaga |
 | Layar HP menerangi plafon | layar ±500 nit seluas ±0,01 m² ≈ ±5 cd tegak lurus ke atas → ±1 lux di plafon 2,5 m di atasnya. Terang di dalam gambar sedikit dilebihkan supaya kamar terbaca |
+| Koaksial antena HP berujung di konektor U.FL, lalu jalur pendek ke kontak pegas | U.FL (Hirose): tinggi terpasang maks. 1,25 mm, untuk kabel mikro-koaksial 0,81/1,13 mm, steker bisa berputar di receptacle. Jalur RF di papan adalah microstrip 50 Ω |
+| Di S5 hanya pola memanjang yang terbaca | kamera ikut paket: 204.000 km/s ÷ 2.670 = ±76 km per detik film = ±1,27 km per frame. Pola melintang terhapus motion blur |
+| Pita pasir di Selat Singapura sejajar arus | arus pasang kuat di selat membentuk bentuk dasar memanjang (pita pasir, alur) sejajar arus. Kabel diletakkan sepanjang selat |
+| Jendela Snell 97° | sudut kritis air–udara arcsin(1/1,333) = 48,6°, jadi seluruh langit terlihat dalam kerucut 2 × 48,6° = 97,2°. Di luarnya permukaan memantul penuh. Radiansi yang masuk air naik n² = 1,78 |
+| Cahaya dari atas melemah dengan kedalaman, merah lebih dulu | atenuasi difus air pesisir yang keruh ±0,1–0,3 /m, paling besar di merah |
+| Awan hujan dari orbit menjadi pendar lembut kota | transmisi difus awan tebal ≈ 1 / (1 + 0,75 τ (1 − g)), g ≈ 0,85: pada τ 10–60 sekitar 15–45 %, bukan e^−τ. Cahaya disebar ke samping sejauh tebal awan (beberapa km) |
+| Coating serat dua lapis | coating primer lunak ±190 µm dan sekunder keras 245–250 µm di atas kaca 125 µm |
+| Konektor LC biru | kode warna konektor: biru = single-mode UPC, hijau = APC, krem/aqua = multimode |
+| LED aktivitas port menyala sepanjang lorong | pulsa LED aktivitas ±50 ms × 5.840 = ±5 menit film |
 
 Penyederhanaan yang disadari:
 - Kamera terbang lebih cepat daripada yang mungkin secara fisik.
@@ -365,3 +414,6 @@ Penyederhanaan yang disadari:
 - Rute kabel bukan kabel bernama.
 - Tanggul, kampung, dan kamar bersifat generik (bukan alamat nyata); detail kampung hanya dipasang di tempat kamera lewat dekat.
 - Tetes di S3 dan butir hujan beku lainnya tidak jatuh 12 cm selama 13 ms antara S3 dan S8 (medan hujan yang sama dipakai di kedua bab).
+- S5 akhir: eksposur lensa membuka ±28× saat cahaya dari atas datang (mata dan kamera beradaptasi; di air 8 m pada malam hari aslinya jauh lebih gelap). Pita pasir ±3 m lebih sempit daripada pita pasir besar di selat (puluhan–ratusan m), supaya terbaca dari ketinggian kamera.
+- Serat dari luar: di kabel asli serat terendam gel (indeks mendekati kaca, sehingga tepinya hampir tak terlihat). Potongan ini diperlakukan di udara, seperti adegan kupas. Garis batas lapisan ditegaskan.
+- Pusat data dan tata letak lorong bersifat generik.

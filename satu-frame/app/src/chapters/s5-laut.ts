@@ -2,17 +2,18 @@
 // second of film: the floor streaks, anything on the cable passes inside one frame). Every 2 beats the
 // packet crosses an amplifier: a flash, its light restored (sawtooth). The cable peels open layer by layer
 // into the one lit fibre; inside the glass the core glows, repeated around the wall by total internal
-// reflection. Out again, and the floor rises toward Singapore's lights (S6).
+// reflection. Out again, and the strait shallows toward Singapore: the night sky's glow gets down to pale
+// sand ribbons, the lens looks up into Snell's window, and the fibre rises into the landing (S6).
 import * as THREE from 'three';
 import { CH, CUE } from '../cues';
 import { ms } from '../clock';
 import { seabed } from '../sets/seabed';
 import { fiber } from '../sets/fiber';
-import { v3, type Cam } from '../r3';
+import { v3, applyCam, type Cam } from '../r3';
 import { track, vtrack } from '../path';
 import { P, eOut, eIO } from '../motion';
 import { underwater } from '../fx';
-import { FIBRE_A, FIBRE_B, LANDING } from './s6-server';
+import { fibreOnScreen, LANDING } from './s6-server';
 import { clamp } from '../engine/util';
 import type { Chapter } from '../world';
 
@@ -37,11 +38,26 @@ const X: K[] = [[T0, 0.6], [25.3, 0.9], [26.25, -0.7], [27.2, 0.3], [28.1, 0.25]
 const Y: K[] = [[T0, 7.0], [25.3, 1.2], [26.25, 0.5], [27.2, 2.4], [28.1, 0.35], [28.6, 0.07], [29.3, 0.036], [29.95, 0.0309]];
 const BEHIND: K[] = [[T0, 16], [25.3, 12], [26.25, 8], [27.2, 10], [28.1, 5], [28.6, 3], [29.95, 2.5]];
 const LOOK: [number, THREE.Vector3][] = [[T0, v3(0, 0, -14)], [25.3, v3(0, 0.1, -12)], [26.25, v3(0, 0.05, -10)], [27.2, v3(0, 0, -9)], [28.1, v3(0, 0.03, -5)], [28.6, v3(0, 0.03, -3)], [29.3, v3(0.001, 0.031, -0.3)], [29.95, v3(0.0011, 0.0306, -0.02)]];
-// the way out (33.75 on): ride higher as the floor rises toward Singapore
+// the way out (33.75 on): ride higher as the floor rises toward Singapore, and look up (the lens widening)
+// to the light overhead: Snell's window, with the lit cable still running along the floor below
 const X2: K[] = [[34.7, 0.0015], [35.2, 0.4], [36.4, 0.9], [37.5, 0.5]];
-const Y2: K[] = [[34.7, 0.0309], [35.2, 0.8], [36.4, 2.2], [37.5, 3.4]];
+const Y2: K[] = [[34.7, 0.0309], [35.2, 0.8], [36.4, 1.3], [37.5, 1.9]];
 const B2: K[] = [[34.7, 2.5], [35.2, 9], [37.5, 14]];
-const LOOK2: [number, THREE.Vector3][] = [[34.7, v3(0.0011, 0.0306, -0.02)], [35.2, v3(0, 0.1, -10)], [37.5, v3(0, 2.5, -20)]];
+const LOOK2: [number, THREE.Vector3][] = [[34.7, v3(0.0011, 0.0306, -0.02)], [35.2, v3(0, 0.1, -10)], [36.3, v3(0, 1.4, -16)], [36.8, v3(0.15, 4.6, -18)], [37.15, v3(0.3, 14.7, -20)], [37.5, v3(0.4, 15.2, -20)]];
+const FOV2: K[] = [[36.2, 54], [37.2, 72]];
+// the lens stops down as the light comes (the floor streaks stay sharp near the lens)
+const FOC2: K[] = [[35.6, Math.min(track(B2, 35.6), 12)], [36.4, 6]];
+const AP2: K[] = [[35.6, 10], [36.4, 3]];
+/** the water's depth over the floor at the camera (m): the strait shallows toward the landing */
+const surfDepth = (surf: number) => 40 * Math.pow(7.5 / 40, surf);
+
+const _pc = new THREE.PerspectiveCamera();
+/** The lit cable on screen (uv from the bottom left): a point just ahead of the lens and one far along it. */
+function cableOnScreen(cam: Cam): [[number, number], [number, number]] {
+  applyCam(_pc, cam);
+  const f = (z: number): [number, number] => { const p = v3(0, 0.03, z).project(_pc); return [(p.x + 1) / 2, (p.y + 1) / 2]; };
+  return [f(-1.5), f(-60)];
+}
 
 function seabedAt(t: number): { cam: Cam; behind: number } {
   const out = t >= 34.7;
@@ -49,7 +65,7 @@ function seabedAt(t: number): { cam: Cam; behind: number } {
   const look = vtrack(out ? LOOK2 : LOOK, t);
   const pos = v3(x, y, 0);
   const near = y < 0.1;
-  return { cam: { pos, look, fov: near ? 60 : 54, focus: near ? Math.max(0.004, pos.distanceTo(look) * 0.35) : Math.min(behind, 12), ap: near ? 6 : 10 }, behind };
+  return { cam: { pos, look, fov: near ? 60 : out ? track(FOV2, t) : 54, focus: near ? Math.max(0.004, pos.distanceTo(look) * 0.35) : out && t > 35.6 ? track(FOC2, t) : Math.min(behind, 12), ap: near ? 6 : out ? track(AP2, t) : 10 }, behind };
 }
 
 // inside the fibre (µm): in through the cladding, a slow orbit around the core, then back out
@@ -75,7 +91,7 @@ const s5: Chapter = {
       const peel = t < 33 ? clamp(P(t, L.peel[0], L.peel[1] - L.peel[0])) : 1 - clamp(P(t, 34.5, 0.7));
       seabed.render(ctx, cam, {
         sCam, headZ: -behind, pLen: 80, pK: pk.pK * 1.4, repA, repB, flash: pk.flash,
-        peel, surf: clamp(P(t, 35.6, 1.9)), rise: clamp(P(t, 35.2, 2.3)) * 0.8,
+        peel, surf: clamp(P(t, 35.6, 1.9)), rise: clamp(P(t, 35.2, 2.3)) * 0.8, surfD: surfDepth(clamp(P(t, 35.6, 1.9))),
       }, target);
     };
     const drawFiber = (target: THREE.WebGLRenderTarget) => fiber.render(ctx, fiberCam(t), { pK: pk.pK, phase: t * 0.9, flash: pk.flash }, target);
@@ -87,8 +103,12 @@ const s5: Chapter = {
       underwater(ctx.renderer, out, 1 - eOut(P(t, T0, 0.55)), [0.33, -0.05], [0.52, 0.55]);
       // the landing: the camera follows the lit fibre up out of the water and into the building; the murk
       // closes in and the line swings to where it runs along the aisle's cable tray (S6 opens around it)
+      // (the line starts on the cable itself, below the frame as the lens looks up at the light, and rises)
       const k = eIO(P(t, T1 - LANDING, LANDING)), s = eIO(P(t, T1 - LANDING * 0.8, LANDING * 0.8));
-      underwater(ctx.renderer, out, k, [0.46 + (FIBRE_A[0] - 0.46) * s, -0.05 + (FIBRE_A[1] + 0.05) * s], [0.5 + (FIBRE_B[0] - 0.5) * s, 0.33 + (FIBRE_B[1] - 0.33) * s]);
+      if (k > 0.001) {
+        const [A, B] = cableOnScreen(seabedAt(t).cam), [FA, FB] = fibreOnScreen(T1);
+        underwater(ctx.renderer, out, k, [A[0] + (FA[0] - A[0]) * s, A[1] + (FA[1] - A[1]) * s], [B[0] + (FB[0] - B[0]) * s, B[1] + (FB[1] - B[1]) * s], true);
+      }
       return;
     }
     if (t >= 30.05 && t < 34.55) { drawFiber(out); return; }

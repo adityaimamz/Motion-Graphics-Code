@@ -60,7 +60,7 @@ node scripts/render.ts video --samples auto
   - `--scale 2`: render 2× lalu diperkecil;
   - `--from 24 --to 38`: sebagian;
   - `--dry`: uji pipeline tanpa file.
-- Waktu render di GPU Intel terintegrasi (i7-1360P): final penuh (`--samples auto`, maks. 108) ±11–12 jam (sebelum revisi cahaya kota: 10,4 jam, 0,12 frame/s). Di GPU diskrit jauh lebih cepat. Bagian terberat: S5 (dasar laut 76 km/s), S6 (tarik mundur), dan S3/S4/S8 (pantulan jalan basah di resolusi penuh, ±7 s per frame pada 36 sub-frame). Revisi tetes/kampung/tanggul menambah geometri di S3/S4/S8 (ikut tergambar di pantulan jalan) dan satu tangkapan cube map saat start. Waktunya belum diukur; perkirakan sedikit lebih lama.
+- Waktu render di GPU Intel terintegrasi (i7-1360P): final penuh (`--samples auto`, maks. 108) ±11–12 jam (sebelum revisi cahaya kota: 10,4 jam, 0,12 frame/s). Di GPU diskrit jauh lebih cepat. Bagian terberat: S5 (dasar laut 76 km/s), S6 (tarik mundur), dan S3/S4/S8 (pantulan jalan basah di resolusi penuh, ±7 s per frame pada 36 sub-frame). Revisi tetes/kampung/tanggul menambah geometri di S3/S4/S8 (ikut tergambar di pantulan jalan) dan satu tangkapan cube map saat start. Waktunya belum diukur; perkirakan sedikit lebih lama. Revisi koaksial–Singapura (jendela Snell, pita pasir, lorong server) diukur per still dengan `--samples auto`: 36,4 s ±30 s (108 sub-frame), 36,9 s ±11 s, 30,3 s ±12 s, 37,35 s ±9 s, 38,1 s ±8 s, 54,0 s ±7 s. Bagian naik S5 (35,2–37,5, 138 frame) bisa menambah ±0,5–1 jam. Render penuhnya belum diukur.
 - Log browser hanya berisi peringatan `X4122 … double precision` dari kompiler shader ANGLE. Itu aman diabaikan. (Peringatan X4000, X3577, dan PCFSoftShadowMap sudah dibereskan.)
 
 ## Audio & data

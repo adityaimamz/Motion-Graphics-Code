@@ -15,7 +15,10 @@ import type { Ctx } from '../world';
 
 const v3c = (c: [number, number, number]) => `vec3(${c.map((x) => x.toFixed(5)).join(',')})`;
 
-const FRAG = /* glsl */ `
+/** The shader; `outside` = the lens outside the glass (the coated rod seen from without). The inside
+ *  variant is exactly the shader as it was, so the flight inside the fibre renders bit-identically. */
+const frag = (outside: boolean) => /* glsl */ `
+#define OUTSIDE ${outside ? 1 : 0}
 ${RAY_GLSL}
 ${SS_TAP_GLSL}
 uniform float pK, phase, flash;
@@ -54,6 +57,82 @@ float exitT(vec3 o, vec3 d, float R) {
   return min(4000.0, (-b + sqrt(max(b * b - a * c, 0.0))) / a);
 }
 
+#if OUTSIDE
+void main() {
+  vec3 col = vec3(0.0);
+  for (int k = ssK0(); k < ssK1(); k++) {
+    vec3 o = camPos, d = camRay(gl_FragCoord.xy / PX_SCALE + rgss(k));
+    vec3 acc = vec3(0.0);
+    float thr = 1.0;
+    bool fromOut = false;
+    // outside: the coated rod. Its acrylate shell is translucent blue, glowing with the light from inside (more
+    // through the long grazing path at its edges), a Fresnel sheen; through it the glass and the lit core
+    if (dot(o.xy, o.xy) > RC * RC) {
+      float a = dot(d.xy, d.xy), b = dot(o.xy, d.xy);
+      float c2 = dot(o.xy, o.xy) - RCOAT * RCOAT, h2 = b * b - a * c2;
+      bool miss = h2 < 0.0 || a < 1e-10 || (-b - sqrt(max(h2, 0.0))) / a < 0.0;
+      if (miss && dot(o.xy, o.xy) > RCOAT * RCOAT) { col += vec3(0.0006, 0.0008, 0.0014); continue; }
+      float tA = dot(o.xy, o.xy) > RCOAT * RCOAT ? (-b - sqrt(max(h2, 0.0))) / a : 0.0;
+      vec3 pA = o + d * tA;
+      vec3 nA = normalize(vec3(pA.xy, 0.0));
+      float FA = 0.04 + 0.96 * pow(1.0 - abs(dot(d, nA)), 5.0);
+      // the chord through the shell (to the glass, or out the far side)
+      float c1 = dot(o.xy, o.xy) - RC * RC, h1 = b * b - a * c1;
+      bool toGlass = h1 > 0.0 && (-b - sqrt(max(h1, 0.0))) / a > 0.0;
+      float tB = toGlass ? (-b - sqrt(h1)) / a : (-b + sqrt(max(h2, 0.0))) / a;
+      float chord = max(tB - tA, 0.0);
+      // the glowing shell, front and back: the line of sight through it is longest where it grazes the glass
+      // (impact parameter = the glass's radius), so a bright line runs down each side of the glass, the
+      // coating fading out to the rod's rims: a tube, not a flat band
+      float bI = abs(o.x * d.y - o.y * d.x) / sqrt(a), ls = 1.0 / sqrt(a);
+      float shell = 2.0 * (sqrt(max(RCOAT * RCOAT - bI * bI, 0.0)) - sqrt(max(RC * RC - bI * bI, 0.0))) * ls;
+      // and the coating is two layers (soft primary to 190 µm, hard secondary to 250 µm): where a line of sight
+      // grazes an interface (glass, primary, secondary) it is reflected along it and carries the glow, so each
+      // shows as a fine bright line down the rod. The gel around is dark: the sheen off the outside is faint
+      float g1 = (bI - RC) / 1.8, g2 = (bI - 95.0) / 1.8, g3 = (bI - RCOAT) / 1.5;
+      // (only an interface the lens is outside of, grazed ahead of the lens, not behind it)
+      float r2 = dot(o.xy, o.xy), ahead = step(0.0, -b);
+      float lines = (0.9 * exp(-g1 * g1) + 0.45 * exp(-g2 * g2) * step(95.0 * 95.0, r2) + 0.7 * exp(-g3 * g3) * step(RCOAT * RCOAT, r2)) * ahead;
+      acc += mix(DEEP, ICE, 0.25) * pK * 0.00008 * shell + mix(DEEP, ICE, 0.55) * pK * 0.05 * lines + vec3(0.03, 0.045, 0.08) * FA * pK * 0.06;
+      thr *= (1.0 - FA) * exp(-chord * 0.004);
+      if (!toGlass) { col += acc; continue; }
+      o = o + d * tB;
+      vec3 n = normalize(vec3(o.xy, 0.0));
+      // the glass's own edge, inside the coating: going from the coating (n 1.50) into the glass (1.444) a ray
+      // past ~74° is totally reflected and stays in the glowing coating, so a second bright line runs just
+      // inside each rim; the round shape reads from the pair of them
+      float ci = abs(dot(d, n)), si = sqrt(max(0.0, 1.0 - ci * ci));
+      float tirG = smoothstep(0.945, 0.975, si);
+      acc += thr * mix(DEEP, ICE, 0.45) * pK * 0.035 * tirG;
+      thr *= 1.0 - tirG;
+      d = refract(d, n, 1.0 / NG);
+      fromOut = true;
+    }
+    // inside: collect the mode's light, bounce off the wall (total internal reflection past the critical angle)
+    for (int b = 0; b < 7; b++) {
+      float t = exitT(o, d, RC);
+      acc += thr * ICE * modeGlow(o, d, t) * pK * 0.007;
+      // seen from outside, the cladding glows faintly with the light it scatters out of the mode, more where
+      // the line of sight through it is longer: brightest down the middle of the rod, fading to its edges
+      if (fromOut) acc += thr * mix(DEEP, ICE, 0.35) * pK * 0.00016 * t;
+      vec3 p = o + d * t;
+      vec3 n = normalize(vec3(p.xy, 0.0));
+      float cosi = abs(dot(d, n));
+      float sini = sqrt(max(0.0, 1.0 - cosi * cosi));
+      float R = sini > 1.0 / NG ? 0.96 : 0.04 + 0.96 * pow(1.0 - cosi, 5.0);
+      // the wall: the coating's glowing inner face (partly mirrored over by the grazing reflection)
+      acc += thr * coatWall(p, d) * (1.0 - 0.55 * R);
+      thr *= R * 0.6;
+      if (thr < 0.01) break;
+      o = p - n * 0.01; d = reflect(d, n);
+    }
+    col += acc;
+  }
+  col *= ssWeight();
+  col += ICE * flash * 0.15;
+  fragColor = vec4(col, 1.0);
+}
+#else
 void main() {
   vec3 col = vec3(0.0);
   for (int k = ssK0(); k < ssK1(); k++) {
@@ -103,17 +182,22 @@ void main() {
   col *= ssWeight();
   col += ICE * flash * 0.15;
   fragColor = vec4(col, 1.0);
-}`;
+}
+#endif
+`;
 
 export interface FiberState { pK: number; phase: number; flash: number }
 
 class Fiber {
-  pass = new FSPass(FRAG, { ...camUniforms(), ssTap: SS_TAP, pK: { value: 1 }, phase: { value: 0 }, flash: { value: 0 } });
+  private uni = { ...camUniforms(), ssTap: SS_TAP, pK: { value: 1 }, phase: { value: 0 }, flash: { value: 0 } };
+  private inside = new FSPass(frag(false), this.uni);
+  private outside = new FSPass(frag(true), this.uni);
   render(ctx: Ctx, cam: Cam, s: FiberState, out: THREE.WebGLRenderTarget) {
-    const u = this.pass.u;
+    const pass = cam.pos.x * cam.pos.x + cam.pos.y * cam.pos.y > 62.5 * 62.5 ? this.outside : this.inside;
+    const u = pass.u;
     setCamUniforms(u, cam);
     u.pK!.value = s.pK; u.phase!.value = s.phase; u.flash!.value = s.flash;
-    this.pass.render(ctx.renderer, out);
+    pass.render(ctx.renderer, out);
   }
 }
 

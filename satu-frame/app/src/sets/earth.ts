@@ -237,6 +237,21 @@ void main() {
         float thick = 0.5 + 0.5 * fbm(normalize(pc) * 4200.0, 4);
         float trans = exp(-(1.2 + 3.6 * thick * cv));
         vec3 cloud = CLOUD_WARM * below.r * below.r * (0.16 * trans + 0.012) * lightsK + vec3(0.0011, 0.0011, 0.0013) * (0.5 + thick);
+        // from orbit the rain deck over Jakarta is several km thick: light does not get through it in straight
+        // lines but diffuses (diffuse transmission of a thick cloud ≈ 1 / (1 + 0.75 τ (1 − g)), 15–40 %, not
+        // e^−τ), spread sideways by about the deck's thickness. The city under it becomes one soft warm glow,
+        // mottled by the cloud's thickness, with sharp lights only in the gaps: it reads as cloud, not as a
+        // dimmer city. (Low down, in the dive, the deck above keeps its close-up look.)
+        float wo = smoothstep(0.08, 0.3, fp);
+        if (wo > 0.0) {
+          vec3 wide = sampleMap(latlon(normalize(pc)), 4.6);
+          // its convective cells (~15–20 km) vary the optical depth: thin between them, thick in their cores
+          float cell = 0.5 + 0.5 * fbm(normalize(pc) * 350.0, 3);
+          float tau = 6.0 + 70.0 * cell * cell * cv;
+          float Td = 1.0 / (1.0 + 0.75 * tau * 0.15);
+          vec3 glow = CLOUD_WARM * wide.r * wide.r * 1.6 * expoLow * Td * lightsK;
+          cloud = mix(cloud, glow + vec3(0.0011, 0.0011, 0.0013) * (0.5 + thick), wo);
+        }
         surf = mix(surf, cloud, cv * 0.96);
       }
       // haze toward the horizon (thin air seen edge-on)
