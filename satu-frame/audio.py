@@ -101,6 +101,14 @@ def glass(freq=3100, dur=0.9, g=1.0):
     n = int(dur * SR); t = T(n)
     s = sum(a * np.sin(2 * np.pi * freq * r * t) * np.exp(-t * d) for r, a, d in [(1, 1, 7), (2.76, .5, 11), (5.4, .25, 16), (8.93, .12, 22)])
     return s * np.minimum(1, t / 0.001) * g
+def droplet(f0=750, f1=2500, dur=0.3, g=1.0):
+    """a water drop: the bubble's ring sliding up fast, a soft splash under it (own noise stream: the other
+    sounds keep theirs)"""
+    n = int(dur * SR); t = T(n)
+    f = f0 + (f1 - f0) * (1 - np.exp(-t * 55))
+    ring = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 24)
+    splash = filt(np.random.default_rng(1403).standard_normal(n), 'bandpass', [1200, 6500]) * np.exp(-t * 70) * 0.35
+    return (ring + splash) * np.minimum(1, t / 0.0015) * g
 def zap(dur=0.35, g=1.0):
     """electric birth: a crackle burst over a falling tone"""
     n = int(dur * SR); t = T(n)
@@ -232,6 +240,11 @@ fx.add(click(0.9, 300), CP['gap'], 0.12)
 n = int(7.8 * SR); tt = T(n)
 grain = filt(rng.standard_normal(n), 'bandpass', [3000, 12000]) * (0.6 + 0.4 * np.sin(2 * np.pi * 0.21 * tt)) * np.minimum(1, tt / 0.4)
 fx.add(np.stack([grain, np.roll(grain, 2311)], 1), H['window'], 0.035, rv=0.6)
+# the frozen drop outside the window: a thin tone rising as the lens closes in on it, then through it (a drop's
+# plink) on the beat the world slows
+hold = H['drop'] - H['hold']
+fx.add(tone(1760, 2350, hold, 1.0, 1.6) * np.sin(np.pi * np.clip(T(int(hold * SR)) / hold, 0, 1)) ** 2, H['hold'], 0.012, rv=0.6)
+fx.add(droplet(), H['drop'], 0.11, rv=0.55)
 fx.add(sweep(0.45, 5000, 200, 0.2, 0.6), H['ramp'][0], 0.08)     # the world slows
 fx.move(tone(180, 2400, 0.5, 1.0, 1.5) * np.hanning(int(0.5 * SR)), H['wave'] - 0.05, 0.10, 0.0, 0.0, rv=0.5)
 fx.move(sweep(0.8, 300, 9000, 0.6, 0.45), H['passCam'] - 0.6, 0.22, -0.9, 0.9, rv=0.4)   # it passes through us

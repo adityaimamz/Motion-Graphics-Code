@@ -58,7 +58,7 @@ node scripts/render.ts video --samples auto
   - `--scale 2`: render 2× lalu diperkecil;
   - `--from 24 --to 38`: sebagian;
   - `--dry`: uji pipeline tanpa file.
-- Waktu render di GPU Intel terintegrasi (i7-1360P): final penuh (`--samples auto`, maks. 108) ±11–12 jam (sebelum revisi cahaya kota: 10,4 jam, 0,12 frame/s). Di GPU diskrit jauh lebih cepat. Bagian terberat: S5 (dasar laut 76 km/s), S6 (tarik mundur), dan S3/S4/S8 (pantulan jalan basah di resolusi penuh, ±7 s per frame pada 36 sub-frame).
+- Waktu render di GPU Intel terintegrasi (i7-1360P): final penuh (`--samples auto`, maks. 108) ±11–12 jam (sebelum revisi cahaya kota: 10,4 jam, 0,12 frame/s). Di GPU diskrit jauh lebih cepat. Bagian terberat: S5 (dasar laut 76 km/s), S6 (tarik mundur), dan S3/S4/S8 (pantulan jalan basah di resolusi penuh, ±7 s per frame pada 36 sub-frame). Revisi tetes/kampung/tanggul menambah geometri di S3/S4/S8 (ikut tergambar di pantulan jalan) dan satu tangkapan cube map saat start. Waktunya belum diukur; perkirakan sedikit lebih lama.
 - Log browser hanya berisi peringatan `X4122 … double precision` dari kompiler shader ANGLE. Itu aman diabaikan. (Peringatan X4000, X3577, dan PCFSoftShadowMap sudah dibereskan.)
 
 ## Audio & data
@@ -85,7 +85,8 @@ satu-frame/
         ├── clock.ts        jam fisik: ms(t), perlambatan(t), baris refresh(t)
         ├── film.ts · hud.ts · r3.ts · path.ts · fx.ts
         ├── sets/           dunia per skala: screen (piksel), board (mm), city (m), seabed (m), fiber (µm),
-        │                   datacenter (m), die (mm), earth (km), sprites (hujan beku, lampu, bokeh)
+        │                   datacenter (m), die (mm), earth (km), sprites (hujan beku, lampu, bokeh),
+        │                   kampung (tiang, kabel, toren, parabola, AC, pagar, jemuran), drop (tetes-lensa S3)
         └── chapters/       s1-layar … s10-closing
 ```
 

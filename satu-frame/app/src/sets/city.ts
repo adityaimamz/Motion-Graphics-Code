@@ -6,11 +6,14 @@
 // slab, black glass, the display with its punch-hole), the lit windows of our own building outside.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
 import { LIN } from '../engine/palette';
 import { mulberry32 } from '../engine/util';
 import { CUE } from '../cues';
 import { ms } from '../clock';
 import { FrozenRain, LightPoints, type Wave } from './sprites';
+import { HeroDrop } from './drop';
+import { buildKampungDetail, nearCamera, type House, type Lamp } from './kampung';
 import { glowSprite, FX_LAYER } from '../fx';
 import { camUniforms, setCamUniforms, applyCam, RAY_GLSL, type Cam } from '../r3';
 import { FSPass, makeRT, clearRT, W, H } from '../engine/gl';
@@ -100,6 +103,11 @@ export const PHONE = { w: 0.0686, h: 0.0079, l: 0.1524, center: V(0, DESK_Y + 0.
 /** The antenna gap on the phone's top edge (board x 49.5 mm of 68.6). */
 export const ANT = V(-PHONE.w / 2 + 0.0495, DESK_Y + 0.0045, PHONE.center.z - PHONE.l / 2);
 export const WIN = { z: -0.95, x0: -0.8, x1: 0.8, y0: 7.95, y1: 9.55 };
+/** the frozen raindrop the camera meets just outside the window (S3): 12 cm beyond the pane, on the way out */
+export const DROP = V(0.0587, 8.569, -1.238), DROP_R = 0.0015;
+/** the phone's screen as a lamp (candela, straight up) and the pool it makes on the ceiling as one (nits,
+ *  facing down; a little above what the pool really sends back, so the room reads) */
+const PHONE_CD = 2.6, BOUNCE_NIT = 0.08;
 /** the head of the street lamp in front of our building, 2 m out from the facade and below the window */
 const FACADE_LAMP = { x: 1.7, y: 6.55, z: -3.15 };
 /** metres per millisecond of light */
@@ -136,6 +144,8 @@ export const FOG = new THREE.Color().setRGB(...SKY_HOR);
 export const CITY_EV = 0.3;
 export const cityExposure = (k: number) => Math.pow(2, CITY_EV * Math.min(1, Math.max(0, k)));
 const WARM_LAMP: RGB = [1.0, 0.9, 0.76];
+/** a phone's white (D65) in a room lit by nothing else: cooler than any lamp outside */
+const SCREEN_WHITE: RGB = [0.78, 0.88, 1.0];
 const glsl3 = (c: RGB) => `vec3(${c.map((x) => x.toFixed(4)).join(',')})`;
 /** the overcast (shared by the sky dome and the environment the outdoor materials see) */
 const SKY_GLSL = /* glsl */ `
@@ -280,14 +290,75 @@ vec3 winC = vec3(0.0);
 #endif
   winC = lit3 * pane;
 }`;
+/** Extra GLSL for one kind of outdoor surface: `surf` after the roughness (may change diffuseColor,
+ *  roughnessFactor), `light` after the lamps' pools (may add to irradiance). */
+interface Hooks { key: string; surf?: string; light?: string }
+/** The quay lamps in front of the seawall (a row along x, dx apart): what lights the wall, its top, its
+ *  railing and the poles. The pools texture stops at the shore, so these surfaces add the lamps up one by one. */
+const QUAY = { x0: -900, dx: 38, n: 43, y: 6, z: SHORE_Z + 6, I: 120 };
+const QUAY_LIGHT = /* glsl */ `
+{
+  vec3 nQ = normalize((vec4(normal, 0.0) * viewMatrix).xyz);
+  float k0 = floor((vLampW.x - ${QUAY.x0.toFixed(1)}) / ${QUAY.dx.toFixed(1)} + 0.5);
+  vec3 q = vec3(0.0);
+  for (int i = -3; i <= 3; i++) {
+    float k = clamp(k0 + float(i), -1.0, ${QUAY.n.toFixed(1)});
+    vec3 L = vec3(${QUAY.x0.toFixed(1)} + k * ${QUAY.dx.toFixed(1)}, ${QUAY.y.toFixed(1)}, ${QUAY.z.toFixed(1)}) - vLampW;
+    float d2 = max(dot(L, L), 0.25); L *= inversesqrt(d2);
+    // a street lamp throws its light down and out; little of it goes up
+    float on = step(0.0, k) * step(k, ${(QUAY.n - 1).toFixed(1)});
+    q += ${glsl3(WARM_LAMP)} * on * smoothstep(-0.05, 0.5, L.y) * max(dot(nQ, L), 0.0) / d2;
+  }
+  irradiance += q * ${QUAY.I.toFixed(1)} * outdoorAt(vLampW);
+}`;
+/** The frozen sea's waves as a slope per pixel: a wind sea (22 trains from 20 m swell down to 30 cm chop,
+ *  spread around the wind, steepness falling with length, fixed random phases), stopped. xy = dh/dx, dh/dz;
+ *  z = the slope of the trains too fine to resolve here, handed on to the roughness. */
+const SEA_TRAINS: [number, number, number, number][] = (() => {
+  const r = mulberry32(77), out: [number, number, number, number][] = [];
+  for (let i = 0; i < 22; i++) {
+    const L = 20 * Math.pow(0.3 / 20, i / 21) * (0.85 + 0.3 * r());
+    const ang = -1.35 + (r() - 0.5) * (0.9 + 1.6 * (i / 21));      // (−z is out to sea; the short chop spreads wider)
+    const k = (2 * Math.PI) / L, steep = 0.05 + 0.035 * r();        // a·k
+    out.push([steep / k, L, ang, r() * 6.283]);
+  }
+  return out;
+})();
+const SEA_WAVES = /* glsl */ `
+vec3 seaSlope(vec2 p, float fw) {
+  vec3 g = vec3(0.0);
+  ${SEA_TRAINS.map(([a, L, ang, ph0]) => {
+    const k = (2 * Math.PI) / L, cx = Math.cos(ang), sz = Math.sin(ang);
+    return `{ float ph = ${k.toFixed(5)} * dot(vec2(${cx.toFixed(5)}, ${sz.toFixed(5)}), p) + ${ph0.toFixed(4)};
+    float vis = 1.0 - smoothstep(0.12, 0.45, fw / ${L.toFixed(3)});
+    g.xy += vis * ${(a * k).toFixed(5)} * (cos(ph) + 0.18 * cos(2.0 * ph)) * vec2(${cx.toFixed(5)}, ${sz.toFixed(5)});
+    g.z += (1.0 - vis) * ${(a * k * 0.5).toFixed(5)}; }`;
+  }).join('\n  ')}
+  return g;
+}`;
+/** Cast concrete: 12 m panels with dark joints, a lift line, rain streaks running down, a darker foot the
+ *  sea splashes; the walkway on top wet (it mirrors the overcast). */
+const SEAWALL_SURF = /* glsl */ `
+{
+  float px = vLampW.x, py = vLampW.y;
+  float joint = 1.0 - smoothstep(0.015, 0.05, abs(fract(px / 12.0 + 0.5) - 0.5) * 12.0);
+  float lift = (1.0 - smoothstep(0.012, 0.035, abs(py - 0.95))) * step(py, 2.1);
+  float streak = vnoise(vec2(px * 1.7, py * 0.09)) * 0.6 + vnoise(vec2(px * 5.3, py * 0.35 + 7.0)) * 0.4;
+  float foot = smoothstep(0.35, -0.7, py);
+  float top = step(0.5, normalize((vec4(vNormal, 0.0) * viewMatrix).xyz).y);
+  diffuseColor.rgb *= mix((0.72 + 0.42 * streak) * (1.0 - 0.3 * lift), 0.85 + 0.2 * streak, top) * (1.0 - 0.6 * joint) * (1.0 - 0.5 * foot);
+  roughnessFactor = mix(roughnessFactor, 0.28, max(foot, top));
+}`;
 /** Light a MeshStandardMaterial the city's way (see above). `lampE` = how much the lamps' pools light it;
  *  `win`: windows in its walls (instanced unit boxes; FLOOR_H, BAY_W, WIN_W, WIN_H, SILL, LIT_P, WIN_K). */
-function outdoor<M extends THREE.MeshStandardMaterial>(m: M, lampE: number, env: THREE.Texture | null, envK: number, wet = false, win?: Record<string, number>): M {
+function outdoor<M extends THREE.MeshStandardMaterial>(m: M, lampE: number, env: THREE.Texture | null, envK: number, wet = false, win?: Record<string, number>, hooks?: Hooks): M {
   m.envMap = env; m.envMapIntensity = envK;
   const defs: Record<string, string> = {};
   if (wet) defs.WET_GROUND = '';
   if (win) { defs.FACADE_WIN = ''; for (const [k, v] of Object.entries(win)) defs[k] = v.toFixed(4); }
   m.defines = { ...(m.defines ?? {}), ...defs };
+  // (the injected code is not in the defines: tell three.js which program this is)
+  if (hooks) m.customProgramCacheKey = () => `outdoor:${hooks.key}`;
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, LIGHT_U, { lampE: { value: lampE } });
     const vary = '\nvarying vec3 vLampW;\n#ifdef FACADE_WIN\nvarying vec3 vLoc, vLocN, vIsc; varying vec2 vSeed;\n#endif';
@@ -300,10 +371,21 @@ function outdoor<M extends THREE.MeshStandardMaterial>(m: M, lampE: number, env:
       .replace('#if ( NUM_HEMI_LIGHTS > 0 )', '#if 0');
     sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_begin>', begin)
       .replace('#include <common>', `#include <common>${vary.replace('varying vec3 vLampW;', '')}\n${OUT_HEAD}`)
-      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>\n#ifdef FACADE_WIN\n${WIN_SURF}\n#endif`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>\n#ifdef FACADE_WIN\n${WIN_SURF}\n#endif\n${hooks?.surf ?? ''}`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\n#ifdef FACADE_WIN\ntotalEmissiveRadiance += winC * outdoorAt(vLampW);\n#endif`)
-      .replace('#include <lights_fragment_maps>', `#include <lights_fragment_maps>\n${OUT_LIGHT}`)
+      .replace('#include <lights_fragment_maps>', `#include <lights_fragment_maps>\n${OUT_LIGHT}\n${hooks?.light ?? ''}`)
       .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>\n${WET_LIGHT}`);
+  };
+  return m;
+}
+
+/** The bedroom's own surfaces: lit by the phone alone (no hemisphere or "moon" fill: those stay for the
+ *  desk the viewer looks down at in S9). */
+function indoor<M extends THREE.MeshStandardMaterial>(m: M): M {
+  m.onBeforeCompile = (sh) => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_begin>', THREE.ShaderChunk.lights_fragment_begin
+      .replace('#if ( NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )', '#if 0')
+      .replace('#if ( NUM_HEMI_LIGHTS > 0 )', '#if 0'));
   };
   return m;
 }
@@ -329,6 +411,13 @@ export interface CityState {
   photon?: { pos: THREE.Vector3; k: number } | null;
   /** the phone's antenna still transmitting (S3 start): a blue glow at the gap, lighting the desk (0..1) */
   ant?: number;
+  /** the scene's own depth of field (aperture px; default none: the lights and drops carry their own) */
+  dof?: number;
+  /** draw the frozen raindrop outside the window (S3) */
+  drop?: boolean;
+  /** the lit screen as the room's one lamp (S8): it throws its light up onto the ceiling, which bounces a
+   *  little of it back down onto the desk and the walls (0..1, how much of the screen is lit) */
+  phoneSky?: number;
 }
 
 class City {
@@ -339,13 +428,20 @@ class City {
   private sheet = new FSPass(SHEET, { ...camUniforms(), center: { value: new THREE.Vector3() }, R: { value: 0 }, wid: { value: 1 }, k: { value: 0 }, fogD: { value: 0 } }, { blending: THREE.AdditiveBlending, transparent: true });
 
   lights!: LightPoints;
+  /** frozen drops beaded on the wires (kampung detail) */
+  private beads!: LightPoints;
   private screenMat!: THREE.ShaderMaterial;
   private roomLight = new THREE.PointLight(col(LIN.paper), 0, 6, 2);
+  private drop = new HeroDrop(DROP, DROP_R);
   private towerFlash = new THREE.PointLight(col(LIN.ice), 0, 55, 2);
   private towerGlow = glowSprite(LIN.ice);
   private photonHalo = glowSprite(LIN.ice);
   private photonCore = glowSprite([0.9, 1.6, 4.0]);
   private antLight = new THREE.PointLight(col(LIN.ice), 0, 2.5, 2);
+  // a screen emits like a flat diffuser (intensity ∝ cos θ): a wide soft cone straight up from its face,
+  // and the pool it makes on the white ceiling lighting the room below it again
+  private phoneUp = new THREE.SpotLight(col(SCREEN_WHITE), 0, 9, 1.45, 1, 2);
+  private ceilBounce = new THREE.RectAreaLight(col(SCREEN_WHITE), 0, 2.6, 2.6);
   private antGlow = glowSprite(LIN.ice);
   private streak!: THREE.Mesh;
   private streakMat!: THREE.MeshBasicMaterial;
@@ -376,6 +472,8 @@ class City {
     s.fog = new THREE.FogExp2(FOG, 0.0011);
     s.add(new THREE.HemisphereLight(0x1a2030, 0x040404, 0.9));
     const glow = new THREE.DirectionalLight(0x6f7f9f, 0.22); glow.position.set(0.3, 1, -0.4); s.add(glow);
+    RectAreaLightUniformsLib.init();
+    s.add(this.phoneUp, this.phoneUp.target, this.ceilBounce);
     s.add(this.roomLight, this.towerFlash, this.towerGlow, this.photonHalo, this.photonCore, this.antLight, this.antGlow, this.facadeLamp);
     this.reflCam.layers.enable(FX_LAYER);
     const rnd = mulberry32(21);
@@ -424,7 +522,8 @@ class City {
     const light = (x: number, y: number, z: number, c: [number, number, number], k: number, r: number) => { pts.push(x, y, z); pcol.push(c[0] * k, c[1] * k, c[2] * k); prad.push(r); };
     // the light each lamp and window throws on the ground around it (painted once, below)
     const pools = this.pools;   // x, z, strength, radius (m), stretch across x / along z
-    const lamp = (x: number, z: number, k: number) => { light(x, 6.2, z, warm, k, 0.12); this.halo(x, 6.2, z, k / 3.2); };
+    const lampList: Lamp[] = [], houseList: House[] = [];
+    const lamp = (x: number, z: number, k: number, ns: boolean, x0: number, z0: number) => { light(x, 6.2, z, warm, k, 0.12); this.halo(x, 6.2, z, k / 3.2); lampList.push({ x, z, ns, x0, z0 }); };
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p3 = new THREE.Vector3();
     const warm: [number, number, number] = [1.0, 0.93, 0.82];
     // kampung colours (sRGB): walls in pale limewash and faded paint; roofs of clay tile, rusted zinc, cement
@@ -435,12 +534,12 @@ class City {
     for (let gx = -40; gx <= 40; gx++) for (let gz = -175; gz <= 30; gz++) {
       const x0 = gx * 10.5, z0 = gz * 10.5;
       if (gx % 6 === 0 || gz % 7 === 0) {   // streets: lamps every other block
-        if (gx % 6 === 0 && gz % 2 === 0 && rnd() < 0.7) { lamp(x0 + 2.5, z0, 3.2); pools.push([x0 + 2.5, z0, 1.2, 7, 0.6, 1.9]); }
+        if (gx % 6 === 0 && gz % 2 === 0 && rnd() < 0.7) { lamp(x0 + 2.5, z0, 3.2, true, x0, z0); pools.push([x0 + 2.5, z0, 1.2, 7, 0.6, 1.9]); }
         // the cross streets have lamps too (own draw, so the rest of the city keeps its layout)
-        if (gz % 7 === 0 && gx % 6 !== 0 && gx % 2 === 0 && rnd2() < 0.6) { lamp(x0, z0 + 2.5, 3.0); pools.push([x0, z0 + 2.5, 1.1, 7, 1.9, 0.6]); }
+        if (gz % 7 === 0 && gx % 6 !== 0 && gx % 2 === 0 && rnd2() < 0.6) { lamp(x0, z0 + 2.5, 3.0, false, x0, z0); pools.push([x0, z0 + 2.5, 1.1, 7, 1.9, 0.6]); }
         // and in between (own draw): a lamp at every block, so the streets read as lit lines from above
-        if (gx % 6 === 0 && gz % 2 !== 0 && rnd3() < 0.6) { lamp(x0 + 2.5, z0, 2.9); pools.push([x0 + 2.5, z0, 1.0, 7, 0.6, 1.9]); }
-        if (gz % 7 === 0 && gx % 6 !== 0 && gx % 2 !== 0 && rnd3() < 0.5) { lamp(x0, z0 + 2.5, 2.7); pools.push([x0, z0 + 2.5, 0.9, 7, 1.9, 0.6]); }
+        if (gx % 6 === 0 && gz % 2 !== 0 && rnd3() < 0.6) { lamp(x0 + 2.5, z0, 2.9, true, x0, z0); pools.push([x0 + 2.5, z0, 1.0, 7, 0.6, 1.9]); }
+        if (gz % 7 === 0 && gx % 6 !== 0 && gx % 2 !== 0 && rnd3() < 0.5) { lamp(x0, z0 + 2.5, 2.7, false, x0, z0); pools.push([x0, z0 + 2.5, 0.9, 7, 1.9, 0.6]); }
         continue;
       }
       if (Math.abs(x0) < 9 && z0 > -6 && z0 < 14) continue;          // our building
@@ -452,6 +551,7 @@ class City {
       houses.push(m4.clone().compose(p3.set(x, 0, z), q, sc.set(w, h, d)));
       roofs.push(m4.clone().compose(p3.set(x, h, z), q, sc.set(w, w * 0.9, d)));
       wallC.push(WALLS[Math.floor(rndC() * WALLS.length)]!.clone().multiplyScalar(0.8 + 0.3 * rndC()));
+      houseList.push({ x, z, w, d, h, ry, gx, gz, color: wallC[wallC.length - 1]! });
       roofC.push(ROOFS[Math.floor(rndC() * ROOFS.length)]!.clone().multiplyScalar(0.75 + 0.35 * rndC()));
       const nw = rnd() < 0.55 ? 1 + Math.floor(rnd() * 3) : 0;
       for (let k = 0; k < nw; k++) {
@@ -543,6 +643,8 @@ class City {
     // (the lamp's face: the LED panel under the head)
     const face = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.14).rotateX(Math.PI / 2).translate(FL.x, FL.y + 0.02, FL.z), new THREE.MeshBasicMaterial({ color: col(WARM_LAMP, 1.15), toneMapped: false }));
     s.add(face);
+    // the kampung up close: poles and wires, tanks, dishes, AC units, front walls and gates, washing
+    this.buildDetail(lampList, houseList, warm);
     this.groundGlow(pools, warm);
     this.lights = new LightPoints(new Float32Array(pts), new Float32Array(pcol), new Float32Array(prad));
     s.add(this.lights.mesh, this.rainNear.mesh, this.rainMid.mesh, this.rainFar.mesh);
@@ -620,8 +722,22 @@ class City {
     box(-4.2 - SK, -4.2, 0, 10.5, Z0 - SK, 8.2 + SK, facadeMat); box(4.2, 4.2 + SK, 0, 10.5, Z0 - SK, 8.2 + SK, facadeMat);
     box(-4.2, 4.2, 0, 10.5, 8.2, 8.2 + SK, facadeMat);
     box(-4.2, 4.2, 10.5, 10.8, Z0 - 0.3, 8.2, outdoor(new THREE.MeshStandardMaterial({ color: 0x6e6a64, roughness: 0.45 }), 1.0, this.env, 1.2)); // roof slab (wet)
-    box(-4, 4, FLOOR_Y - 0.2, FLOOR_Y, Z1, 8);                      // floor of the room
-    box(-4, 4, 10.3, 10.5, Z1, 8);                                  // ceiling
+    box(-4, 4, FLOOR_Y - 0.2, FLOOR_Y, Z1, 8, indoor(new THREE.MeshStandardMaterial({ color: 0x77726b, roughness: 0.35 })));   // ceramic tile floor
+    // the bedroom behind the window: a partition 3.6 m back (a door in it) and its side walls, painted
+    // off-white; a wardrobe, a bed. Nothing lights them but the phone (its pool on the ceiling), and they
+    // sit behind the camera wherever it looks out (S3 start) or down (S9)
+    const paint = indoor(new THREE.MeshStandardMaterial({ color: 0xc8c9c9, roughness: 0.9 }));
+    const RZ = 3.6;
+    box(-4, 0.9, FLOOR_Y, 10.3, RZ, RZ + 0.12, paint); box(1.85, 4, FLOOR_Y, 10.3, RZ, RZ + 0.12, paint); box(0.9, 1.85, FLOOR_Y + 2.1, 10.3, RZ, RZ + 0.12, paint);
+    box(0.9, 1.85, FLOOR_Y, FLOOR_Y + 2.1, RZ + 0.5, RZ + 0.62, indoor(new THREE.MeshStandardMaterial({ color: 0x141312, roughness: 0.9 })));   // the dark hall beyond the door
+    box(-4, -3.9, FLOOR_Y, 10.3, Z1, RZ, paint); box(3.9, 4, FLOOR_Y, 10.3, Z1, RZ, paint);
+    const wood = indoor(new THREE.MeshStandardMaterial({ color: 0x3a2d22, roughness: 0.6 }));
+    box(-3.3, -2.0, FLOOR_Y, FLOOR_Y + 2.05, RZ - 0.6, RZ, wood);                                 // wardrobe
+    box(-2.66, -2.64, FLOOR_Y + 0.1, FLOOR_Y + 1.95, RZ - 0.61, RZ - 0.6, indoor(new THREE.MeshStandardMaterial({ color: 0x0c0a08 })));
+    box(2.0, 3.9, FLOOR_Y, FLOOR_Y + 0.42, 1.4, RZ, wood);                                        // bed: frame,
+    box(2.05, 3.85, FLOOR_Y + 0.42, FLOOR_Y + 0.62, 1.45, RZ - 0.05, indoor(new THREE.MeshStandardMaterial({ color: 0x9b978f, roughness: 0.95 })));   // sheet
+    // the ceiling: white paint (what the phone's light lands on; the walls stay the room's dark)
+    box(-4, 4, 10.3, 10.5, Z1, 8, indoor(new THREE.MeshStandardMaterial({ color: 0xdcd9d2, roughness: 0.95 })));
     const deskTex = woodTexture(mulberry32(31));
     const deskMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: deskTex.map, roughnessMap: deskTex.rough, roughness: 1, metalness: 0 });
     box(-0.75, 0.75, DESK_Y - 0.04, DESK_Y, -0.9, 0.05, deskMat);
@@ -770,6 +886,8 @@ class City {
         }`,
     })));
     this.roomLight.position.set(PHONE.center.x, DESK_Y + 0.25, PHONE.center.z);
+    this.phoneUp.position.set(PHONE.center.x, PHONE.center.y + PHONE.h / 2 + 0.003, PHONE.center.z); this.phoneUp.target.position.set(PHONE.center.x, 10.3, PHONE.center.z);
+    this.ceilBounce.position.set(PHONE.center.x, 10.29, PHONE.center.z); this.ceilBounce.lookAt(PHONE.center.x, 0, PHONE.center.z);
     this.antLight.position.set(ANT.x, ANT.y + 0.006, ANT.z - 0.004);
     this.antGlow.position.set(ANT.x, ANT.y, ANT.z - 0.0008);
     this.towerFlash.position.set(TOWER.x, TOWER_H + 2, TOWER.z + 4);
@@ -778,6 +896,7 @@ class City {
     this.halos = new LightPoints(new Float32Array(hb.p), new Float32Array(hb.c), new Float32Array(hb.r), true);
     s.add(this.halos.mesh);
     this.captureWaterEnv(ctx);
+    this.drop.env = this.captureAt(ctx, DROP, 1024);
   }
   /** The environment the outdoor materials see (diffuse sky light + what wet surfaces mirror): the glowing
    *  overcast above, the lit streets' bounce below. Prefiltered once. */
@@ -793,6 +912,88 @@ class City {
     pm.dispose();
     return t;
   }
+  /** The kampung's close-up detail (kampung.ts), with what it needs from here: the city's outdoor
+   *  materials, the wires' shader, the lamps as light for the drops beaded on the wires. */
+  private buildDetail(lamps: Lamp[], houses: House[], warm: [number, number, number]) {
+    // lamps on a 16 m grid, for the light at a point
+    const grid = new Map<string, Lamp[]>(), key = (x: number, z: number) => `${Math.floor(x / 16)},${Math.floor(z / 16)}`;
+    for (const l of lamps) { const k = key(l.x, l.z); (grid.get(k) ?? grid.set(k, []).get(k)!).push(l); }
+    const lampAt = (x: number, y: number, z: number) => {
+      let e = 0;
+      for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const l of grid.get(key(x + i * 16, z + j * 16)) ?? []) {
+        const d2 = (l.x - x) ** 2 + (6.2 - y) ** 2 + (l.z - z) ** 2;
+        if (d2 < 144) e += 1 / (d2 + 0.6);
+      }
+      return e * 4;
+    };
+    const stats = buildKampungDetail({
+      scene: this.scene,
+      mat: (color, roughness, metalness, lampE, envK, opts) => outdoor(new THREE.MeshStandardMaterial({ color, roughness, metalness, ...opts }), lampE, this.env, envK),
+      wires: (segs, rad) => this.wires(segs, rad),
+      face: new THREE.MeshBasicMaterial({ color: col(WARM_LAMP, 1.15), toneMapped: false, side: THREE.DoubleSide }),
+      lampAt,
+      beads: (p, c, r) => { this.beads = new LightPoints(new Float32Array(p), new Float32Array(c), new Float32Array(r)); this.scene.add(this.beads.mesh); },
+      warm,
+    }, houses, lamps, (x, z) => nearCamera(x, z, TOWER));
+    void stats;
+  }
+
+  /** Power and telecom wires as ribbons facing the camera, never thinner than ~1.4 px (thinner, they fade
+   *  instead: the energy of a wire too fine to resolve), so they never shimmer. Black PVC, wet: a dark line
+   *  against the glowing overcast, a warm glint where a lamp is near. */
+  private wires(segs: number[], rad: number[]) {
+    const n = segs.length / 6;
+    const pos = new Float32Array(n * 12), oth = new Float32Array(n * 12), side = new Float32Array(n * 4), endK = new Float32Array(n * 4), r = new Float32Array(n * 4);
+    const idx: number[] = [];
+    for (let i = 0; i < n; i++) {
+      const a = segs.slice(i * 6, i * 6 + 3), b = segs.slice(i * 6 + 3, i * 6 + 6);
+      [[a, b, -1, 1], [a, b, 1, 1], [b, a, -1, -1], [b, a, 1, -1]].forEach(([p, o, sd, ek], k) => {
+        pos.set(p as number[], (i * 4 + k) * 3); oth.set(o as number[], (i * 4 + k) * 3);
+        side[i * 4 + k] = sd as number; endK[i * 4 + k] = ek as number; r[i * 4 + k] = rad[i]!;
+      });
+      idx.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4 + 1, i * 4 + 3, i * 4 + 2);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aOther', new THREE.BufferAttribute(oth, 3));
+    g.setAttribute('aSide', new THREE.BufferAttribute(side, 1)); g.setAttribute('aEnd', new THREE.BufferAttribute(endK, 1)); g.setAttribute('aRad', new THREE.BufferAttribute(r, 1));
+    g.setIndex(idx);
+    const m = new THREE.ShaderMaterial({
+      uniforms: { ...LIGHT_U, lampE: { value: 1 }, fogD: this.fogU, fogC: { value: FOG } },
+      vertexShader: /* glsl */ `
+        attribute vec3 aOther; attribute float aSide; attribute float aEnd; attribute float aRad;
+        varying vec3 vLampW; varying float vA, vD;
+        void main() {
+          vec4 a = modelViewMatrix * vec4(position, 1.0), b = modelViewMatrix * vec4(aOther, 1.0);
+          vec4 pa = projectionMatrix * a, pb = projectionMatrix * b;
+          vec2 S = vec2(${W}.0, ${H}.0);
+          vec2 dir = pb.w > 0.0 && pa.w > 0.0 ? (pb.xy / pb.w - pa.xy / pa.w) * S : vec2(1.0, 0.0);
+          dir = length(dir) > 1e-6 ? normalize(dir) : vec2(1.0, 0.0);
+          float focal = projectionMatrix[1][1] * 0.5 * S.y;
+          float rPx = aRad / max(-a.z, 1e-3) * focal;
+          float wPx = max(rPx, 0.7);
+          vA = rPx / wPx;
+          pa.xy += vec2(-dir.y, dir.x) * aEnd * aSide * wPx * 2.0 / S * pa.w;
+          vLampW = (modelMatrix * vec4(position, 1.0)).xyz; vD = -a.z;
+          gl_Position = pa;
+        }`,
+      fragmentShader: /* glsl */ `
+        ${OUT_HEAD}
+        uniform float fogD; uniform vec3 fogC;
+        varying float vA, vD;
+        void main() {
+          float e = poolAt(vLampW.xz, 2.2) * smoothstep(12.0, 4.0, vLampW.y);
+          vec3 c = ${glsl3(SKY_HOR)} * 0.3 + ${glsl3(WARM_LAMP)} * e * 1.6;
+          c = mix(fogC, c, exp(-fogD * fogD * vD * vD));
+          gl_FragColor = vec4(c * vA, vA);
+        }`,
+      transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
+    });
+    const mesh = new THREE.Mesh(g, m);
+    mesh.frustumCulled = false;
+    return mesh;
+  }
+
   /** The pools of light the lamps and windows throw on the ground: painted once into two textures (the
    *  kampung at 1 m a texel, the far city at ~3.4 m) laid on the ground, additive. Seen from above they are
    *  the lit streets between the points of the lamps; they also fade with the fog. */
@@ -844,6 +1045,23 @@ class City {
   private seaMesh!: THREE.Mesh;
   cableLen = 1;
 
+  /** The city as seen from one point, all round (lamps included, no rain): one cube capture, once (it is frozen). */
+  private captureAt(ctx: Ctx, pos: THREE.Vector3, size: number) {
+    const rt = new THREE.WebGLCubeRenderTarget(size, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
+    const cc = new THREE.CubeCamera(0.001, 30000, rt);
+    cc.position.copy(pos);
+    this.scene.add(cc);
+    const c90: Cam = { pos: pos.clone(), look: pos.clone().add(V(0, 0, 1)), fov: 90, ap: 0 };
+    for (const l of [this.lights, this.yard, this.beacon, this.halos, this.beads]) l.update(c90, 0.0006);
+    for (const c of cc.children) c.layers.enable(FX_LAYER);
+    const rain = [this.rainNear.mesh, this.rainMid.mesh, this.rainFar.mesh];
+    rain.forEach((m) => { m.visible = false; });
+    cc.update(ctx.renderer, this.scene);
+    rain.forEach((m) => { m.visible = true; });
+    this.scene.remove(cc);
+    return rt.texture;
+  }
+
   /** Mirror the real night (lights, lamps, sky) into the water: one cube capture from the breaker. */
   private captureWaterEnv(ctx: Ctx) {
     const rt = new THREE.WebGLCubeRenderTarget(1024, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
@@ -851,7 +1069,7 @@ class City {
     cc.position.set(-189, 0.5, SHORE_Z - 60);
     this.scene.add(cc);
     const c90: Cam = { pos: cc.position.clone(), look: cc.position.clone().add(V(0, 0, 1)), fov: 90, ap: 0 };
-    for (const l of [this.lights, this.yard, this.beacon, this.halos]) l.update(c90, 0.0006);
+    for (const l of [this.lights, this.yard, this.beacon, this.halos, this.beads]) l.update(c90, 0.0006);
     // the lamps are sprites on the FX layer: the capture has to see that layer too, or the sea mirrors no lamp
     for (const c of cc.children) c.layers.enable(FX_LAYER);
     this.rainNear.mesh.visible = this.rainMid.mesh.visible = this.rainFar.mesh.visible = false;
@@ -893,21 +1111,44 @@ class City {
     for (let x = -900; x < 700; x += 38) { pts.push(x, 6, SHORE_Z + 6); pc.push(2.6, 2.5, 2.3); pr.push(0.2); this.halo(x, 6, SHORE_Z + 6, 0.8, 2.4); this.pools.push([x, SHORE_Z + 5, 1.0, 10, 1.8, 0.7]); }
     this.yard = new LightPoints(new Float32Array(pts), new Float32Array(pc), new Float32Array(pr));
     s.add(this.yard.mesh);
-    // seawall
-    const wall = new THREE.Mesh(new THREE.BoxGeometry(2400, 3.2, 4), outdoor(new THREE.MeshStandardMaterial({ color: 0x77736c, roughness: 0.7 }), 8.0, this.env, 1.2));
+    // the seawall (Jakarta's giant sea dike): a cast-concrete wall 2.2 m over the quay road, a walkway on
+    // top behind a steel railing; lit by the quay lamps in front of it (one by one: see QUAY_LIGHT)
+    const quayLit: Hooks = { key: 'quay', light: QUAY_LIGHT };
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(2400, 3.2, 4), outdoor(new THREE.MeshStandardMaterial({ color: 0x8a857c, roughness: 0.75 }), 0.0, this.env, 1.0, false, undefined,
+      { key: 'seawall', surf: SEAWALL_SURF, light: QUAY_LIGHT }));
     wall.position.set(0, 0.6, SHORE_Z - 2); s.add(wall);
-    // the frozen sea: a displaced sheet (a few wave trains, stopped), black glass with the sky's sheen
-    const sea = new THREE.PlaneGeometry(9000, 9000, 360, 360).rotateX(-Math.PI / 2).translate(0, 0, SHORE_Z - 4504);
-    const p = sea.attributes.position as THREE.BufferAttribute;
-    const trains: [number, number, number, number][] = [[0.3, 13, 0.2, 0.9], [0.16, 7, 1.1, 0.5], [0.09, 3.7, -0.7, 0.3]];
-    for (let i = 0; i < p.count; i++) {
-      const x = p.getX(i), z = p.getZ(i);
-      let y = 0;
-      for (const [a, L, ang, st] of trains) { const k = (2 * Math.PI) / L; const ph = k * (Math.cos(ang) * x + Math.sin(ang) * z); y += a * Math.sin(ph) * (1 + st * 0.3 * Math.cos(ph)); }
-      p.setY(i, -1.0 + y);
-    }
-    sea.computeVertexNormals();
+    const steel = outdoor(new THREE.MeshStandardMaterial({ color: 0x8e9194, roughness: 0.45, metalness: 0.55 }), 0.0, this.env, 1.2, false, undefined, quayLit);
+    const railZ = SHORE_Z - 3.85, nPost = Math.floor(2400 / 2.4);
+    const posts = new THREE.InstancedMesh(new THREE.BoxGeometry(0.06, 1.05, 0.06).translate(0, 2.2 + 0.525, 0), steel, nPost);
+    for (let i = 0; i < nPost; i++) posts.setMatrixAt(i, new THREE.Matrix4().makeTranslation(-1200 + 1.2 + i * 2.4, 0, railZ));
+    s.add(posts);
+    for (const h of [0.55, 1.05]) { const r = new THREE.Mesh(new THREE.BoxGeometry(2400, 0.05, 0.05), steel); r.position.set(0, 2.2 + h, railZ); s.add(r); }
+    // the quay lamps' poles (the heads hang 1.4 m out over the road from the kerb)
+    const pole = new THREE.InstancedMesh(mergeGeometries([
+      new THREE.CylinderGeometry(0.07, 0.1, 6.3, 8).translate(0, 3.15, 1.4),
+      new THREE.BoxGeometry(0.07, 0.07, 1.5).translate(0, 6.2, 0.7),
+      new THREE.BoxGeometry(0.28, 0.1, 0.55).translate(0, 6.12, 0),
+    ]), steel, QUAY.n);
+    for (let k = 0; k < QUAY.n; k++) pole.setMatrixAt(k, new THREE.Matrix4().makeTranslation(QUAY.x0 + k * QUAY.dx, 0, QUAY.z));
+    s.add(pole);
+    // the frozen sea: a sheet of black glass with the sky's sheen; its waves (the trains the swell froze in,
+    // stopped) are in its shader, per pixel: a mesh this size could never carry 13 m waves, let alone chop
+    const sea = new THREE.PlaneGeometry(9000, 9000, 8, 8).rotateX(-Math.PI / 2).translate(0, -1.0, SHORE_Z - 4504);
     this.seaMat = new THREE.MeshStandardMaterial({ color: 0x010203, roughness: 0.06, metalness: 0.0, envMap: env, envMapIntensity: 1.4 });
+    this.seaMat.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vSeaW;')
+        .replace('#include <project_vertex>', '#include <project_vertex>\nvSeaW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>\nvarying vec3 vSeaW;\n${SEA_WAVES}`)
+        .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        {
+          // the frozen waves: slope of every train at this point, faded out (into roughness) once finer than a pixel
+          float fw = length(fwidth(vSeaW.xz));
+          vec3 g = seaSlope(vSeaW.xz, fw);
+          vec3 nW = normalize(vec3(-g.x, 1.0, -g.y));
+          normal = normalize((viewMatrix * vec4(nW, 0.0)).xyz);
+          roughnessFactor = clamp(roughnessFactor + g.z, 0.0, 1.0);
+        }`);
+    };
     this.seaMesh = new THREE.Mesh(sea, this.seaMat);
     s.add(this.seaMesh);
     // the cable under the street: an x-ray glow line (additive, just above the asphalt)
@@ -968,6 +1209,9 @@ class City {
     this.screenMat.uniforms.scan!.value = st.scan;
     this.screenMat.uniforms.k!.value = st.screenK ?? 1;
     this.roomLight.intensity = 0.05 + 1.2 * (st.glow ?? 0);
+    const sky = st.phoneSky ?? 0;
+    this.phoneUp.intensity = PHONE_CD * sky; this.phoneUp.visible = sky > 0;
+    this.ceilBounce.intensity = BOUNCE_NIT * sky; this.ceilBounce.visible = sky > 0;
     const hit = st.towerHit ?? 0;
     this.towerFlash.intensity = 500 * hit;
     this.towerGlow.visible = hit > 0.001; this.towerGlow.scale.setScalar(26 * hit + 4);
@@ -993,6 +1237,7 @@ class City {
     this.rainFar.update(cam, fogD, st.wave ?? null);
 
     this.lights.update(cam, fogD * 0.55, st.lightsGain ?? 1);
+    this.beads.update(cam, fogD * 0.55);
     this.halos.update(cam, fogD * 0.55, st.lightsGain ?? 1);
     this.beacon.update(cam, fogD * 0.5);
     this.yard.update(cam, fogD * 0.6);
@@ -1007,7 +1252,8 @@ class City {
     LIGHT_U.reflK.value = wet ? 1 : 0;
     if (wet) this.reflect(ctx, cam);
     const near = cam.near ?? (cam.pos.distanceTo(PHONE.center) < 1.5 ? 0.0015 : cam.pos.y < 30 ? 0.08 : 0.5);
-    ctx.r3.scene(this.scene, { ...cam, near, far: 30000, ap: 0 }, out, [FOG.r, FOG.g, FOG.b]);
+    ctx.r3.scene(this.scene, { ...cam, near, far: 30000, ap: st.dof ?? 0 }, out, [FOG.r, FOG.g, FOG.b]);
+    if (st.drop) this.drop.render(ctx.renderer, cam, out);
     const w = st.wave;
     if (w && w.R > 0.3 && w.sheet !== false) {
       const u2 = this.sheet.u;

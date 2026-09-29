@@ -15,7 +15,7 @@ const v3c = (c: [number, number, number]) => `vec3(${c.map((x) => x.toFixed(5)).
 const FRAG = /* glsl */ `
 ${RAY_GLSL}
 ${SS_TAP_GLSL}
-uniform float scan, newLevel, oldLevel, flashLen, lineGlow, gain, sheen, useOld, depthOut, touchK, tftK, envK;
+uniform float scan, newLevel, oldLevel, flashLen, lineGlow, gain, sheen, useOld, depthOut, touchK, tftK, envK, leakK;
 uniform sampler2D oldTex; uniform vec4 oldRect; uniform float oldK;
 // below the emitters the layers are spread out (true scale is microns) so the descent can see them
 const float GLASS = 8.7, TOUCH = 3.0, TFT = -9.0, PI_Z = -11.0, BACK = -16.0;
@@ -45,6 +45,9 @@ float flashOf(float row) { float a = floor(scan) - row - 1.0; return a < 0.0 ? 0
 
 // light scattered by a fingerprint film and dust on the glass top, lit by the emission under it
 float litBelow(float row) { return smoothstep(floor(scan) + 6.0, floor(scan) - 6.0, row); }
+// light from the rows already written, trapped in the cover glass, running on past the line over the rows
+// not yet written (S8: what lets the dead emitters and the dust there glint instead of going black)
+float leakAt(float row) { float a = row - floor(scan); return a < 0.0 ? 0.0 : leakK * newLevel * exp(-a / 70.0); }
 vec3 glassTop(vec2 p, float fp) {
   // fingerprint: ridges ~0.45 mm apart (7 pixel pitches), bent and broken like a real print (not rings), a
   // soft greasy smear around them; the ridges fade out before they are too small to draw
@@ -65,7 +68,7 @@ vec3 glassTop(vec2 p, float fp) {
     float rr = 0.06 + 0.2 * hash12(dc + 7.7);
     speck = 1.0 - smoothstep(rr - fp, rr + fp, length(p - sp));
   }
-  float L = litBelow(p.y) * newLevel;
+  float L = litBelow(p.y) * newLevel + leakAt(p.y) * 0.5;
   return (vec3(0.9, 0.95, 1.0) * smear * 0.16 + vec3(1.0) * speck * 3.0) * L;
 }
 
@@ -130,11 +133,16 @@ vec3 emitters(vec2 p, float fp, out float cover) {
   // off emitters: tinted dark glass with a sheen
   vec3 off = (colD * mD + SG * mG) * 0.012 + vec3(0.004) * (1.0 - max(mD, mG));
   cover = max(mD, mG);
+  // past the line, the light running in the glass grazes the dead emitters: their bevelled walls catch it,
+  // brighter on the side facing the written rows, and the dark film takes a trace of its own colour
+  float lk = leakAt(p.y);
+  float faceD = 0.6 - 0.4 * clamp(q.y * 4.0, -1.0, 1.0), faceG = 0.6 - 0.4 * clamp(gq.y * 6.0, -1.0, 1.0);
+  off += (vec3(0.85, 0.9, 1.0) * (rimD * mD * faceD + rimG * mG * faceG) * 0.55 + (colD * mD + SG * mG) * 0.04) * lk / max(sheen, 1e-3);
   vec3 near = e + off * sheen;
   // far: the pattern's mean (areas: R .13, B .16, G .1 per pixel)
   vec3 avgC = contentAt(floor(p));
   float avgF = flashOf(floor(p.y));
-  vec3 far = (SR * 0.128 * avgC.r * 0.95 + SB * 0.16 * avgC.b * 0.9 + SG * 0.1 * avgC.g * 1.25) * gain * (1.0 + 2.4 * avgF) + vec3(0.005) * sheen;
+  vec3 far = (SR * 0.128 * avgC.r * 0.95 + SB * 0.16 * avgC.b * 0.9 + SG * 0.1 * avgC.g * 1.25) * gain * (1.0 + 2.4 * avgF) + vec3(0.005) * sheen + vec3(0.85, 0.9, 1.0) * 0.03 * leakAt(p.y);
   return mix(near, far, smoothstep(0.22, 0.75, fp));
 }
 
@@ -262,6 +270,8 @@ export interface ScreenState {
   oldRect?: [number, number, number, number];
   oldK?: number;
   lineGlow?: number;
+  /** light from the written rows running on in the cover glass past the line (0 = none) */
+  leak?: number;
   gain?: number;
   touch?: number;
   tft?: number;
@@ -272,7 +282,7 @@ class Screen {
     ...camUniforms(),
     ssTap: SS_TAP,
     scan: { value: 0 }, newLevel: { value: 1 }, oldLevel: { value: 0 }, flashLen: { value: 1.6 }, lineGlow: { value: 0.6 },
-    gain: { value: 3.2 }, sheen: { value: 1 }, useOld: { value: 0 }, depthOut: { value: 0 }, touchK: { value: 1 }, tftK: { value: 1 }, envK: { value: 1 },
+    gain: { value: 3.2 }, sheen: { value: 1 }, useOld: { value: 0 }, depthOut: { value: 0 }, touchK: { value: 1 }, tftK: { value: 1 }, envK: { value: 1 }, leakK: { value: 0 },
     oldTex: { value: null }, oldK: { value: 1 }, oldRect: { value: new THREE.Vector4(0, 240, 1080, 2160) },
   });
 
@@ -287,6 +297,7 @@ class Screen {
     if (s.oldRect) (u.oldRect!.value as THREE.Vector4).set(...s.oldRect);
     u.oldK!.value = s.oldK ?? 1;
     u.lineGlow!.value = s.lineGlow ?? 0.6;
+    u.leakK!.value = s.leak ?? 0;
     u.gain!.value = s.gain ?? 3.2;
     u.touchK!.value = s.touch ?? 1;
     u.tftK!.value = s.tft ?? 1;

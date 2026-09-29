@@ -83,7 +83,7 @@
 
   "layar": { "ignite": 0.17, "plunge": [7.03, 7.5] },
   "chip": { "layers": [7.5, 7.96875, 8.4375, 8.90625, 9.375], "birth": 10.3125, "whip": 11.25, "gap": 12.1875 },
-  "hujan": { "window": 13.125, "ramp": [14.06, 14.53], "wave": 14.53, "passCam": 15.0, "tower": 18.75, "descend": [18.9, 20.625] },
+  "hujan": { "window": 13.125, "hold": 13.5, "drop": 14.0625, "ramp": [14.06, 14.53], "wave": 14.53, "passCam": 15.0, "tower": 18.75, "descend": [18.9, 20.625] },
   "pantai": { "shore": 22.5, "lip": 23.9, "plunge": 24.375 },
   "laut": { "pass": 26.25, "rep0": 28.125, "repEvery": 0.9375, "peel": [28.6, 30.0], "fiber": [30.0, 33.75], "exit": [33.75, 35.2], "rise": [35.6, 37.5] },
   "server": { "aisle": 38.0, "die": 38.9, "clock0": 39.375, "ticks": 8, "pullout": [43.6, 46.875] },

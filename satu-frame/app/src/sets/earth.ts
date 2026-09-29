@@ -134,7 +134,33 @@ vec2 groundKm(vec3 p) { vec3 rel = p - fO; return vec2(dot(rel, fE), dot(rel, fN
 vec2 streetKm(vec2 q) { return rot2(0.35) * q + 0.08 * vec2(snoise(q / 2.5 + 1.3), snoise(q / 2.5 + 8.9)); }
 float fabric(vec2 q, float fp, float plateau) {
   float w = smoothstep(3.0, 7.0, 3.0 / fp) * plateau;
-  return w > 0.0 ? mix(1.0, 1.0 + 0.25 * snoise(q / 3.0 + 7.7), w) : 1.0;
+  return w > 0.0 ? mix(1.0, 1.0 + 0.1 * snoise(q / 3.0 + 7.7), w) : 1.0;
+}
+// From 150–500 km a lit city is its streets (what photos from orbit show; 500 m data cannot): districts
+// ~4 km across, each with its own street grid (turned its own way, its own block size, brighter or dimmer),
+// expressways curving through, a dark park or reservoir here and there. Only where the map is lit, only once
+// the streets span a few pixels, and with the mean kept near 1 (the light stays NASA's).
+float cityGrain(vec2 gs, float fp, float litMap) {
+  // (below ~60 km the glow is the map's again, then single lamps: see main)
+  float w = smoothstep(0.2, 0.6, litMap) * smoothstep(0.5, 0.2, fp) * smoothstep(0.03, 0.06, fp);
+  float g = 1.0;
+  if (w > 0.0) {
+    vec2 q = gs / 4.0, qi = floor(q), id = qi;
+    float best = 9.0;
+    for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+      vec2 c = qi + vec2(float(i), float(j));
+      float dd = length(q - c - hash22(c));
+      if (dd < best) { best = dd; id = c; }
+    }
+    float blk = mix(0.14, 0.38, hash12(id + 4.2)), bri = mix(0.65, 1.3, hash12(id + 9.1));
+    vec2 u = rot2(hash12(id + 1.7) * 3.1416) * gs / blk;
+    float lane = roadCover(u, 0.1, fp / blk, 0.3);
+    // expressways: the zero lines of a slow field (|n| / |grad n| ~ distance), a few per 10 km
+    float hwy = 1.0 - smoothstep(0.02, 0.02 + fp, abs(snoise(gs / 11.0 + 2.1)) * 5.5);
+    float park = smoothstep(0.55, 0.75, snoise(gs / 1.3 + 3.3)) * step(bri, 0.95);
+    g = (bri * (0.3 + 1.2 * lane) * (1.0 - 0.85 * park) + 1.6 * hwy) / 0.63;
+  }
+  return mix(1.0, g, w);
 }
 
 // clouds over Jakarta (and a few elsewhere): coverage 0..1 at a point on the deck
@@ -171,7 +197,7 @@ void main() {
       float land = smoothstep(0.47, 0.53, m.g);
       // low over a city the exposure comes down, so its core keeps its structure instead of going flat white
       vec2 gq = groundKm(p), gs = streetKm(gq);
-      float lit = m.r * m.r * 1.6 * expoLow * fabric(gq, fp, smoothstep(0.55, 0.9, m.r));
+      float lit = m.r * m.r * 1.6 * expoLow * fabric(gq, fp, smoothstep(0.55, 0.9, m.r)) * cityGrain(gs, fp, m.r);
       // close to the ground: the glow breaks into lamps ~35 m apart, fixed to the ground, along the streets
       // (a few in the blocks), density from the map
       float det = smoothstep(0.012, 0.004, fp);
@@ -257,9 +283,9 @@ class Earth {
     u.hCam!.value = cam.pos.length() - R_EARTH;
     // near the ground the sky is the overcast night, not the limb seen from space
     u.rimK!.value = Math.min(1, Math.max(0, (u.hCam!.value - 12) / 110));
-    // city cores go flat white when seen from low: bring the lights down under ~500 km (0.55 at 150 km and below)
+    // city cores go flat white when seen from low: bring the lights down under ~500 km (0.35 at 150 km and below)
     const lo = Math.min(1, Math.max(0, (u.hCam!.value - 150) / 350));
-    u.expoLow!.value = 0.55 + 0.45 * lo * lo * (3 - 2 * lo);
+    u.expoLow!.value = 0.35 + 0.65 * lo * lo * (3 - 2 * lo);
     u.headS!.value = s.headS; u.threadK!.value = s.threadK ?? 1; u.cloudK!.value = s.cloudK ?? 1; u.lightsK!.value = s.lightsK ?? 1;
     this.pass.render(ctx.renderer, out);
   }

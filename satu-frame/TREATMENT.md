@@ -20,6 +20,8 @@ Seluruh video ini adalah **satu kali layar HP menyegarkan gambar**: 16,667 milid
   - lampu berhalo di udara hujan.
 
   Halo itu bagian dari adegan, bukan bloom, jadi caption tetap tanpa halo. Kota diberi eksposur +0,3 stop, masuk dan keluar dengan halus di celah antena, permukaan laut, dek awan, dan jendela. Biru sinyal tetap yang paling terang.
+- *(berubah)* **Kamar kita hanya diterangi layar HP.** Di S8 jendela kita satu-satunya yang berpendar putih-dingin di antara tirai-tirai hangat tetangga: plafon putih menangkap genangan cahaya layar, dan pantulannya samar-samar menerangi dinding, lemari, dan kasur. Penonton tahu "itu kamarnya" sebelum kamera masuk.
+- *(berubah)* **Kampung yang bisa ditunjuk di peta.** Dari dekat, atap-atapnya Jakarta, bukan perumahan generik: tiang listrik beton dengan kabel melendut dan kusut, toren air, parabola, AC, pagar dan gerbang besi, jemuran.
 - **Cerdas tapi kering.** Setiap angka di layar benar, dan kejujurannya terlihat (`λ 1550 nm · inframerah · warna palsu`). Lucunya muncul dari fakta ("Hujan pun berhenti." / "Sinyalnya tidak.").
 - **Kecepatan terasa lewat perubahan skala dan laju waktu.** Perubahan laju selalu terlihat (angka × bergulir), dan musik ikut tape-stop / tape-start.
 
@@ -31,7 +33,9 @@ Penyimpangan (disengaja):
 - **Subpixel merah dan hijau** hanya di makro layar (S1, S2 awal, S8 akhir, keluar-loop), karena layar memang tersusun dari emitor R/G/B. R `#FF3B2F`, G `#3DFF7A`, B `#2F5BFF`. Tidak pernah dipakai untuk teks atau UI.
 - **Logam redup** (emas pad `#B8A987`, tembaga `#A08A7A`) hanya sebagai material.
 - **Lampu kota** = putih hangat samar (LED), tidak oranye sodium. Awan di atas Jakarta memantulkannya sedikit lebih dalam (hangat-gelap), tetap bukan oranye. *(berubah)* Dari bawah, langit mendung dan udara hujan memakai pendar hangat-netral yang sama (horizon ±`#4E4945`, zenit hampir hitam). Tirai jendela yang menyala berwarna hangat, lebih dalam dari lampu jalan.
-- *(berubah)* **Warna kampung** hanya sebagai material: dinding kapur pucat dan cat pudar, atap genteng tanah liat, seng berkarat, dan semen.
+- *(berubah)* **Warna kampung** hanya sebagai material: dinding kapur pucat dan cat pudar, atap genteng tanah liat, seng berkarat, dan semen. Ditambah toren oranye/biru/abu, gerbang besi hijau tua/hitam, dan jemuran berwarna pudar, semuanya diredam.
+- *(berubah)* **Cahaya layar HP di kamar** putih dingin (D65, `SCREEN_WHITE`), lebih dingin dari lampu mana pun di luar. Dinding kamar dicat putih pucat netral, sehingga kamar terbaca dingin di samping fasad yang hangat.
+- *(berubah)* **Coating serat biru** (serat nomor 1 dalam kode warna TIA-598) hanya sebagai material dinding terowongan di S5. Masih keluarga biru brand.
 - **Meja kayu walnut yang hampir hitam** (S3 awal, S8 akhir, S9) dan **keramik kapasitor coklat-krem** di papan (S2) hanya sebagai material.
 
 Tipografi:
@@ -110,6 +114,12 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
   - 15,47 – 18,28: **Sinyalnya tidak.**
 - **Frame kunci:**
   - Keluar dari celah antena, melintasi meja, menembus kaca jendela berbutir air, ke hujan beku. *(berubah)* Tepi HP masih memancarkan cahaya biru samar ke meja dan kusen sampai kubah radio lahir dari titik yang sama (14,53), sehingga ruangan terbaca dan tidak ada frame hitam kosong.
+  - *(baru)* **Satu tetes hujan beku, 12 cm di luar kaca (13,5 – 14,0625).** Tepat setelah menembus jendela, kamera mengerem di depan satu tetes yang menggantung diam (Ø 3 mm, sedikit pipih di bawah, bukan berbentuk air mata). Lensa berubah jadi makro:
+    - kota di belakangnya melebur menjadi blur lembut dan lampu jalan menjadi bokeh;
+    - tetesnya tajam dan tumbuh dengan zoom tetap dari ±50 ke ±360 px, di atas pita caption;
+    - di dalam tetes, seluruh kota terbalik: jalan, jendela menyala, dan deret lampu di atas, langit di bawah, dengan tepi gelap pantulan total.
+
+    "Hujan pun berhenti." (13,59) muncul saat tetes itu diam di layar. Lalu kamera **menembus tetes tepat di ketukan 14,0625**, yaitu saat tape-stop ke ×1.000.000 dimulai (hujan berhenti, lalu waktu berhenti). Satu frame dari dalam air, lalu fokus langsung ke jauh dan kamera dilempar keluar dan berbalik menatap jendela. Key 14,4 dan seterusnya (kubah 14,53, menara 18,75) tidak berubah; lesatan keluar jadi lebih cepat.
   - *(berubah)* Jendela-jendela yang menyala di gedung kita sendiri adalah bukaan yang punya kedalaman:
     - kusen dan palang di muka dinding, lalu relung plester 14 cm yang diterangi dari dalam, dan ambang jendela;
     - di belakangnya tirai kain hangat yang berlipat lembut dan disinari lampu kamar (satu tersingkap sedikit);
@@ -127,6 +137,13 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
     - satu pintu, noda hujan di bawah ambang, dan pondasi yang lebih gelap.
 
     Dari jauh, pola jendela memudar ke rata-ratanya supaya tidak moiré. Di luar kampung, kota diisi ±40 ribu blok beratap datar berjendela di antara jalan-jalan lampu karpet. Menara jauh punya jendela per lantai.
+  - *(baru)* **Detail kampung**, hanya di tempat kamera lewat dekat: ±280 m sekitar gedung kita, koridor jalan kabel S4, dan ±140 m sekitar menara. Detail ini memakai aliran acak sendiri, jadi tata letak kota tidak bergeser.
+    - **Tiang listrik beton** di setiap lampu jalan (lampu tidak lagi melayang). Lengannya menjangkau ke atas jalan. Dari tiang ke tiang: tiga kabel fase di palang, bundel twist, dan 1–3 kabel telekomunikasi yang paling melendut. Ada sambungan ke rumah-rumah dan gulungan kabel cadangan di sebagian tiang. Kabel digambar sebagai pita minimal ±1,4 px yang memudar bila lebih tipis, sehingga tidak berkedip. Tetes beku menempel di bawah kabel dan berkilau hanya dekat lampu.
+    - **Toren air** oranye, biru, abu, atau krem di atas rangka besi yang mengangkangi bubungan.
+    - **Parabola** diarahkan ke satelit sungguhan: Telkom-4 (hampir tegak, elevasi 82,6°) atau MEASAT-3 (rendah ke barat-barat laut).
+    - **AC luar** dengan noda tetesan di bawahnya.
+    - **Tembok depan dengan gerbang besi**, di rumah yang punya halaman ke jalan.
+    - **Jemuran beku** di halaman depan.
   - Butir hujan diam: tajam di bidang fokus, bokeh di depan/belakang, dan hanya sebagian yang berkilau lampu kota.
   - Kota: ribuan atap kampung, gedung dengan jendela menyala, menara seluler rangka baja di ±1,3 km.
   - 14,06: ramp ke ×1.000.000.
@@ -134,7 +151,7 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
   - 15,0: kubah menelan kamera.
   - Kamera lalu naik tinggi ke samping dan menyaksikan cincin menyapu kota ke menara. Tepat 18,75 cincin menyentuh menara: kilat di panel, guncangan kecil.
 - **18,9–20,6:** garis biru turun di sepanjang kaki menara, kamera ikut turun. Ramp keluar ke ×1.400.
-- **SFX:** hujan beku (butir noise yang dibekukan), tape-stop, nada kubah naik, sapuan yang menembus kamera, denting kristal, impact menara + bell, tape-start, sapuan turun.
+- **SFX:** hujan beku (butir noise yang dibekukan), *(baru)* nada tipis yang naik saat lensa mendekati tetes lalu "plink" tetes air saat menembusnya, tape-stop, nada kubah naik, sapuan yang menembus kamera, denting kristal, impact menara + bell, tape-start, sapuan turun.
 
 ### S4 · Pantai · 20,625 – 24,375 *(berubah: ombak pecah diganti laut beku)*
 - **Teks:** tidak ada.
@@ -142,6 +159,8 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
   - Di pangkal menara, kabel menyala seperti sinar-X di bawah jalan, belok, lalu lurus ke utara melewati pelabuhan.
   - Garis itu **terus keluar ke laut beku** (air hitam mengkilap yang memantulkan lampu pantai, dari tangkapan cube map adegan asli) sampai ke cakrawala. *(berubah)* Tangkapan cube map dulu tidak melihat lampu (lampu ada di layer efek), jadi laut hanya memantulkan langit. Sekarang lampu tanggul dan pelabuhan tampak sebagai goresan di air beku, di bawah langit mendung bergumpal yang berpendar.
   - *(berubah)* Jalan kabel di pelabuhan basah dan memantulkan deretan lampunya. Gudang seng yang basah memantulkan langit, dan tanggul disinari lampu-lampunya sendiri.
+  - *(berubah)* **Tanggul laut** tidak lagi pita gelap di cakrawala. Bentuknya tanggul raksasa Jakarta: dinding beton cor 2,2 m di atas jalan pelabuhan dengan panel 12 m bersambungan gelap, garis cor, noda hujan yang mengalir, dan kaki yang gelap basah. Di atasnya ada jalan setapak basah dan pagar besi. Lampu-lampu jalan pelabuhan berdiri di tiangnya sendiri di depan tanggul dan menerangi mukanya satu per satu, membentuk pola sisik cahaya.
+  - *(berubah)* **Laut beku** di balik tanggul punya ombak yang terbaca: 22 deret gelombang, dari alun 20 m sampai riak 30 cm, menyebar di sekitar arah angin, dihitung per piksel (mesh laut terlalu kasar untuk membawanya, jadi dulu terlihat abu-abu rata). Kaca hitam memantulkan langit mendung. Deret yang terlalu halus untuk satu piksel beralih menjadi kekasaran, sehingga tidak berkilap-kilap.
   - Kamera terbang rendah mengikutinya, menunduk, dan tenggelam tepat di bar 13 (24,375). *(berubah)* Dilihat dari sangat dekat, pendar kabel tetap berupa garis dan tidak membanjiri layar dengan biru. Di bawah permukaan, garis kabel terus terlihat menembus air keruh dan berbelok ke posisi kabel di dasar laut, sampai kabel dan paket S5 sendiri muncul (±24,9).
 - *Alasan perubahan:* ombak pecah yang membeku tidak terbaca di malam gelap tanpa sumber cahaya. Garis kabel yang keluar ke laut lebih bersih dan lebih bermakna.
 - **SFX:** angin tipis, napas, boom bawah air.
@@ -156,10 +175,15 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
 - **Frame kunci:**
   - Air keruh gelap total. Satu-satunya cahaya adalah **paket data ±80 m cahaya** (500 B pada 10 Gb/s = 400 ns cahaya) di satu serat, bersinar menembus kabel dan menghamburi air.
   - Kamera ikut paket (±76 km per detik film). Dasar laut menjadi garis-garis blur; benda di kabel lewat dalam satu frame.
+- *(berubah)* **Dasar laut terlihat.** Paket adalah garis cahaya sepanjang 80 m, jadi cahayanya jatuh ±1/r, bukan 1/r² seperti titik. Lumpur Laut Jawa (lanau abu-zaitun gelap, sesekali pecahan cangkang) di kiri-kanan kabel terbaca sebagai hamparan beralur yang diterangi paket, memudar ke air keruh. Dulu hanya beberapa sentimeter dari kabel yang terang.
   - Tiap 2 ketukan paket melewati **penguat**: kilat biru, dan terangnya pulih (gigi gergaji).
 - *(berubah)* Kabel selalu terbaring di atas dasar laut (di sepanjang kabel dasarnya tergerus), jadi kamera yang turun ke kabel tidak pernah masuk ke dalam pasir.
 - **28,6–30:** kabel terkupas lapis demi lapis (selubung PE → kawat baja heliks → tembaga → tabung baja) sampai berkas serat. *(berubah)* Tepi potongan setiap lapisan menangkap cahaya yang keluar dari dalam. Kawat baja, tembaga, dan tabung punya kilap sendiri. Selubung berpendar biru di sekitar paket. Serat-serat yang gelap tetap tampak sebagai untaian kaca bening (kilau dan tepi Fresnel dari cahaya paket), bukan batang hitam.
-- **30–34,5:** **di dalam satu serat.** Inti menyala (mode ±10,4 µm, sedikit melampaui inti) dengan riak halus sepanjang gelombang di kaca. Dinding kelongsong memantulkannya secara total, sehingga inti tampak berulang. Orbit pelan mengelilingi inti.
+- **30–34,5:** **di dalam satu serat.** Inti menyala (mode ±10,4 µm, sedikit melampaui inti) dengan riak halus sepanjang gelombang di kaca. Dinding kelongsong memantulkannya secara total, sehingga inti tampak berulang. Orbit pelan mengelilingi inti. *(berubah)* Terowongannya kini terbaca:
+  - dari luar, serat adalah batang biru tembus cahaya (coating akrilat serat nomor 1) dengan kilau Fresnel dan inti yang menyala di dalamnya;
+  - dari dalam, muka dalam coating menjadi dinding tabung yang berpendar lembut oleh cahaya yang dihamburkan kaca dari mode (hamburan Rayleigh). Dinding lebih terang ke arah titik hilang, karena dilihat menyerempet, jalur cahaya di lapisan buram itu lebih panjang.
+
+  Dulu ruang hitam dengan dua berkas yang terbaca seperti sinar laser.
 - **34,5–37,5:** kembali ke skala kabel. Dasar laut naik, cahaya dari atas mulai terasa (mendekati Singapura). *(berubah)* Air berangsur terang ke biru-batu, riak pasir tersinari dari atas, dan ada berkas cahaya miring yang samar (membeku seperti yang lain).
 - **Transisi keluar** *(berubah, dulu cut keras)*: pada 0,35 s terakhir kamera mengikuti serat yang menyala naik ke stasiun pendaratan. Air keruh menutup, garis biru berayun ke tempat serat itu menyusuri baki kabel di lorong S6, lalu lorong terbuka di sekelilingnya.
 - **SFX:** hamparan tekanan bawah air, desir paket, ping penguat yang naik nadanya tiap kali, sapuan kupas, nada kaca tinggi, riser.
@@ -177,7 +201,12 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
   - 39,375–43,125, 8 ketukan: **H-tree jam** (12 level). Di setiap ketukan, sisi jam menyala dari akar ke cabang, ±18 ms film per level (≈ 13 ps nyata), lalu flip-flop di ujungnya menyala. *(berubah)* Semua level digambar utuh sekaligus, jadi batang pohon lurus bersih (dulu tergigit cabang halus).
   - *(berubah)* Keterbacaan: selama caption tampil, kilat pohon diredupkan (hingga 85 %) di pita caption dan pojok HUD, dengan tepi lembut. Yang diredupkan hanya cahayanya: permukaan die tetap terlihat, dan tidak ada bentuk yang mengikuti huruf (bukan halo/outline).
   - 43,3: jawaban pergi, seluruh pohon menyala.
-- **Tarik mundur:** die → server → lorong → **tembus atap (sekejap gelap)** → 150 km di atas Singapura → 900 km. *(berubah)* Dari 150 km, lampu Singapura tidak lagi kotak-kotak: tekstur 500 m disampel bicubic, lubang satu-texel di inti kota yang jenuh ditambal dari mip berikutnya, dan eksposur lampu diturunkan di bawah ±500 km supaya inti kota tidak putih rata.
+- **Tarik mundur:** die → server → lorong → **tembus atap (sekejap gelap)** → 150 km di atas Singapura → 900 km. *(berubah)* Dari 150 km, lampu Singapura tidak lagi kotak-kotak: tekstur 500 m disampel bicubic, lubang satu-texel di inti kota yang jenuh ditambal dari mip berikutnya, dan eksposur lampu diturunkan di bawah ±500 km supaya inti kota tidak putih rata. *(berubah lagi)* Pada 60–500 km kota yang terang adalah jalan-jalannya, seperti di foto dari orbit (data 500 m tidak bisa menunjukkannya):
+  - distrik ±4 km, masing-masing dengan grid jalan sendiri (arah, ukuran blok, dan terang berbeda);
+  - jalan tol yang melengkung;
+  - taman atau waduk gelap di sana-sini.
+
+  Rata-ratanya dijaga ±1, sehingga total cahaya tetap milik NASA. Eksposur lampu di 150 km menjadi 0,35. Dulu gumpalan putih berbintik.
 - **SFX:** kipas ruang server, sapuan masuk die, tape-stop; lalu hanya jam (kick kering + klik logam) dengan mekaran akor di setiap kilat; reverse swell, riser naik, lepas "udara".
 
 ### S7 · Orbit · 46,875 – 54,375
@@ -197,12 +226,20 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
   - Keluar di bawah awan: karpet lampu kota. Hujan beku muncul di bawah ±400 m. *(berubah)* Lampu-lampu berbaris di sepanjang jaringan jalan yang terpaku ke tanah, dengan genangan cahaya di jalan di antara atap rumah yang gelap. Lampu di jalan melintang juga menyala.
   - *(berubah)* Di bawah dek awan, udara hujan berpendar hangat (kabut lebih tebal di awal tukikan), menyambung dari awan yang berpendar di earth.ts. Dari 1,5 km kota terbaca sebagai jaringan jalan yang menyala di antara blok-blok gelap, dengan jalan utama kampung yang lebih hangat. Makin rendah, rumah-rumah menampakkan jendela, atap basah, dan genangan lampu yang memanjang.
   - *(berubah)* 57,6–58,6: lampu jalan di depan gedung kita menyinari fasad dari bawah. Jendela-jendela bertirai menyala di relungnya. Pada 57,656 kilat radio jawaban menyalakan ribuan butir hujan biru di depan fasad.
+  - *(berubah)* **Kamar kita tidak lagi lubang hitam.** Layar HP (91–95 % putih) adalah satu-satunya lampu kamar. Cahayanya memancar ke atas seperti bidang difus, menjadi genangan putih-dingin lembut di plafon yang dicat putih. Genangan itu memantulkan sedikit cahaya ke bawah, ke partisi 3,6 m di belakang (ada pintu ke lorong gelap), lemari, kasur, dan lantai keramik. Kamar terbaca dingin dan redup di samping fasad yang hangat. Khusus S8: S3 dan S9 identik per piksel dengan sebelumnya.
   - *(berubah)* Eksposur kota (+0,3 stop) masuk saat menembus awan (56,1–56,35) dan keluar saat kamera masuk jendela (58,6–59,3). Meja, HP, dan kaca layar tetap pada eksposur film.
   - *(berubah)* Tukikan dari 1,5 km ke meja memakai jalur kamera monoton: kamera tidak lagi sempat menembus tanah (dulu y −1,5 m di 57,27) atau melewati HP.
   - **57,656: gelombang radio jawaban melintasi kota di dalam satu frame** (pada ×2.500 radio 1,3 km = 4 µs). Tampil jujur sebagai satu kilat biru pada butir hujan.
   - Jendela yang sama, meja, HP dari atas (atas putih, sepertiga bawah masih hitam), menembus kaca ke baris-baris terakhir.
+  - *(berubah)* **Tukikan ke kaca tanpa frame gelap** (dulu 59,95–60,9 hampir hitam: kamera menatap tegak lurus ke baris yang belum dilukis). Alurnya kini:
+    - 59,53 (ketukan): kamera diam sejenak 7 cm di atas layar;
+    - lalu menukik sambil mengangkat pandangan. Lensa selalu membidik satu baris tepat melewati garis refresh, jadi baris putih yang sudah dilukis ada di atas bingkai dan baris gelap di bawahnya;
+    - 59,62: begitu bingkai hanya berisi layar (±2 cm), shader layar mengambil alih dan putih terurai menjadi emitor R/G/B, mosaik yang sama dengan S1;
+    - 60,15 (denting kaca): lensa menembus permukaan kaca penutup dan tetap di dalamnya sampai mendarat (S9 mundur keluar darinya).
+
+    Baris yang belum dilukis tidak hitam mati: cahaya dari baris yang sudah menyala merambat di kaca penutup dan membuat dinding emitor mati serta debu di kaca berkilau. Kecerahan layar HP di S8 sama dengan S9 (0,5).
   - Garis refresh datang dari kejauhan ke lensa dan **mendarat di baris 2.400 tepat 61,875**. Semua putih.
-- **SFX:** riser tukik, sapuan awan, hujan beku, kilauan radio, denting jendela & kaca, desis "zipper" baris yang makin rapat, **impact + gema + akor D mayor** saat mendarat.
+- **SFX:** riser tukik, sapuan awan, hujan beku, kilauan radio, denting jendela & kaca (kaca: saat lensa menembus kaca penutup), desis "zipper" baris yang makin rapat, **impact + gema + akor D mayor** saat mendarat.
 
 ### S9 · Foton · 63,75 – 67,5
 - **Teks:** 64,69 – 67,2: **Terakhir: 30 cm ke matamu.** (y 520, di atas meja gelap).
@@ -224,7 +261,7 @@ Lihat bagian 8.
 - **Tiga bus:**
   - **jam:** kick di setiap ketukan, tidak pernah di-tape-stop. Lembut di S1–S4, penuh di S5, kering sendirian di S6, lebar di S7–S8, hilang di S9.
   - **musik:** pad, bass 8-an + arpeggio 16-an di S5 dan S8. Kena tape-stop/start persis di ramp jam fisik: 14,06–14,53 / 18,6–19,1; 38,9–39,375 / 43,125–43,6; 63,9–64,66 / 67,46–67,5.
-  - **sfx:** daftar di storyboard. Semua whoosh di-pan mengikuti layar.
+  - **sfx:** daftar di storyboard. Semua whoosh di-pan mengikuti layar. *(berubah)* Tetes di S3 punya bunyinya sendiri: nada tipis yang naik selama tahanan (`hujan.hold` → `hujan.drop`) lalu "plink" tetes air tepat di ketukan saat lensa menembusnya. Suara tetes memakai generator acak sendiri, sehingga SFX lain tidak bergeser (dicek: stem SFX hanya berubah di 13,5–16,7 s, termasuk ekor gemanya).
 - **Loop:** 0,6 s terakhir meluruh ke hening, dan detik 0 mulai dari hening.
 - **Mix:** peak −1 dBTP, dinormalisasi ke −14 LUFS saat encode. Stem terpisah: `score_music.wav` (jam + musik) dan `sfx.wav`; `score.wav` = mix.
 
@@ -260,6 +297,16 @@ Yang baru:
   - Jendela prosedural per instance dengan anti-aliasing ke rata-rata.
   - Halo lampu sebagai sprite adegan (`LightPoints` mode halo).
   - Kilau butir hujan dari medan lampu (`sprites.ts`).
+- **Revisi terakhir** *(baru)*:
+  - **Tetes-lensa** (`sets/drop.ts`): ellipsoid air ditrace analitik di atas frame (setelah DOF), dengan refraksi masuk-keluar, Fresnel, dan pantulan total. Isinya cube map kota yang ditangkap sekali dari posisi tetes (kota beku, jadi satu tangkapan berlaku untuk semua frame). Selama tahanan, adegan kota memakai DOF-nya sendiri (`CityState.dof`); blur DOF kini bisa sampai 64 px.
+  - **Detail kampung** (`sets/kampung.ts`): instancing dari aliran acak sendiri (`mulberry32(41)`); daftar rumah dan lampu dikumpulkan tanpa menambah tarikan acak kota. Kabel berupa pita layar (shader sendiri, dua sisi, lebar minimal ±1,4 px, alpha = tebal sebenarnya / tebal gambar) yang membaca medan lampu yang sama.
+  - **Tanggul**: `outdoor()` menerima kait GLSL (`Hooks`) untuk permukaan dan cahaya. Tanggul, pagar, dan tiangnya menjumlahkan lampu jalan pelabuhan satu per satu (`QUAY_LIGHT`), karena tekstur genangan berhenti di garis pantai.
+  - **Laut beku**: normal ombak per piksel (spektrum 22 deret, memudar ke kekasaran bila lebih halus dari satu piksel); mesh laut kini datar dan kasar.
+  - **Kamar**: cahaya layar = SpotLight ke atas (kerucut difus) + RectAreaLight di plafon (pantulan genangan), hanya diisi S8 (`phoneSky`). Material kamar baru tidak memakai hemisphere/direksional lama (`indoor()`).
+  - **Layar**: satu kamera satuan layar untuk tukikan S8 yang dipetakan ke meter kamar (serah terima kota → shader layar identik). `leak` di shader layar (default 0; S1/S2/S9 tidak berubah) untuk cahaya yang merambat di kaca penutup.
+  - **Dasar laut**: iluminasi sumber garis analitik (selisih atan / r) untuk permukaan; hamburan air tetap memakai model lama supaya air tetap gelap.
+  - **Serat**: coating (r 125 µm) sebagai cangkang tembus cahaya dari luar dan dinding buram yang berpendar dari dalam.
+  - **Bumi**: `cityGrain` (distrik Voronoi 4 km, grid jalan per distrik, jalan tol dari isoline noise, taman) pada fp 0,03–0,5 km/px.
 - **Peringatan kompiler shader** *(dibereskan)*:
   - X4000: satu `return` per fungsi di screen, die, dan earth;
   - X3577: pengaman NaN memakai bit (`floatBitsToUint`), karena kompiler D3D membuang `isnan()`;
@@ -302,6 +349,13 @@ Yang baru:
 | Jarak punggung sidik jari ±0,45 mm | ±7 pitch piksel (63,5 µm) di layar |
 | 30 cm ke mata = 1 ns | 0,3 m ÷ 3×10⁸ m/s |
 | Hujan/laut beku | tetes jatuh ±9 m/s ÷ ≥1.400 → ≤ 7 mm/s di layar |
+| Tetes hujan 3 mm sedikit pipih, bukan berbentuk air mata; di dalamnya kota tampak terbalik | tetes > ±2 mm dipipihkan hambatan udara (rasio sumbu ±0,9). Bola air adalah lensa bola: bayangannya terbalik dan diperkecil |
+| Parabola kampung menghadap hampir tegak ke atas | dari Jakarta (6,2° LS, 106,8° BT): Telkom-4 di 108° BT → elevasi 82,6°, azimut ±11° (utara-timur laut); MEASAT-3 di 91,5° BT → elevasi 70,6°, azimut ±292° (barat-barat laut) |
+| Serat nomor 1 berwarna biru | kode warna serat TIA-598: 1 biru, 2 oranye, 3 hijau, … |
+| Dinding serat berpendar oleh cahaya inti | hamburan Rayleigh di kaca silika, penyebab utama redaman serat (±0,2 dB/km di 1550 nm) |
+| Cahaya paket jatuh ±1/r ke dasar laut | sumber garis sepanjang 80 m: iradiansi ∝ sudut yang dibentang ÷ jarak |
+| Dari orbit, kota terbaca sebagai jaringan jalan | foto malam dari ISS. Data Black Marble 500 m tidak memuatnya, jadi ditambahkan prosedural dengan rata-rata cahaya dijaga |
+| Layar HP menerangi plafon | layar ±500 nit seluas ±0,01 m² ≈ ±5 cd tegak lurus ke atas → ±1 lux di plafon 2,5 m di atasnya. Terang di dalam gambar sedikit dilebihkan supaya kamar terbaca |
 
 Penyederhanaan yang disadari:
 - Kamera terbang lebih cepat daripada yang mungkin secara fisik.
@@ -309,3 +363,5 @@ Penyederhanaan yang disadari:
 - Foton digambar sebagai titik terlihat.
 - Server "di Singapura" bersifat generik.
 - Rute kabel bukan kabel bernama.
+- Tanggul, kampung, dan kamar bersifat generik (bukan alamat nyata); detail kampung hanya dipasang di tempat kamera lewat dekat.
+- Tetes di S3 dan butir hujan beku lainnya tidak jatuh 12 cm selama 13 ms antara S3 dan S8 (medan hujan yang sama dipakai di kedua bab).

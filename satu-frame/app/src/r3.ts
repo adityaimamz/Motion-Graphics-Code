@@ -141,7 +141,8 @@ export class R3 {
     r.render(scene, this.cam);
     this.cam.layers.enable(FX_LAYER);
     scene.overrideMaterial = null;
-    this.dofPass.run(r, this.color.texture, this.depth.texture, out, s.focus ?? s.pos.distanceTo(s.look), ap);
+    // (a macro wider than the usual 28 px blur gets it: the gather widens with the aperture, up to 64 px)
+    this.dofPass.run(r, this.color.texture, this.depth.texture, out, s.focus ?? s.pos.distanceTo(s.look), ap, Math.max(28, Math.min(ap, 64)));
   }
 
   /** DOF for fullscreen worlds that rendered colour into `color` and view depth into `depth`. */

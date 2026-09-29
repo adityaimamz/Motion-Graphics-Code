@@ -35,6 +35,16 @@ float pulseLight(vec3 p) {
   float k = pK * (0.25 + 2.2 * exp(-a * 9.0));
   return k * exp(-murk * d) / (d * d + 0.02);
 }
+// light falling on a surface at p: the packet is a line of light 80 m long (its first ~9 m brighter), so
+// what reaches p goes as the angle the line subtends over the distance to it (1/r, not 1/r²), dimmed by
+// the murk over that distance
+float lineA(float r, float z1, float z2) { return atan(z2 / r) - atan(z1 / r); }
+float pulseOn(vec3 p) {
+  vec3 q = p - vec3(fibreOff.x, R_SHEATH + fibreOff.y, 0.0);
+  float r = length(q.xy) + 0.004;
+  float body = lineA(r, headZ - q.z, headZ + pLen - q.z), head = lineA(r, headZ - q.z, headZ + 9.0 - q.z);
+  return pK * (0.25 * body + 2.2 * head) / r * exp(-murk * r);
+}
 // ---- seabed height (world z = local z + sCam): long grooves along the route, soft ripples, a trench near the cable
 float bed(vec2 xz) {
   float zw = xz.y + sCam;
@@ -163,16 +173,18 @@ void main() {
         float e = 0.02;
         vec3 n = normalize(vec3(bed(p.xz - vec2(e, 0)) - bed(p.xz + vec2(e, 0)), 2.0 * e, bed(p.xz - vec2(0, e)) - bed(p.xz + vec2(0, e))));
         vec3 lp = vec3(0.0, R_SHEATH, clamp(p.z, headZ, headZ + pLen));
-        float L = pulseLight(p) * max(0.0, dot(n, normalize(lp - p)));
+        vec3 lq = vec3(0.0, R_SHEATH, p.z) - p;
+        float L = pulseOn(p) * (0.25 + 0.75 * max(0.0, dot(n, normalize(lq))));
         // amplifier flash lights the floor around it
         for (int r = 0; r < 2; r++) { float rz = r == 0 ? repA : repB; vec3 q = p - vec3(0, 0.3, rz); L += flash * 60.0 * max(0.0, dot(n, normalize(-q))) / (dot(q, q) + 0.5) * exp(-murk * length(q)); }
         float zw = p.z + sCam;
         float grain = 0.55 + 0.25 * snoise(vec2(p.x * 3.0, zw * 0.3)) + 0.2 * snoise(vec2(p.x * 17.0, zw * 2.1));
         float pebble = smoothstep(0.62, 0.8, snoise(vec2(p.x * 9.0, zw * 9.0)));
-        float silt = 0.05 * grain + 0.05 * pebble;
+        // Java Sea mud: dark olive-grey silt, shell grit here and there
+        float silt = 0.13 * grain + 0.08 * pebble;
         // near Singapore the floor rises into the city's light from above: the sand ripples read, lit from above
         float ripple = 0.75 + 0.25 * sin(zw * 2.2 + p.x * 0.8 + 2.0 * snoise(vec2(p.x * 0.4, zw * 0.15)));
-        c = silt * ICE * L * 0.12 + vec3(0.03, 0.05, 0.075) * surf * (0.2 + 0.8 * max(n.y, 0.0)) * (0.6 + 0.4 * grain) * ripple;
+        c = silt * ICE * L * 0.14 + vec3(0.03, 0.05, 0.075) * surf * (0.2 + 0.8 * max(n.y, 0.0)) * (0.6 + 0.4 * grain) * ripple;
         tHit = t; hit = true;
       }
     }
