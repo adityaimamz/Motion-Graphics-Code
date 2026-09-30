@@ -1,0 +1,53 @@
+{
+  "_": "Sumber waktu tunggal (detik film) untuk app/ dan audio.py. 128 BPM: 1 ketukan = 0,46875 s. Dunia kertas 12 fps; setiap cue menjadi jangkar langkah (hentakan jatuh tepat di frame cue).",
+  "bpm": 128,
+  "dur": 60,
+  "paperFps": 12,
+  "smoothFrom": 49.6875,
+  "ch": {
+    "hook": [0, 3.75],
+    "riak": [3.75, 13.125],
+    "flip": [13.125, 18.75],
+    "ui": [18.75, 26.25],
+    "pop": [26.25, 33.75],
+    "gerak": [33.75, 39.375],
+    "mundur": [39.375, 45],
+    "kosong": [45, 52.5],
+    "closing": [52.5, 60]
+  },
+  "cue": {
+    "hook": { "lepas": 0.9375, "harusnya": 1.875, "spin": 2.8125, "rebah": 3.75 },
+    "riak": {
+      "jatuh": 3.75, "lontar": 4.21875, "beku": 4.6875, "orbitEnd": 5.625,
+      "lv1": 6.09375, "lv2": 6.5625, "lv3": 7.03125, "bayer": 7.5, "tarik": 7.96875, "tarikEnd": 8.90625,
+      "lepasWaktu": 9.375, "normal": 10.3125, "groove": 11.25, "jatuhTepi": 12.65625
+    },
+    "flip": { "masuk": 13.125, "caption": 13.59375, "pantul1": 13.59375, "pantul2": 14.53125, "pantul3": 15.46875, "pantul4": 16.40625, "keluar": 16.875 },
+    "ui": {
+      "toggle": 18.75, "slider": 19.21875, "sliderEnd": 20.625, "kirim": 21.09375,
+      "notif": 22.03125, "sobek": 22.5, "gelinding": 23.4375
+    },
+    "pop": { "buka": 26.25, "tegak": 27.1875, "caption": 28.125, "lontar": 31.875 },
+    "gerak": { "g": 33.75, "e": 33.984375, "r": 34.21875, "a": 34.453125, "k": 34.6875, "pensil": 35.15625, "caption": 35.625 },
+    "mundur": { "drop": 39.375, "full": 42.1875, "turun": 43.125 },
+    "kosong": {
+      "pensil": 45.0, "caption": 45.0,
+      "lipat1": 47.34375, "lipat2": 47.8125, "lipat3": 48.28125, "lipat4": 48.75,
+      "brand": 45.9375, "terbang": 49.6875, "tembus": 50.625, "sunyi": 51.5625
+    },
+    "closing": {
+      "cincin": 52.5, "panah": 53.4375, "kunci": 54.375, "wordmark": 54.45, "cta": 55.3125,
+      "pill": 56.25, "ketik": 56.5, "wa": 57.1875, "sub": 57.65625, "tap": 58.125
+    }
+  },
+  "caption": [
+    { "id": "harusnya", "t": 1.875, "text": "Harusnya." },
+    { "id": "tahan", "t": 4.6875, "text": "Sebentar, waktunya kami tahan." },
+    { "id": "lama", "t": 13.59375, "text": "Cara lama. Masih jalan." },
+    { "id": "tombol", "t": 21.09375, "text": "Tombol yang enak dipencet." },
+    { "id": "data", "t": 28.125, "text": "Data pun bisa joget." },
+    { "id": "bunyi", "t": 35.625, "text": "Sampai bunyinya kami atur." },
+    { "id": "tinggal", "t": 45.0, "text": "Tinggal satu yang belum bergerak:" },
+    { "id": "brand", "t": 45.9375, "text": "brand-mu." }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "harusnya-diam",
+  "private": true,
+  "type": "module",
+  "description": "Harusnya Diam — 60 s showreel Beyond Studio: reaksi berantai kertas risograf, 12 fps stop-motion. three.js, deterministik per frame. Engine di-port dari pdoom-video (MIT) lewat satu-frame.",
+  "scripts": {
+    "dev": "vite",
+    "stills": "node scripts/render.ts stills",
+    "sheet": "node scripts/render.ts sheet",
+    "render": "node scripts/render.ts video --samples auto"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.0",
+    "@types/three": "^0.186.0",
+    "playwright-core": "^1.56.0",
+    "typescript": "5",
+    "vite": "^7.0.0"
+  },
+  "dependencies": {
+    "three": "^0.186.0"
+  }
+}

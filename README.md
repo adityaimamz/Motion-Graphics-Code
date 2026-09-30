@@ -43,6 +43,13 @@ Motion-Grapich-Code/
 │   ├── TREATMENT.md                     # Konsep, storyboard, jam fisik, catatan fakta
 │   └── README.md                        # Dokumentasi teknis & panduan render Satu Frame
 │
+├── harusnya-diam/                       # Showreel vertikal 60 detik "Harusnya Diam" (three.js/Node)
+│   ├── app/                             # Dunia kertas: material riso (halftone per piksel), stasiun, kamera, closing
+│   ├── cues.json                        # Sumber waktu tunggal: bab, cue, caption
+│   ├── audio.py                         # Musik 2-step + foley kertas sintetis, master −14 LUFS, bars.json
+│   ├── TREATMENT.md                     # Konsep, trend yang ditegakkan, storyboard S1–S9
+│   └── README.md                        # Dokumentasi teknis & panduan render Harusnya Diam
+│
 ├── .gitignore                           # Proteksi dari file biner video/audio besar & cache
 └── README.md                            # Dokumentasi induk repositori
 ```
@@ -92,6 +99,15 @@ Video edukasi vertikal 1080×1920 @ 60 FPS, 75 detik (40 bar @ 128 BPM). Seluruh
 * **Motion Blur Adaptif**: 4–108 sub-frame per frame; setiap frame = f(t), deterministik piksel per piksel.
 * **Audio 100% Sintetis**: Bus jam, musik, dan SFX; musik ter-*tape-stop* persis mengikuti ramp jam fisik; EBU R128 ($-14\text{ LUFS}$).
 * **Renderer Aman**: Hasil render tidak pernah menimpa file lama (nama bertanggal) dan progress per frame tampil di terminal (bab, sub-frame, sisa waktu, jam selesai).
+
+### 5. Harusnya Diam (`harusnya-diam/`)
+Showreel skill motion design Beyond Studio, 1080×1920 @ 60 FPS, 60 detik (32 bar @ 128 BPM). Titik di ujung "HALAMAN INI HARUSNYA DIAM." robek lepas dan memicu reaksi berantai di papan gambar penuh cetakan risograf; setiap stasiun memamerkan satu skill:
+* **Stop-motion 12 fps yang presisi**: setiap cue menjadi jangkar langkah, jadi hentakan tetap jatuh di ketukan. Hanya pesawat kertas (brand-mu) dan closing yang 60 fps.
+* **Riso dihitung, bukan gambar**: setiap cetakan di-halftone per piksel (sudut layar per tinta, misregistrasi, drum mottling, serat kertas + relief cahaya menyapu).
+* **Droste dive**: menyelam ke satu dot halftone; di dalamnya seluruh gambar dicetak ulang dengan tinta berikutnya sampai dither Bayer 1-bit.
+* **Kinetic type font variabel**: Anybody wdth 50–150 × wght 100–900 (kerning asli, huruf "tercetak" per langkah).
+* **Infografis audio-reaktif jujur**: batang pop-up = energi 8 pita dari musik film ini sendiri.
+* **Lipatan origami 3D** per verteks dan sobekan papan; closing mengikuti end card legacy (WhatsApp CTA).
 
 ---
 
@@ -170,6 +186,17 @@ Jalankan dari `satu-frame/app`:
 | **Cek Loop** | `node scripts/render.ts loop` | Frame terakhir + frame 0 berdampingan |
 | **Sintesis Audio** | `cd .. && python audio.py` | Jalankan ulang setiap `cues.json` berubah |
 
+### 5. Harusnya Diam (`harusnya-diam/`)
+Jalankan dari `harusnya-diam/app` (sekali: `npm install`):
+
+| Kebutuhan | Perintah | Keterangan |
+|---|---|---|
+| **Preview Browser** | `npx vite` → `http://localhost:5173/?t=27.5` | Player dengan audio; `[`/`]` pindah bab, `L` loop bab |
+| **Render Final** | `node scripts/render.ts video --samples auto` | `harusnya-diam/out/harusnya-diam-60s_<tanggal>_<jam>_final.mp4` (tidak menimpa) |
+| **Draft Cepat** | `node scripts/render.ts video --samples 1 --preset veryfast` | Tanpa motion blur |
+| **Still / Contact Sheet** | `node scripts/render.ts stills --t 0,6.1` / `sheet --n 60` | Ke `harusnya-diam/out/` |
+| **Sintesis Audio** | `cd .. && python audio.py` | Jalankan ulang setiap `cues.json` berubah |
+
 ---
 
 ## 📖 Indeks Dokumentasi Teknis
@@ -192,4 +219,7 @@ Pelajari panduan teknis mendalam pada masing-masing sub-proyek:
 
 * **Satu Frame**:
   * [satu-frame/README.md](satu-frame/README.md): Preview, opsi render (tidak menimpa, progress), audio, data Bumi, dan struktur kode.
+* **Harusnya Diam**:
+  * [harusnya-diam/README.md](harusnya-diam/README.md): Preview, render, audio, struktur kode.
+  * [harusnya-diam/TREATMENT.md](harusnya-diam/TREATMENT.md): Konsep, trend yang ditegakkan, storyboard S1–S9, audio, closing.
   * [satu-frame/TREATMENT.md](satu-frame/TREATMENT.md): Konsep satu frame, jam fisik per bab, storyboard S1–S10, dan catatan fakta beserta penyederhanaan yang disadari.

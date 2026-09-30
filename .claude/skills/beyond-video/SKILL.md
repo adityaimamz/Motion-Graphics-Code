@@ -6,7 +6,7 @@ description: Use when creating or revising (any size, even one scene or one colo
 # Beyond Video
 
 ## Overview
-Setiap video Beyond Studio boleh memakai engine dan gaya visual yang berbeda, tapi **tone-nya harus sama**: gerak tegas yang jatuh di ketukan, tenang di antara hentakan, cerdas dan tidak norak, lalu selalu ditutup closing logo + CTA. Brand bible ada di `STYLE.md` (satu folder dengan file ini); baca dulu sebelum menulis apa pun.
+Isi konten setiap video Beyond Studio **bebas sebebas-bebasnya**: engine, palet, font, gaya, dan ritme boleh berbeda total dan tidak terikat brand. Yang selalu sama hanya **closing logo + CTA** (memakai brand kit), ditambah aturan teknis dan larangan anti-slop. Brand bible ada di `STYLE.md` (satu folder dengan file ini); baca dulu sebelum menulis apa pun.
 
 Aturan repo (dari `CLAUDE.md`) tetap berlaku: kerja di `master`, jangan render MP4, jangan pernah commit.
 
@@ -21,8 +21,8 @@ Aturan repo (dari `CLAUDE.md`) tetap berlaku: kerja di `master`, jangan render M
    → **GERBANG 1: naskah disetujui.**
 2. **Treatment.** Buat folder `<slug>/` (kebab-case) berisi `TREATMENT.md` dengan bagian wajib berikut, berurutan:
    1. Ide dalam satu paragraf
-   2. Tone (turunan dari STYLE.md)
-   3. Palet & tipografi (default brand, atau alasan kenapa menyimpang)
+   2. Tone & gaya isi konten (bebas; boleh mengambil dari rujukan opsional di STYLE.md §3)
+   3. Palet & tipografi isi konten (bebas; closing tetap brand kit)
    4. Motif/benang merah visual
    5. **Storyboard**, satu blok per scene:
       - id + jendela waktu;
@@ -95,6 +95,7 @@ Untuk revisi, gunakan `fix(<slug>)` atau `refactor(<slug>)`; untuk perubahan ski
 | "Cuma revisi kecil, langsung edit saja" | Ajukan revisi dulu (jalur revisi), edit setelah disetujui |
 | Waktu scene ditulis di dalam scene | Semua waktu dibaca dari timeline |
 | `Math.random()` / `Date.now()` / rAF sebagai jam | `hash(i, seed)`, frame = f(t) |
-| Closing dibuat ulang "kreatif" | Geometri & urutan closing mengikuti STYLE.md |
+| Closing dibuat ulang "kreatif" | Geometri, urutan, dan brand kit closing mengikuti STYLE.md |
+| Memaksa palet/font/easing brand ke semua scene | Brand kit hanya untuk closing; isi konten bebas |
 | Render MP4 untuk "memastikan" | Still PNG saja; MP4 urusan user |
 | `git commit` di akhir | Tulis commit message, lalu berhenti |
