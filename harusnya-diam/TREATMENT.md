@@ -18,13 +18,13 @@ Perubahan saat dibangun (ringkas; detail di bagian masing-masing):
 
 ## 1. Ide
 
-Sebuah papan gambar desainer, miring seperti meja drafting, penuh cetakan risograf yang ditempel masking tape. Poster teratas berbunyi **HALAMAN INI HARUSNYA DIAM.** Titik di ujung kalimat itu tidak mau diam: ia robek lepas dari kertas dan memicu **reaksi berantai** menuruni papan. Setiap benda yang ditabraknya ikut bergerak dan memamerkan satu keahlian motion design: bidang halftone yang beriak seperti air lalu dibekukan waktunya (generatif + manipulasi waktu), flipbook yang menganimasikan bola memantul frame demi frame, prototipe aplikasi dari kertas dengan micro-interaction, kartu pop-up berisi grafik yang menari mengikuti musik film ini, dan deretan kartu huruf yang jatuh bernada. Seluruh dunia kertas bergerak **12 fps** seperti stop-motion. Kamera lalu mundur memperlihatkan seluruh mesin beserta coretan pensil perencanaannya, dan banner di puncak papan akhirnya terbaca: **SETIAP GERAK PUNYA SEBAB.** Di dasar papan tinggal satu lembar kosong yang belum bergerak, yaitu *brand-mu*. Kertas itu melipat dirinya menjadi pesawat dan terbang dengan **60 fps**, satu-satunya gerak mulus di dunia kertas. Pesawat itu menembus papan ke kegelapan dan menjadi panah logo Beyond Studio yang mengunci ke cincinnya.
+Sebuah papan gambar desainer, miring seperti meja drafting, penuh cetakan risograf yang ditempel masking tape. Poster teratas berbunyi **HALAMAN INI HARUSNYA DIAM.** Titik di ujung kalimat itu tidak mau diam: ia robek lepas dari kertas dan memicu **reaksi berantai** menuruni papan. Setiap benda yang ditabraknya ikut bergerak dan memamerkan satu keahlian motion design: bidang halftone yang beriak seperti air lalu dibekukan waktunya (generatif + manipulasi waktu), flipbook yang menganimasikan bola memantul frame demi frame, prototipe aplikasi dari kertas dengan micro-interaction, kartu pop-up berisi grafik yang menari mengikuti musik film ini, dan deretan kartu huruf yang jatuh bernada. Seluruh dunia kertas bergerak **12 fps** seperti stop-motion. Kamera lalu mundur memperlihatkan seluruh mesin beserta coretan pensil perencanaannya, dan banner di puncak papan akhirnya terbaca: **SEMUA GERAK ADA SEBABNYA.** Di dasar papan tinggal satu lembar kosong yang belum bergerak, yaitu *brand-mu*. Kertas itu melipat dirinya menjadi pesawat dan terbang dengan **60 fps**, satu-satunya gerak mulus di dunia kertas. Pesawat itu menembus papan ke kegelapan dan menjadi panah logo Beyond Studio yang mengunci ke cincinnya.
 
 ## 2. Tone & gaya
 
 - **Kerajinan tangan yang presisi.** Semua terlihat dibuat tangan: kertas, tinta riso, tape, pensil, stop-motion. Tetapi timing-nya presisi sampai ketukan. Kesan yang dituju: "ini dikerjakan orang yang peduli detail", lawan dari kilap mulus konten AI.
 - **Sebab-akibat yang bisa ditunjuk.** Tidak ada yang bergerak sendiri. Pemicu yang sah hanya sentuhan benda, waktu yang ditahan/dilepas (S2), dan musik (hanya S5, dan datanya jujur dari musik film ini).
-- **Lucu yang kering.** Caption berbicara datar seperti desainer yang sedang menjelaskan mesinnya ("Harusnya.", "Data pun bisa joget."). Tanpa emoji, tanpa maskot; titik hitam adalah benda, bukan karakter berwajah.
+- **Lucu yang kering.** Caption berbicara datar seperti desainer yang sedang menjelaskan mesinnya ("Harusnya sih.", "Angka pun ikut bergoyang."). Tanpa emoji, tanpa maskot; titik hitam adalah benda, bukan karakter berwajah.
 - **Satu kalimat utama di layar**, dicetak di kertas sebagai bagian gambar, bukan subtitle di atasnya.
 - **Tetap terbaca tanpa suara.** Setiap sebab-akibat terlihat. Tidak ada informasi yang hanya ada di audio.
 
@@ -42,7 +42,7 @@ Sebuah papan gambar desainer, miring seperti meja drafting, penuh cetakan risogr
 | Foley ASMR yang taktil | Kertas robek, lipatan, gelinding, tik pensil, klak kartu, direkam "dekat" (kering, detail tinggi) | Seluruh film | Foley terdengar jelas di HP tanpa musik |
 | Hit hanya di momen kunci | Maksimal ±10 hit besar (daftar §6). Gerak lain cukup foley halus atau diam | Seluruh film | Hitung hit di stem SFX |
 | Sunyi sebagai tanda baca | Hampir sunyi 0–0,94; waktu beku 4,69–5,63; halaman kosong 45,0–46,9; **sunyi total** 51,56–52,50 sebelum logo | S1, S2, S8 | Level RMS di jendela itu |
-| Ide tersampaikan ≤ 3 s | "Halaman ini harusnya diam." terbaca sejak frame 0, titik lepas 0,94, "Harusnya." 1,88 | S1 | Still 0,0 / 1,0 / 2,5 |
+| Ide tersampaikan ≤ 3 s | "Halaman ini harusnya diam." terbaca sejak frame 0, titik lepas 0,94, "Harusnya sih." 1,88 | S1 | Still 0,0 / 1,0 / 2,5 |
 | Shot terbaik lebih dulu | Frame 0 dikomposisikan sebagai poster terbaik film; stasiun paling spektakuler (S2) datang pertama | S1–S2 | Contact sheet: frame 0 dan S2 terkuat |
 | Sedikit tapi kuat | Lima stasiun skill, masing-masing satu gagasan, tanpa pengisi | S2–S6 | Setiap stasiun bisa dijelaskan dalam satu kalimat |
 
@@ -66,7 +66,7 @@ Aturan tinta: setiap cetakan maksimal tiga tinta + hitam, dengan misregistrasi 2
 
 Tipografi (semua OFL, diunduh ke `app/public/fonts/`):
 - **Anybody** (variabel wdth 50–150, wght 100–900): headline, caption, angka, kartu huruf. Caption 820–860, wdth 86–96 (dipersempit otomatis lewat sumbu wdth bila baris terlalu lebar), tinggi huruf besar ≥ 64 px di layar, tinta hitam. Headline dan banner dirata-kanan-kirikan dengan sumbu wdth per baris.
-- **Instrument Serif Italic**: sela kering ("Harusnya."), tinta pink.
+- **Instrument Serif Italic**: sela kering ("Harusnya sih."), tinta pink.
 - **Space Mono**: label stasiun di masking tape dan label sumbu, 24–28 px.
 - **Architects Daughter**: coretan pensil perencanaan (catatan kecil, bukan kalimat utama).
 - **Inter Tight** (dari `beyond-studio-legacy/site/fonts/it.woff2`): hanya closing.
@@ -91,7 +91,7 @@ Waktu dalam detik (1 ketukan = 0,469; 1 bar = 1,875). Dunia: papan gambar dari k
 Tata letak papan *(berubah, lihat `app/src/layout.ts`)*: banner di puncak; poster kiri + storyboard dan swatch kanan; flipbook kanan-tengah; HP kiri-tengah; penggaris dari HP ke pop-up (kanan bawah); kartu GERAK kiri bawah; pensil dan halaman di dasar. Lintasan titik zig-zag menuruninya dan digambar dengan pensil (lintasan sebenarnya).
 
 ### S1 · Hook · 0,000–3,750 (bar 1–2)
-- **Teks:** poster "HALAMAN INI / HARUSNYA / DIAM." (sudah ada di frame 0) → 1,875 "Harusnya."
+- **Teks:** poster "HALAMAN INI / HARUSNYA / DIAM." (sudah ada di frame 0) → 1,875 "Harusnya sih."
 - **Frame kunci (0,000), dikomposisikan sebagai still terbaik film:**
   - Poster A2 mengisi frame.
   - Headline Anybody 900, tiga baris; dua baris pertama dirata-kanan-kirikan lewat sumbu wdth (HALAMAN INI sangat sempit, HARUSNYA lebih lebar), DIAM wdth 72. Tinta hitam dengan bayangan tinta pink yang meleset.
@@ -102,7 +102,7 @@ Tata letak papan *(berubah, lihat `app/src/layout.ts`)*: banner di puncak; poste
   - 0,000–0,938: titik bergetar per langkah; di bawahnya kawah sobekan mulai terlihat. Huruf "DIAM" menyempit (wdth 72 → 62) seperti menahan napas.
   - 0,938: titik robek lepas (meninggalkan kawah serat putih) dan rebah ke tepinya. "DIAM" memantul dengan pegas (wdth 62 → 74). *(berubah: rentang lebih kecil agar M tidak menabrak kawah)*
   - 0,938–3,750: titik menggelinding di tepinya seperti koin, melengkung turun ke bidang halftone, lalu berputar makin rendah dan makin cepat (Euler's disk). Ia rebah tepat di 3,750 di tengah bidang (x 540, y ±1230).
-  - 1,875: "Harusnya." tercetak rata kanan di bawah bekas titik, Instrument Serif Italic, tinta pink. *(berubah: di bawah, bukan di kanan, supaya tidak menimpa kawah)*
+  - 1,875: "Harusnya sih." tercetak rata kanan di bawah bekas titik, Instrument Serif Italic, tinta pink. *(berubah: di bawah, bukan di kanan, supaya tidak menimpa kawah)*
   - Kamera diam (locked-off) sampai 2,8, lalu dolly-in bertahap ke bidang halftone.
 - **Transisi keluar:** tanpa potong; cakram rebah = ketukan pertama S2.
 - **SFX:**
@@ -112,7 +112,7 @@ Tata letak papan *(berubah, lihat `app/src/layout.ts`)*: banner di puncak; poste
   - 2,8–3,75: dengung Euler's disk makin cepat (riser alami), berhenti mendadak di 3,75.
 
 ### S2 · Generatif + waktu · 3,750–13,125 (bar 3–7)
-- **Teks:** 4,688 "Sebentar, waktunya kami tahan."
+- **Teks:** 4,688 "Bentar, / waktunya kita pause."
 - **Label tape:** "02 · generatif · time remap"
 - **Frame kunci (5,000):**
   - Bidang halftone mengisi frame (y 250–1700), permukaan kertasnya bergelombang 3D seperti air: riak konsentris dari cakram, ±4 mm.
@@ -129,7 +129,7 @@ Tata letak papan *(berubah, lihat `app/src/layout.ts`)*: banner di puncak; poste
   - 7,500: tingkat terdalam: gambar yang sama sebagai dither Bayer 1-bit. Tahan satu ketukan.
   - 7,969–8,906: tarik mundur cepat melewati semua tingkat, kembali ke adegan beku.
   - 9,375–10,313: waktu dilepas pelan: jarak waktu per langkah membesar dari 0 ke normal (ramp), langkah tetap 12 fps.
-  - 10,313–13,125: riak berjalan lagi; cakram jatuh tepat di 10,313, "berselancar" ke tepi kanan poster, lalu melompat dari tepinya (12,656) ke flipbook. *(berubah: tepi kanan)*
+  - 10,313–13,125: riak berjalan lagi; cakram jatuh tepat di 10,313, "berselancar" di puncak riak lalu melambat di tepi kanan poster (ancang-ancang), melompat dari tepinya (12,188) dalam busur tinggi (±110 mm, ±11 pose) dan mendarat tepat 13,125 di flipbook; kamera mengikuti busurnya (chase). *(berubah: lompatan diberi waktu dua kali lipat, sebelumnya terasa seperti teleport)* *(berubah: tepi kanan)*
 - **Transisi keluar:** kamera tilt turun bertahap mengikuti cakram.
 - **SFX:**
   - **3,750 hit musik pertama** (hit 2): sub + akor hangat; groove 2-step mulai, dibangun dari foley kertas.
@@ -140,21 +140,21 @@ Tata letak papan *(berubah, lihat `app/src/layout.ts`)*: banner di puncak; poste
   - 9,375: tape-start. 11,250: groove utuh lagi.
 
 ### S3 · Frame-by-frame · 13,125–18,750 (bar 8–10)
-- **Teks:** 13,594 "Cara lama. Masih jalan."
+- **Teks:** 13,594 "Jadul? / Masih jalan kok."
 - **Label tape:** "03 · frame-by-frame · 12 fps"
 - **Frame kunci (14,000):**
   - Flipbook 210 × 150 mm (±780 px di layar) di tengah, diikat strip karton + dua staples di **tepi kanan**; halaman membalik ke kanan, menjauhi jendela, jadi bayangannya jatuh keluar buku. *(berubah)*
   - Di halamannya: gambar pensil + satu tinta pink, bola memantul (squash & stretch), jejak onion-skin pensil samar, bagan timing animator (garis tik) di margin.
   - Caption di slip kertas di atas buku.
 - **Gerak:** *(berubah)*
-  - 13,125: cakram mendarat di atas halaman teratas; langkah berikutnya ia sudah menjadi **gambar bola di halaman itu** (3D → 2D).
-  - 13,208–16,875: 46 halaman membalik, satu per langkah 12 fps (tiga di udara sekaligus). Di halaman: bola pink halftone dengan garis grafit, onion-skin dua frame sebelumnya, lintasan rencana pensil biru non-foto, bagan timing, nomor frame tulisan tangan. Bola memantul empat kali di ketukan (13,594 / 14,531 / 15,469 / 16,406), makin tinggi, squash saat menyentuh ("squash!"), stretch di udara.
-  - 16,875: bola keluar dari tepi kiri halaman terakhir dan menjadi cakram 3D lagi (**2D → 3D di satu frame**).
+  - 13,125: cakram mendarat di atas halaman teratas, jauh dari engsel. 13,208: cakram **meresap**: ia pipih rata di atas cetakan hitam dirinya sendiri (posisi dan ukuran sama). 13,292: tinggal cetakannya, dan halaman 01 mulai membalik. Tinta bola lalu berubah dari hitam ke pink riso selama empat halaman (3D → 2D tanpa lompatan). *(berubah)*
+  - 13,292–16,875: 45 halaman membalik, satu per langkah 12 fps (tiga di udara sekaligus). Di halaman: bola pink halftone dengan garis grafit, onion-skin dua frame sebelumnya, lintasan rencana pensil biru non-foto, bagan timing, nomor frame tulisan tangan. Bola memantul empat kali di ketukan (13,594 / 14,531 / 15,469 / 16,406), makin tinggi, squash saat menyentuh ("squash!"), stretch di udara.
+  - Di empat halaman terakhir tinta bola kembali hitam. 16,875: bola hitam tepat di tepi kiri halaman, dan cakram 3D muncul pipih di atas cetakan itu; 16,958: cakram menebal dan terangkat lepas dari kertas (**2D → 3D tanpa pose kosong**). *(berubah)*
   - 16,875–18,750: chase shot: kamera mengikuti cakram yang melengkung tinggi ke toggle HP.
 - **SFX:** desir masuk halaman; kibaran halaman *brrrt* 12 Hz (laju frame-nya terdengar); empat "tok" kayu bernada turun di tiap pantulan; **16,875 *pop* keluar ke 3D** (hit 3).
 
 ### S4 · UI motion · 18,750–26,250 (bar 11–14)
-- **Teks:** 21,094 "Tombol yang enak dipencet."
+- **Teks:** 21,094 "Tombol yang bikin / gatel pengin dipencet."
 - **Label tape:** "04 · UI motion · micro-interaction"
 - **Frame kunci (21,094):**
   - Prototipe HP dari kertas: bingkai dipotong, antarmuka digambar pensil dan dicetak riso. Lebar ±560 px, y 600–1560, x 260–820.
@@ -174,7 +174,7 @@ Tata letak papan *(berubah, lihat `app/src/layout.ts`)*: banner di puncak; poste
 - **SFX:** klik tab toggle (renyah); desir geser + tik penghitung halus; **21,094 *thock* tombol + bloop UI** (hit 4); desis kartu meluncur; **22,500 sobekan perforasi ASMR** (hit 5); gelinding.
 
 ### S5 · Infografis audio-reaktif · 26,250–33,750 (bar 15–18)
-- **Teks:** 28,125 "Data pun bisa joget."
+- **Teks:** 28,125 "Angka pun ikut bergoyang."
 - **Label tape:** "05 · infografis · audio-reactive"
 - **Frame kunci (29,000):**
   - Kartu pop-up terbuka 90° (sampul tegak di belakang). Delapan batang kertas pop-up (V-fold) berdiri di atas sumbu tercetak, di tengah frame (y 700–1450); tinta kuning/pink/biru bergantian.
@@ -189,7 +189,7 @@ Tata letak papan *(berubah, lihat `app/src/layout.ts`)*: banner di puncak; poste
 - **SFX:** kepak sampul + derit lipatan. Di sini musik yang memimpin (bassline ditonjolkan). 31,875 aksen kick = lontaran.
 
 ### S6 · Ritme & suara · 33,750–39,375 (bar 19–21)
-- **Teks:** 35,625 "Sampai bunyinya kami atur."
+- **Teks:** 35,625 "Sampai suaranya / kami atur."
 - **Label tape:** "06 · ritme · sound design"
 - **Frame kunci (35,300):**
   - Lima kartu huruf G · E · R · A · K yang sudah rebah menghadap atas, berderet di birai kertas (y 900–1250, x 110–930).
@@ -201,7 +201,7 @@ Tata letak papan *(berubah, lihat `app/src/layout.ts`)*: banner di puncak; poste
 - **SFX:** lima *klak* kartu bernada pentatonik naik (lima nada lonceng logo, dibocorkan lebih awal); pensil kayu menggelinding di kertas.
 
 ### S7 · Tarik mundur · 39,375–45,000 (bar 22–24)
-- **Teks:** banner di puncak papan, **SETIAP GERAK / PUNYA SEBAB.** Sudah ada sejak awal (di luar frame S1), baru terbaca sekarang. Anybody 900 dirata-kanan-kirikan lewat wdth, tinta hitam + pink meleset di atas latar halftone kuning.
+- **Teks:** banner di puncak papan, **SEMUA GERAK / ADA SEBABNYA.** Sudah ada sejak awal (di luar frame S1), baru terbaca sekarang. Anybody 900 dirata-kanan-kirikan lewat wdth, tinta hitam + pink meleset di atas latar halftone kuning.
 - **Frame kunci (42,200):**
   - Seluruh mesin mengisi 9:16: banner di atas (y ±250–470), poster, lembar storyboard + swatch, flipbook, HP dengan toast robek, penggaris, pop-up yang batangnya masih menari, huruf GERAK, pensil, halaman di dasar.
   - Coretan pensil perencanaan menghubungkan semua stasiun: garis lintasan putus-putus yang cocok dengan lintasan sebenarnya, tanda ukur, catatan kecil.
@@ -279,10 +279,10 @@ Rujukan: STYLE.md §1–2 (geometri, urutan, brand kit) dan end card vertikal le
 - **Latar:** void `#000`, vinyet halus. Pesawat datang dari kegelapan kiri.
 - **Tata letak 9:16 (mengikuti legacy):**
   - Logo dirakit besar di tengah (y 820), lalu mengendap menjadi lockup **horizontal** (logo 96 px kiri + wordmark "Beyond Studio" 58 px kanan), terpusat di y 540. *(berubah: dirakit besar dulu agar momen kunci terasa)*
-  - CTA "**Bikin brand-mu / bergerak.**" dua baris di y 770 / 872, Inter Tight 88 px (satu baris melanggar area aman kanan).
+  - CTA "**Yuk, animasikan / brand-mu**" dua baris di y 770 / 872, Inter Tight 88 px (satu baris melanggar area aman kanan).
   - Pil URL "beyondstudio.site" (ikon globe, kursor ice, tombol go biru) di y 1000.
   - Tombol WhatsApp `#25D366` "0819-2707-0239" di y 1140.
-  - Sub "Konsultasi gratis sebelum kamu memutuskan." di y 1322, mute.
+  - Sub "Konsultasi dulu, gratis. Baru putuskan." di y 1322, mute.
 - **Urutan:**
   1. 52,500–53,450: cincin tergambar simetris dari arah jam 9 (dua busur, ease in-out 0,95 s).
   2. 53,438–54,375: pesawat meratakan diri menjadi panah logo `#F5F5F5` (geometri persis), terbang dari kiri dengan jejak cahaya biru, lalu **mengunci di celah kanan tepat 54,375**: gelombang kejut `#60A5FA`, guncangan kecil, pop outBack, impact + lonceng.
@@ -295,3 +295,24 @@ Rujukan: STYLE.md §1–2 (geometri, urutan, brand kit) dan end card vertikal le
   9. Tahan sampai 60,000 (≥ 1,7 s setelah sub terbaca).
 - **SFX:** kilau tipis cincin, whoosh panah kiri → tengah, impact + lonceng (nada lima kartu S6), sapuan wordmark, pop CTA, tap; akor akhir berdengung sampai 60,0.
 - **Catatan:** STYLE.md §1 menulis wordmark *di bawah* logo, sedangkan end card legacy memakai lockup horizontal. Film ini mengikuti legacy (dikonfirmasi user).
+
+## 9. Versi EN
+
+Satu film, dua bahasa: `?lang=en` (preview) / `--lang en` (render). Timeline, gerak, kamera, dan audio sama persis; hanya teks yang berganti. Semua teks kedua bahasa ada di `app/src/copy.ts`. Copy ID di atas sudah memakai versi yang dilueskan (disetujui user).
+
+| Tempat | ID | EN |
+|---|---|---|
+| Poster (headline) | HALAMAN INI / HARUSNYA / DIAM. | THIS PAGE / SHOULD STAY / STILL. |
+| Poster (sela) | Harusnya sih. | Supposedly. |
+| S2 | Bentar, / waktunya kita pause. | Hold on, / we're pausing time. |
+| S3 | Jadul? / Masih jalan kok. | Old school. / Still works. |
+| S4 | Tombol yang bikin / gatel pengin dipencet. | Buttons you / want to press. |
+| S5 | Angka pun ikut bergoyang. | Even data can dance. |
+| S6 | Sampai suaranya / kami atur. | Down to how / it sounds. |
+| Banner S7 | SEMUA GERAK / ADA SEBABNYA. | EVERY MOVE / HAS A CAUSE. |
+| Halaman S8 | Tinggal satu yang / belum bergerak: / brand-mu. | One thing hasn't / moved yet: / your brand. |
+| Kartu S6 | G·E·R·A·K | M·O·V·E·S |
+| CTA closing | Yuk, animasikan / brand-mu | Let's get your / brand moving. |
+| Sub closing | Konsultasi dulu, gratis. Baru putuskan. | Free consultation before you commit. |
+
+Teks kecil (UI HP, label sumbu pop-up, label selotip, header flipbook, footer poster, catatan pensil, storyboard) ikut diterjemahkan.

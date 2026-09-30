@@ -5,26 +5,26 @@ export const LANG: Lang = typeof location !== 'undefined' && new URLSearchParams
 
 const ID = {
   // S1–S2 poster
-  head: ['HALAMAN INI', 'HARUSNYA'], last: 'DIAM', aside: 'Harusnya.',
-  tahan: ['Sebentar,', 'waktunya kami tahan.'],
+  head: ['HALAMAN INI', 'HARUSNYA'], last: 'DIAM', aside: 'Harusnya sih.',
+  tahan: ['Bentar,', 'waktunya kita pause.'],
   posterFoot: 'HARUSNYA DIAM — cetak riso · pink / biru / kuning / hitam',
   tape1: '01 · tipografi kinetik', tape2: '02 · generatif · time remap',
   // S3
-  lama: ['Cara lama.', 'Masih jalan.'], flipHead: 'FLIPBOOK · BOLA MEMANTUL', squash: 'squash!',
+  lama: ['Jadul?', 'Masih jalan kok.'], flipHead: 'FLIPBOOK · BOLA MEMANTUL', squash: 'squash!',
   tape3: '03 · frame-by-frame · 12 fps',
   // S4
-  tombol: ['Tombol yang', 'enak dipencet.'],
+  tombol: ['Tombol yang bikin', 'gatel pengin dipencet.'],
   ui: { title: 'Pengaturan', silent: 'Mode diam', motion: 'Gerak', last: 'Terakhir dikirim', foot: '12 fps · riso · 4 tinta', send: 'Kirim', sent: 'Terkirim', sentSub: 'Gerak: 100 · barusan' },
   tape4: '04 · UI motion · micro-interaction',
   ruler: '30 cm · KAYU',
   // S5
-  data: 'Data pun bisa joget.', dataSub: 'tinggi batang = musik video ini, per pita frekuensi',
+  data: 'Angka pun ikut bergoyang.', dataSub: 'tinggi batang = musik video ini, per pita frekuensi',
   bands: ['sub', 'bass', 'bawah', 'tengah', 'atas', 'hadir', 'kilau', 'udara'],
   cover: 'KARTU POP-UP · BUKA DI SINI →', tape5: '05 · infografis · audio-reactive',
   // S6
-  bunyi: ['Sampai bunyinya', 'kami atur.'], word: 'GERAK', tape6: '06 · ritme · sound design',
+  bunyi: ['Sampai suaranya', 'kami atur.'], word: 'GERAK', tape6: '06 · ritme · sound design',
   // S7
-  banner: ['SETIAP GERAK', 'PUNYA SEBAB.'],
+  banner: ['SEMUA GERAK', 'ADA SEBABNYA.'],
   bannerFoot: 'HARUSNYA DIAM — mesin reaksi berantai · 6 stasiun · 60 detik · 128 BPM · 12 fps',
   sbFoot: 'HARUSNYA DIAM · 9:16 · 60 s · 12 fps',
   sbLab: ['titik lepas', 'riak · beku', 'flipbook', 'UI kertas', 'pop-up data', 'G·E·R·A·K', 'lipat · terbang', 'logo'],
@@ -37,7 +37,7 @@ const ID = {
   // S8
   page: ['Tinggal satu yang', 'belum bergerak:'], brand: 'brand-mu.', tape7: '07 · brand-mu',
   // closing
-  cta: ['Bikin brand-mu', 'bergerak.'], sub: 'Konsultasi gratis sebelum kamu memutuskan.',
+  cta: ['Yuk, animasikan', 'brand-mu'], sub: 'Konsultasi dulu, gratis. Baru putuskan.',
 };
 
 const EN: typeof ID = {

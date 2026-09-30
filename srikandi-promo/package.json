@@ -1,0 +1,31 @@
+{
+  "name": "srikandi-tailor-promo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Video promosi Srikandi Tailor — 1080x1920 (9:16), Remotion",
+  "scripts": {
+    "dev": "remotion studio",
+    "render": "remotion render SrikandiPromo out/srikandi-tailor-promo.mp4 --codec=h264 --crf=16",
+    "render:hq": "remotion render SrikandiPromo out/srikandi-tailor-promo-hq.mp4 --codec=h264 --crf=12 --pixel-format=yuv420p --audio-bitrate=320k",
+    "render:tanpa-musik": "remotion render SrikandiPromo out/srikandi-tailor-promo-tanpa-musik.mp4 --codec=h264 --crf=16 --props=./props/tanpa-musik.json",
+    "still": "remotion still SrikandiPromo out/cover.png --frame=1060",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.530",
+    "@remotion/fonts": "^4.0.530",
+    "@remotion/paths": "^4.0.530",
+    "@remotion/player": "^4.0.530",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.530"
+  },
+  "devDependencies": {
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/plus-jakarta-sans": "^5.3.0",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  }
+}

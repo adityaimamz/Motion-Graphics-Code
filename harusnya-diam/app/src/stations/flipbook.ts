@@ -1,6 +1,8 @@
-// S3: the flipbook. The disc lands on the top page and becomes the ball drawn on it; 45 pages flip at 12 fps
-// (one per step, three in the air at once), the ball squashes and stretches through four beat-timed bounces,
-// each higher, and leaves the last page as the disc again.
+// S3: the flipbook. The disc lands on the top page and soaks into it: for one step it lies flattened over a
+// black print of itself (same place, same size), then only the print is left and its ink turns riso pink over
+// four pages. The pages flip at 12 fps (one per step, three in the air at once), the ball squashes and stretches
+// through four beat-timed bounces, each higher, turns black again on the last pages and leaves the last page's
+// edge as the disc, peeling up from its own print.
 import { T } from '../copy';
 import * as THREE from 'three';
 import { makeSheet, makeTape, placeTape, type Sheet } from '../paper/sheet';
@@ -16,7 +18,9 @@ import { DISC_R } from './disc';
 
 const F = CUE.flip;
 const PW = rw(FLIP), PH = rh(FLIP); // page 210 × 150
-export const PAGES = Math.round((F.keluar - F.masuk) * 12) + 1; // 46: the last one is empty (the ball has left)
+export const PAGES = Math.round((F.keluar - F.masuk) * 12) + 1; // 46: page p shows frame p + 1; the last is empty
+/** animation frames (12 fps) from the landing to the exit */
+export const FRAMES = Math.round((F.keluar - F.masuk) * 12);
 const LEAF = 0.11;                  // page thickness
 const HINGE_X = FLIP.x1;             // pages hinge on the right edge (they flip away from the window light)
 
@@ -24,7 +28,8 @@ const HINGE_X = FLIP.x1;             // pages hinge on the right edge (they flip
 export function ballAt(a: number) {
   const c = [F.pantul1, F.pantul2, F.pantul3, F.pantul4].map((x) => x - F.masuk);
   const end = F.keluar - F.masuk;
-  const x = lerp(PW - 50, -DISC_R - 6, clamp(a / end));
+  // starts clear of the hinge (the standing pages never hide it), ends centred on the left edge (half off)
+  const x = lerp(PW - 92, 0, clamp(a / end));
   const yg = 22 + DISC_R;
   let y: number, vy: number;
   if (a < c[0]!) { const g = (2 * (110 - yg)) / (c[0]! * c[0]!); y = 110 - 0.5 * g * a * a; vy = -g * a; }
@@ -36,16 +41,24 @@ export function ballAt(a: number) {
     const T = 2 * (end - c[3]!), u = (a - c[3]!) / T;
     y = yg + 4 * 80 * u * (1 - u); vy = (4 * 80 * (1 - 2 * u)) / T;
   }
-  const vx = -(PW - 50 + DISC_R + 6) / end;
+  const vx = -(PW - 92) / end;
   const contact = c.some((ci) => Math.abs(a - ci) < 0.045);
   return { x, y, vx, vy, contact };
 }
 
-/** Draw page i (its frame of the animation) into an ink canvas. */
-function drawPage(ink: InkCanvas, iIn: number) {
-  ink.draw(`p${iIn}`, (k) => {
-    const i = Math.max(0, iIn);
-    const a = iIn < 0 ? Infinity : i / 12;
+/** How black the ball's ink is on frame f (1 = the disc's black, 0 = riso pink): soaks in, and back out. */
+export function blackAt(f: number) {
+  if (f <= 1) return 1;
+  if (f <= 5) return 1 - (f - 1) / 4;
+  if (f >= FRAMES - 3) return (f - (FRAMES - 4)) / 4;
+  return 0;
+}
+
+/** Draw page `page` showing animation frame `frame` (−1 = no ball yet) into an ink canvas. */
+function drawPage(ink: InkCanvas, page: number, frame: number) {
+  ink.draw(`p${page}f${frame}`, (k) => {
+    const i = page;
+    const a = frame < 0 ? Infinity : frame / 12;
     const yb = (y: number) => PH - y; // page y-up → canvas y-down
     // non-photo blue: the planned arc and the ground, drawn once, loosely
     k.paint('solid', 'blue', 0.28, (c) => {
@@ -76,8 +89,8 @@ function drawPage(ink: InkCanvas, iIn: number) {
     if (a > F.keluar - F.masuk + 1e-6) return;
     // onion skins: the two previous frames, faint
     for (const [d, dens] of [[2, 0.2], [1, 0.36]] as const) {
-      if (i - d < 0) continue;
-      const b = ballAt((i - d) / 12);
+      if (frame - d < 1) continue;
+      const b = ballAt((frame - d) / 12);
       k.paint('solid', 'black', dens, (c) => { c.lineWidth = 0.6; c.beginPath(); c.arc(b.x, yb(b.y), DISC_R, 0, Math.PI * 2); c.stroke(); });
     }
     // the ball: squash on contact, stretch along the motion
@@ -94,7 +107,9 @@ function drawPage(ink: InkCanvas, iIn: number) {
       c.beginPath(); c.arc(0, 0, DISC_R, 0, Math.PI * 2);
       c.restore();
     };
-    k.paint('tone', 'pink', 0.88, (c) => { shape(c); c.fill(); });
+    const kb = blackAt(frame);
+    if (kb < 1) k.paint('tone', 'pink', 0.88 * (1 - kb), (c) => { shape(c); c.fill(); });
+    if (kb > 0) k.paint('solid', 'black', 0.97 * kb, (c) => { shape(c); c.fill(); });
     k.paint('solid', 'black', 0.78, (c) => { c.lineWidth = 1.15; shape(c); c.stroke(); });
     // speed lines when it is fast, a squash note on the contact frames
     k.paint('solid', 'black', 0.5, (c) => {
@@ -192,8 +207,10 @@ export class Flipbook {
     const k = this.flipped(ts);
     return (PAGES - k) * LEAF + 0.2;
   }
-  /** Pages that have left the stack (fractional steps are held: stop-motion). */
-  flipped(ts: number) { return clamp(Math.floor((ts - F.masuk) * 12 + 1e-6), 0, PAGES - 1); }
+  /** Step since the landing (0 = the disc lands, 1 = it soaks in, 2 = the first page flips). */
+  step(ts: number) { return Math.floor((ts - F.masuk) * 12 + 1e-6); }
+  /** Pages that have left the stack: the first page goes one step after the print appears. */
+  flipped(ts: number) { return clamp(this.step(ts) - 1, 0, PAGES - 1); }
 
   update(ts: number) {
     this.slip.update(ts);
@@ -201,8 +218,9 @@ export class Flipbook {
     const nStack = PAGES - k;
     this.stack.scale.z = nStack * LEAF;
     this.stack.position.set(FLIP.x0 + PW / 2, FLIP.y0 + PH / 2, (nStack * LEAF) / 2);
-    // the top page shows frame k (before the landing: frame 0 without the ball)
-    drawPage(this.top.ink, ts < F.masuk + 1 / 24 ? -1 : k);
+    // the top page p shows frame p + 1 (the landing step: no print yet, the disc lies on it)
+    const s = this.step(ts);
+    drawPage(this.top.ink, k, s < 1 ? -1 : k + 1);
     this.top.pose(0, nStack * LEAF + 0.25);
     // pages in the air: j = k-1, k-2, k-3 at 1/6, 1/2, 5/6 of their flight
     let landed = 0;
@@ -214,7 +232,7 @@ export class Flipbook {
       if (j < 0 || ts < F.masuk || n >= 3 - settled) { p.hide(); continue; }
       // a page snaps up past vertical in its first step (stop-motion), so the stack below stays in the light
       const phi = [0.47, 0.71, 0.93][n]! * Math.PI;
-      drawPage(p.ink, j);
+      drawPage(p.ink, j, j + 1);
       p.pose(phi, (PAGES - j) * LEAF + 0.3);
     }
     landed = Math.max(0, k - 3 + Math.min(3, settled));

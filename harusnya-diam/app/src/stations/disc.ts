@@ -26,6 +26,7 @@ export class Disc {
 
   /** Centre (x, y) over a surface at height z0; β, ψ, θ in radians; `lift` raises it off its contact point. */
   pose(x: number, y: number, z0: number, beta: number, psi: number, theta: number, lift = 0) {
+    this.mesh.scale.set(1, 1, 1);
     const n = new THREE.Vector3(-Math.sin(psi) * Math.sin(beta), Math.cos(psi) * Math.sin(beta), Math.cos(beta));
     const qa = new THREE.Quaternion().setFromUnitVectors(Z, n.normalize());
     const qs = new THREE.Quaternion().setFromAxisAngle(Z, theta);
@@ -36,7 +37,8 @@ export class Disc {
   }
 
   /** Free flight: centre anywhere, orientation from an arbitrary quaternion-free axis/angle pair. */
-  place(p: THREE.Vector3, axis: THREE.Vector3, theta: number) {
+  place(p: THREE.Vector3, axis: THREE.Vector3, theta: number, thick = 1) {
+    this.mesh.scale.set(1, 1, thick);
     const qa = new THREE.Quaternion().setFromUnitVectors(Z, axis.clone().normalize());
     const qs = new THREE.Quaternion().setFromAxisAngle(Z, theta);
     this.mesh.quaternion.copy(qa.multiply(qs));

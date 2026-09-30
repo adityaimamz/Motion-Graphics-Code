@@ -1,4 +1,4 @@
-// S7: the banner at the top of the board ("SETIAP GERAK / PUNYA SEBAB.") and the pencil planning on the board:
+// S7: the banner at the top of the board ("SEMUA GERAK / ADA SEBABNYA.", copy.ts) and the pencil planning on the board:
 // the disc's real path as a dashed line through every station, with the designer's notes. Both are there from
 // frame 0 (outside the early framings) and read only when the camera pulls back.
 import { T } from '../copy';

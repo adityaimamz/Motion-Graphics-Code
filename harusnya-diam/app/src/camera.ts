@@ -119,6 +119,7 @@ function flightFrame(t: number): Frame {
  * key before and out into the key after — the transits are shots, not waits.
  */
 const CHASE: { t0: number; t1: number; fw: number; tilt: number; az: number; lead: [number, number] }[] = [
+  { t0: RK.jatuhTepi - 0.25, t1: FK.masuk + 0.35, fw: 330, tilt: 12, az: -10, lead: [50, -30] },
   { t0: FK.keluar, t1: UK.toggle, fw: 250, tilt: 14, az: 25, lead: [-40, -30] },
   { t0: UK.gelinding + 0.3, t1: PK.buka + 0.2, fw: 230, tilt: 34, az: 62, lead: [40, -18] },
   { t0: PK.lontar, t1: GK.g, fw: 330, tilt: 18, az: 20, lead: [-60, -30] },

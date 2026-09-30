@@ -11,7 +11,7 @@ Showreel skill motion design Beyond Studio. Seluruh video adalah reaksi berantai
 
 Setelah itu kamera mundur memperlihatkan seluruh papan, lalu halaman terakhir melipat diri jadi pesawat kertas dan menembus papan ke logo. Dunia kertas bergerak **12 fps** seperti stop-motion. Hanya pesawat dan closing yang **60 fps**.
 
-Konsep, storyboard, dan keputusan desain ada di [TREATMENT.md](TREATMENT.md).
+Konsep, storyboard, dan keputusan desain ada di [TREATMENT.md](TREATMENT.md). Tersedia dua bahasa (ID default, EN lewat `--lang en`); semua teks ada di `app/src/copy.ts`.
 
 - 1080×1920, 60 fps, 60,0 s (32 bar @ 128 BPM)
 - three.js + Vite + TypeScript, render Node + Chrome headless (pola dari `satu-frame/`)
@@ -42,6 +42,7 @@ Semua perintah dijalankan dari `harusnya-diam/app`.
 | Contact sheet | `node scripts/render.ts sheet --from 0.5 --to 59.5 --n 60 --cols 12` | `out/sheet.png` |
 | Uji pipeline tanpa file | tambahkan `--dry` | (tidak menulis MP4) |
 | Audio ulang | `cd .. && python audio.py` | `app/public/audio/*.wav` + `app/public/data/bars.json` |
+| **Versi English** | preview `/?lang=en`; render tambahkan `--lang en` (juga untuk `stills` / `sheet`) | `out/harusnya-diam-60s-en_<tanggal>_<jam>_final.mp4` |
 
 Catatan render:
 - Render **tidak pernah menimpa** file lama. Namanya memuat tanggal dan jam; `--out` yang sudah ada otomatis diberi `-2`, `-3`, dan seterusnya.

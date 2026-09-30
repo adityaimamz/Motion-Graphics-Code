@@ -106,7 +106,8 @@ export class Hero {
     const tOff = rippleTau(RK.jatuhTepi);
     if (tau < tOff) {
       const u = clamp((tau - tLand) / (tOff - tLand));
-      const e = ease.inQuad(u);
+      // rides the crest out, then eases into the edge (a beat of wind-up before the jump)
+      const e = ease.inOutCubic(u);
       const lx = lerp(RS.x + 2 * 0.47 * 9, 372, e), ly = lerp(RS.y - 3.4, RS.y + 36, e);
       const hz = rippleH(lx, ly, tau);
       const w = P.toWorld(lx, ly, Math.max(0, hz));
@@ -120,21 +121,26 @@ export class Hero {
     if (ts < FK.masuk) {
       const off = P.toWorld(372, RS.y + 36, 1.6 + Math.max(0, rippleH(372, RS.y + 36, tau)));
       const u = clamp((ts - RK.jatuhTepi) / (FK.masuk - RK.jatuhTepi));
-      const p = arc(off, land, 46, u);
+      const p = arc(off, land, 110, u);
       d.place(p, new THREE.Vector3(Math.sin(u * 5) * 0.5, Math.cos(u * 4) * 0.4, 1), u * 7);
       return;
     }
-    if (ts < FK.masuk + 1 / 24) { d.place(land, new THREE.Vector3(0, 0, 1), 0); return; }
+    // lands (step 0), then soaks into the page: flattened flush over its own black print (step 1), then gone
+    if (ts < FK.masuk + 1 / 12 - 1e-4) { d.place(land, new THREE.Vector3(0, 0, 1), 0); return; }
+    if (ts < FK.masuk + 2 / 12 - 1e-4) { d.place(land.clone().setZ(land.z - 1.6 + 0.35), new THREE.Vector3(0, 0, 1), 0, 0.22); return; }
     if (ts < FK.keluar) { d.hide(); return; }
     // out of the last page's left edge (the ball's own velocity), towards the phone
     const b = ballAt(FK.keluar - FK.masuk);
     const [ex, ey] = pageW(b.x, b.y);
     const start = new THREE.Vector3(ex, ey, this.flip.stackTop(FK.keluar) + 1.6);
+    // it peels up from its last print on the page's edge: flat for a step, then thickening as it lifts off
+    const lift0 = FK.keluar + 1 / 12;
+    if (ts < lift0 - 1e-4) { d.place(start.clone().setZ(start.z - 1.6 + 0.35), new THREE.Vector3(0, 0, 1), 0, 0.22); return; }
     const onKnob = (x: number) => { const [wx, wy] = phoneW(x, TOG.y); return new THREE.Vector3(wx, wy, PHONE_Z + 1.8 + 1.6); };
     if (ts < UK.toggle) {
-      const u = clamp((ts - FK.keluar) / (UK.toggle - FK.keluar));
+      const u = clamp((ts - lift0) / (UK.toggle - lift0));
       const p = arc(start, onKnob(TOG.x1 - 12), 150, u);
-      d.place(p, new THREE.Vector3(Math.sin(u * 9) * 0.6, 0.3 + Math.cos(u * 7) * 0.5, 1), u * 11);
+      d.place(p, new THREE.Vector3(Math.sin(u * 9) * 0.6, 0.3 + Math.cos(u * 7) * 0.5, 1), u * 11, Math.min(1, 0.6 + u * 12));
       return;
     }
     // ---------------- S4: rides the toggle knob off, hops into the slider (it is the knob), drops on Kirim

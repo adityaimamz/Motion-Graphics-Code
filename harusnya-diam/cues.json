@@ -20,7 +20,7 @@
     "riak": {
       "jatuh": 3.75, "lontar": 4.21875, "beku": 4.6875, "orbitEnd": 5.625,
       "lv1": 6.09375, "lv2": 6.5625, "lv3": 7.03125, "bayer": 7.5, "tarik": 7.96875, "tarikEnd": 8.90625,
-      "lepasWaktu": 9.375, "normal": 10.3125, "groove": 11.25, "jatuhTepi": 12.65625
+      "lepasWaktu": 9.375, "normal": 10.3125, "groove": 11.25, "jatuhTepi": 12.1875
     },
     "flip": { "masuk": 13.125, "caption": 13.59375, "pantul1": 13.59375, "pantul2": 14.53125, "pantul3": 15.46875, "pantul4": 16.40625, "keluar": 16.875 },
     "ui": {
@@ -41,12 +41,12 @@
     }
   },
   "caption": [
-    { "id": "harusnya", "t": 1.875, "text": "Harusnya." },
-    { "id": "tahan", "t": 4.6875, "text": "Sebentar, waktunya kami tahan." },
-    { "id": "lama", "t": 13.59375, "text": "Cara lama. Masih jalan." },
-    { "id": "tombol", "t": 21.09375, "text": "Tombol yang enak dipencet." },
-    { "id": "data", "t": 28.125, "text": "Data pun bisa joget." },
-    { "id": "bunyi", "t": 35.625, "text": "Sampai bunyinya kami atur." },
+    { "id": "harusnya", "t": 1.875, "text": "Harusnya sih. (teks final ID/EN: app/src/copy.ts)" },
+    { "id": "tahan", "t": 4.6875, "text": "Bentar, waktunya kita pause." },
+    { "id": "lama", "t": 13.59375, "text": "Jadul? Masih jalan kok." },
+    { "id": "tombol", "t": 21.09375, "text": "Tombol yang bikin gatel pengin dipencet." },
+    { "id": "data", "t": 28.125, "text": "Angka pun ikut bergoyang." },
+    { "id": "bunyi", "t": 35.625, "text": "Sampai suaranya kami atur." },
     { "id": "tinggal", "t": 45.0, "text": "Tinggal satu yang belum bergerak:" },
     { "id": "brand", "t": 45.9375, "text": "brand-mu." }
   ]

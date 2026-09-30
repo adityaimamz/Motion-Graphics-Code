@@ -180,7 +180,7 @@ export class Phone {
     this.toastStub = makeSheet(28, 6, { res: 6, seed: 49, paper: [0.96, 0.95, 0.92], seg: [1, 1], castShadow: false });
     this.group.add(this.toast.mesh, this.toastStub.mesh);
     this.group.add(placeTape(makeTape(160, 20, 9.1, { s: T.tape4, font: monoFont(7, true), px: 7 }), PHONE.x0 + 70, PHONE.y0 - 22, 0.2, 2));
-    this.slip = new Slip('tombol', T.tombol, PHONE.x0 + 95, PHONE.y1 + 48, 246, 76, { px: 29, deg: 1.2 });
+    this.slip = new Slip('tombol', T.tombol, PHONE.x0 + 95, PHONE.y1 + 48, 300, 76, { px: 27, deg: 1.2 });
     this.group.add(this.slip.group);
   }
 
