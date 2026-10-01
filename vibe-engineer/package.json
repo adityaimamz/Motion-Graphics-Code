@@ -1,0 +1,23 @@
+{
+  "name": "vibe-engineer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vibe Engineer — video edukasi vertikal Beyond Studio, pixel art 100% code-rendered (Canvas2D), deterministik per frame.",
+  "scripts": {
+    "preview": "node render.mjs serve",
+    "render": "node render.mjs video",
+    "render:draft": "node render.mjs video --draft",
+    "stills": "node render.mjs stills --scenes",
+    "sheet": "node render.mjs sheet --n 40 --cols 8",
+    "check": "node render.mjs check",
+    "audio": "node render.mjs audio",
+    "vo": "node render.mjs vo",
+    "tts": "node tools/tts-gemini.mjs",
+    "vo:bagi": "node tools/vo-bagi.mjs",
+    "vo:rapat": "node tools/vo-rapat.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.56.0"
+  }
+}

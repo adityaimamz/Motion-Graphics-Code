@@ -1,0 +1,86 @@
+Naskah VO — Vibe Engineer (transkrip)
+
+Teks yang diucapkan, persis (angka ditulis sebagai kata). Satu file per baris, nama file persis seperti id.
+Naskahnya lugas: istilah sebenarnya (prompt, kode AI, bug, tes, commit); kapal, kraken, dan pangkat hanya ilustrasi.
+Versi dengan tag nada ElevenLabs v4: naskah-elevenlabs.txt.
+
+Suara narator (sama untuk semua file):
+Young Indonesian male narrator in his late 20s, warm mid-range voice, light playful tone, casual Jakarta Indonesian accent, steady medium pace like a friendly tech content creator.
+
+01-karam
+  teks : Aplikasinya rusak... Di hari pertama rilis.
+  nada : dry, dramatic, deadpan
+
+02-bayu
+  teks : Ini Bayu. Dia vibe coder: bikin aplikasi dengan ngobrol sama AI, tanpa nulis kodenya sendiri.
+  nada : playful, upbeat, a little cocky
+  kartu: VIBE CODER / ngobrol sama AI, AI yang ngoding
+
+03-merem
+  teks : Saking percayanya sama AI, kodenya nggak pernah Bayu baca. Ngoding sambil merem. Literally.
+  nada : playful, dry, a little cocky
+  kartu: NGODING SAMBIL MEREM / kode AI nggak pernah dibaca
+
+04-muat
+  teks : Kode dari AI? Diterima semua. Nggak dibaca, nggak dites. Langsung dirilis.
+  nada : playful, upbeat, getting faster
+  kartu: TERIMA SEMUA / nggak dibaca · nggak dites
+
+05-malam
+  teks : Tengah malam... laporan error berdatangan. Tiga puluh delapan bug sekaligus.
+  nada : suspenseful pause, then flustered
+  kartu: BUG: 38 / tengah malam, error di mana-mana
+
+06-peti
+  teks : Bug itu kesalahan di kode. Semuanya sembunyi di fungsi yang nggak Bayu baca.
+  nada : dry, wry, clear
+  kartu: BUG / = kesalahan di dalam kode
+
+07-pangkat
+  teks : Tapi tiap bug itu pelajaran. Bayu naik pangkat, dan belajar lima aturan.
+  nada : hopeful, rising energy
+  kartu: NAIK PANGKAT / tiap bug = pelajaran
+
+08-melek
+  teks : Satu: baca dulu. Periksa setiap baris yang ditulis AI, sebelum kamu terima.
+  nada : clear, confident, instructional, short pauses
+  kartu: 1 · BACA DULU / periksa sebelum diterima
+
+09-item
+  teks : Dua: kasih AI konteks. Tujuan aplikasinya, aturannya, dan contoh kode. Jangan suruh dia menebak.
+  nada : clear, confident, instructional, short pauses
+  kartu: 2 · KASIH KONTEKS / tujuan · aturan · contoh kode
+
+10-serang
+  teks : Tiga: kasih satu perintah kecil setiap kali. Kalau ada yang salah, gampang ketahuan di mana.
+  nada : clear, confident, instructional, short pauses
+  kartu: 3 · PERINTAH KECIL / satu tugas, satu prompt
+
+11-cek
+  teks : Empat: cek pakai tes, yaitu kode yang memeriksa aplikasimu secara otomatis. Ada yang rusak, langsung ketahuan.
+  nada : clear, confident, instructional, short pauses
+  kartu: 4 · CEK PAKAI TES / tes = pemeriksa otomatis
+
+12-simpan
+  teks : Lima: lolos tes? Simpan versinya, namanya commit. Kalau nanti berantakan, tinggal balik ke versi ini.
+  nada : clear, confident, instructional, short pauses
+  kartu: 5 · COMMIT / titik aman untuk balik
+
+13-ulangi
+  teks : Ulangi langkah ini untuk setiap tugas, sampai bug-nya habis.
+  nada : energetic, building momentum
+  kartu: ULANGI / tiap tugas, sampai bug habis
+
+14-layar
+  teks : Vibe coder menerima semua kode AI. Vibe engineer memeriksanya dulu. Itu bedanya.
+  nada : triumphant, calm, clear contrast between the two sentences
+
+15-santai
+  teks : Tetap santai pakai AI. Tapi nggak asal.
+  nada : triumphant, calm, slow down on the last line
+  kartu: NEW GAME+ / santai, tapi nggak asal
+
+16-follow
+  teks : Follow, biar naik pangkat bareng.
+  nada : warm, friendly invitation
+

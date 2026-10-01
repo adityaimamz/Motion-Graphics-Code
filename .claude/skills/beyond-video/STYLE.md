@@ -76,7 +76,7 @@ Pola yang pernah berhasil di video sebelumnya. Boleh dipakai, diubah, atau diaba
 ## 4. LARANGAN (anti-slop, seluruh video)
 - Gambar AI, stok "AI/tech" generik, otak bercahaya, hujan kode Matrix, neon ungu-cyan cyberpunk, nebula partikel generik, lens flare berlebihan.
 - Gerak mengambang ala screensaver; elemen bergerak tanpa sebab (setiap perubahan dipicu klik, ketukan, atau narasi).
-- Maskot kartun, wajah/mata realistis, meniru karya/UI/logo pihak lain.
+- Wajah/mata realistis.
 - Teks bergaris tepi (outline) atau ber-halo; lebih dari satu kalimat utama sekaligus.
 - Karya "ilustrasi" palsu untuk promo: tampilkan website klien asli (`beyond-studio/site/assets/`).
 

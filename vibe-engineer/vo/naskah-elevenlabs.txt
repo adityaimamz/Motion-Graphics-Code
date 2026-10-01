@@ -1,0 +1,62 @@
+Naskah SATU TARIKAN — Vibe Engineer (ElevenLabs Eleven v4)
+=========================================================
+
+Semua 16 baris dibacakan dalam SATU generate, supaya suara dan nada konsisten dari awal sampai akhir.
+Sesudahnya audio dipotong otomatis jadi 16 file oleh tools/vo-bagi.mjs (lokal, tanpa API).
+
+LANGKAH
+  1. Di ElevenLabs: Text to Speech, model Eleven v4, pilih SATU suara.
+  2. Copy hanya blok di antara >>> dan <<< (baris kosong antarbaris jangan dihapus), paste, Generate.
+     Jangan pakai mode dialog / Add speaker. Stabilitas: condong ke Creative/rendah agar tag nada bekerja.
+  3. Generate 2–3 kali, dengarkan, pilih SATU rekaman utuh yang terbaik (jangan menyambung potongan dari
+     rekaman berbeda: itu yang membuat nada melompat).
+  4. Unduh, simpan sebagai  vibe-engineer/vo/satu-tarikan.mp3  (wav juga boleh).
+  5. Dari folder vibe-engineer:
+       npm run vo:bagi -- vo/satu-tarikan.mp3 --dry     lihat di detik berapa tiap baris dipotong
+       npm run vo:bagi -- vo/satu-tarikan.mp3           potong + rapatkan → vo/01-karam.wav … 16-follow.wav
+       npm run vo                                       cek posisi tiap scene dan durasi total
+     Kalau ada batas yang meleset (tabel menandai baris yang janggal dengan "← cek"), beri waktu potong sendiri:
+       npm run vo:bagi -- vo/satu-tarikan.mp3 --potong 3.9,12.1,…   (15 angka detik, urut)
+
+CATATAN
+  - Tag dalam [kurung siku] tidak diucapkan; v4 memakainya sebagai arahan. Satu tag per klausa.
+  - Jeda di dalam baris ditulis "..." (v4 tidak mendukung SSML <break>). Jeda antarbaris datang dari baris kosong:
+    pemotong membedakan keduanya dari proporsi panjang teks, jadi tidak perlu apa-apa lagi.
+  - Kalau ada tag yang ikut terbaca, hapus tag itu dan generate ulang seluruhnya.
+  - Teks yang diucapkan sama persis dengan vo/naskah-tts.txt (angka ditulis sebagai kata).
+
+----------------------------------------------------------------------------------------------------------
+
+>>>
+[dry, deadpan] Aplikasinya rusak... Di hari pertama rilis.
+
+[playful, upbeat] Ini Bayu. Dia vibe coder: bikin aplikasi dengan ngobrol sama AI, tanpa nulis kodenya sendiri.
+
+[teasing] Saking percayanya sama AI, kodenya nggak pernah Bayu baca. [deadpan] Ngoding sambil merem. Literally.
+
+[casual, picking up speed] Kode dari AI? Diterima semua. Nggak dibaca, nggak dites. Langsung dirilis.
+
+[quiet, suspenseful] Tengah malam... [flustered] laporan error berdatangan. Tiga puluh delapan bug sekaligus.
+
+[dry, matter-of-fact] Bug itu kesalahan di kode. [wry] Semuanya sembunyi di fungsi yang nggak Bayu baca.
+
+[hopeful, rising energy] Tapi tiap bug itu pelajaran. Bayu naik pangkat, dan belajar lima aturan.
+
+[clear, confident] Satu: baca dulu. Periksa setiap baris yang ditulis AI, sebelum kamu terima.
+
+[clear, confident] Dua: kasih AI konteks. Tujuan aplikasinya, aturannya, dan contoh kode. [lightly teasing] Jangan suruh dia menebak.
+
+[clear, confident] Tiga: kasih satu perintah kecil setiap kali. Kalau ada yang salah, gampang ketahuan di mana.
+
+[clear, confident] Empat: cek pakai tes, yaitu kode yang memeriksa aplikasimu secara otomatis. Ada yang rusak, langsung ketahuan.
+
+[clear, confident] Lima: lolos tes? Simpan versinya, namanya commit. Kalau nanti berantakan, tinggal balik ke versi ini.
+
+[energetic, building momentum] Ulangi langkah ini untuk setiap tugas, sampai bug-nya habis.
+
+[calm, clear contrast] Vibe coder menerima semua kode AI. Vibe engineer memeriksanya dulu. [warm] Itu bedanya.
+
+[relaxed, warm] Tetap santai pakai AI. [slower] Tapi nggak asal.
+
+[warm, friendly] Follow, biar naik pangkat bareng.
+<<<

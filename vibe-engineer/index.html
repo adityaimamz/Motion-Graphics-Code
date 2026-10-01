@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vibe Engineer — Beyond Studio</title>
+<style>
+@font-face{font-family:'Jersey 10';src:url(fonts/jersey10.woff2) format('woff2');font-weight:400}
+@font-face{font-family:IT;src:url(fonts/it.woff2) format('woff2');font-weight:100 900;font-style:normal}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#000;color:#F5F5F5;font-family:IT,system-ui,sans-serif;overflow:hidden}
+#c{display:block;width:1080px;height:1920px;image-rendering:pixelated}
+body.preview{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0a0a0c}
+body.preview #c{height:calc(100vh - 110px);width:auto;aspect-ratio:9/16;box-shadow:0 0 0 1px #26262E}
+#ui{display:none;width:min(900px,96vw)}
+body.preview #ui{display:block}
+#ui.hidden{visibility:hidden}
+.row{display:flex;gap:12px;align-items:center}
+#play{background:#2563EB;color:#fff;border:0;border-radius:8px;height:32px;padding:0 14px;font:600 14px IT,system-ui;cursor:pointer}
+#play:focus-visible,#marks button:focus-visible{outline:2px solid #60A5FA;outline-offset:2px}
+#bar{flex:1;accent-color:#3B82F6}
+#time{font:500 13px IT,system-ui;color:#9CA3AF;min-width:210px;text-align:right;font-variant-numeric:tabular-nums}
+#marks{position:relative;height:26px;margin-top:6px}
+#marks button{position:absolute;transform:translateX(-50%);background:#131318;color:#c9cbd1;border:1px solid #26262E;border-radius:6px;font:500 10px IT,system-ui;padding:3px 5px;cursor:pointer}
+#audio{font:500 12px IT,system-ui;color:#60A5FA;margin-top:4px}
+#help{font:400 12px IT,system-ui;color:#6B7280;margin-top:6px}
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="ui">
+  <div class="row"><button id="play">Play / pause</button><input id="bar" type="range" min="0" value="0"><span id="time"></span></div>
+  <div class="row"><span id="audio">audio: tekan play</span></div>
+  <div id="marks"></div>
+  <div id="help">space play · ←/→ ±1 s (shift ±5 s) · , / . satu frame · [ / ] scene · l loop scene · m mute · h sembunyikan UI · ?t=12.5 mulai dari detik tertentu</div>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
