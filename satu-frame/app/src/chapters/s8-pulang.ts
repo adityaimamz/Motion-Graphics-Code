@@ -77,7 +77,7 @@ const s8: Chapter = {
     const cityState = () => {
       const flash = t >= S8.radio ? Math.exp(-(t - S8.radio) / 0.05) : 0;
       return {
-        scan: scanRow(t), glow: 0.03 + 0.35 * clamp(scanRow(t) / 2400), screenK: 0.5, phoneSky: clamp(scanRow(t) / 2400),
+        scan: scanRow(t), glow: 0.03 + 0.35 * clamp(scanRow(t) / 2400), screenK: 0.5, phoneSky: clamp(scanRow(t) / 2400), lampSpot: true,
         fogD: mtrack([[56.15, 0.00045], [57.0, 0.0005], [58.0, 0.0008]], t, true), lightsGain: mtrack([[56.15, 2.2], [57.2, 1]], t),
         // the answer's radio wave: gone across the city inside a frame; drawn as that frame's flash
         wave: flash > 0.01 ? { origin: v3(TOWER.x, TOWER_H, TOWER.z), R: 1300, width: 900, k: 5 * flash, sheet: false } : null,

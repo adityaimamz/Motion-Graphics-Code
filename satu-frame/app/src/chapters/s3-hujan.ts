@@ -72,6 +72,7 @@ const s3: Chapter = {
       // on the drop the lens is a macro: the city behind it goes soft
       dof: 48 * within(t, HOLD - 0.05, THRU - 0.06, 0.1),
       drop: t > 13.2 && t < THRU + 0.3,
+      lampSpot: true,
     }, out);
     ctx.post.bloom = 0.7;
     ctx.post.bloomThreshold = 1.2;

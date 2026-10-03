@@ -13,7 +13,7 @@ import { CUE } from '../cues';
 import { ms } from '../clock';
 import { FrozenRain, LightPoints, type Wave } from './sprites';
 import { HeroDrop } from './drop';
-import { buildKampungDetail, nearCamera, type House, type Lamp } from './kampung';
+import { buildKampungDetail, nearCamera, CELL, K_GX, K_GZ, filledCell, isStreet, doorDir, doorFace, ihash, PORCH, BULB_WARM, SHED_RISE, KCELL_GLSL, type House, type Lamp, type Roof } from './kampung';
 import { glowSprite, FX_LAYER } from '../fx';
 import { camUniforms, setCamUniforms, applyCam, RAY_GLSL, type Cam } from '../r3';
 import { FSPass, makeRT, clearRT, W, H } from '../engine/gl';
@@ -69,6 +69,78 @@ function roundedRect(w: number, l: number, r: number) {
   s.lineTo(-w / 2, -y); s.absarc(-x, -y, r, Math.PI, Math.PI * 1.5, false);
   return s;
 }
+/** Is (x, z) still kampung? Its edge is not a ruled line: 15–85 m in from the old rectangle, in places, the
+ *  city's blocks have taken over (a slow noise decides where). */
+function kampungAt(x: number, z: number) {
+  const sd = Math.max(Math.abs(x) - 425, -1845 - z, z - 325);
+  const fx = x / 70, fz = z / 70, ix = Math.floor(fx), iz = Math.floor(fz), u = fx - ix, v = fz - iz;
+  const sm = (t: number) => t * t * (3 - 2 * t), H = (a: number, b: number) => ihash(a, b, 9);
+  const n = (H(ix, iz) * (1 - sm(u)) + H(ix + 1, iz) * sm(u)) * (1 - sm(v)) + (H(ix, iz + 1) * (1 - sm(u)) + H(ix + 1, iz + 1) * sm(u)) * sm(v);
+  return sd < -(15 + 70 * n);
+}
+/** A hipped roof (limasan): unit footprint like the gable's (x ±0.56 across, z ±0.54 along, ridge 0.42 up),
+ *  sloping at both ends too. */
+function hipGeometry() {
+  const P = [[-0.56, 0, -0.54], [0.56, 0, -0.54], [0.56, 0, 0.54], [-0.56, 0, 0.54], [0, 0.42, -0.2], [0, 0.42, 0.2]].map(([x, y, z]) => V(x!, y!, z!));
+  const pos: number[] = [];
+  // each face turned outward (away from the middle of the roof)
+  const tri = (a: number, b: number, c: number) => {
+    const A = P[a]!, B = P[b]!, C = P[c]!;
+    const n = B.clone().sub(A).cross(C.clone().sub(A)), m = A.clone().add(B).add(C).multiplyScalar(1 / 3).sub(V(0, 0.1, 0));
+    const [p, q2] = n.dot(m) >= 0 ? [B, C] : [C, B];
+    pos.push(A.x, A.y, A.z, p.x, p.y, p.z, q2.x, q2.y, q2.z);
+  };
+  tri(0, 3, 4); tri(4, 3, 5); tri(1, 4, 2); tri(2, 4, 5);   // the two long slopes
+  tri(0, 4, 1); tri(3, 2, 5);                               // the hipped ends
+  tri(0, 1, 2); tri(0, 2, 3);                               // (the underside)
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.computeVertexNormals();
+  return g;
+}
+/** A flat concrete roof (dak): a slab 0.15 m thick (y in metres; x, z unit) with a parapet round its edge. */
+function dakGeometry() {
+  return mergeGeometries([
+    new THREE.BoxGeometry(1.02, 0.15, 1.02).translate(0, 0.075, 0),
+    new THREE.BoxGeometry(1.02, 0.55, 0.025).translate(0, 0.425, 0.4975), new THREE.BoxGeometry(1.02, 0.55, 0.025).translate(0, 0.425, -0.4975),
+    new THREE.BoxGeometry(0.025, 0.55, 0.97).translate(0.4975, 0.425, 0), new THREE.BoxGeometry(0.025, 0.55, 0.97).translate(-0.4975, 0.425, 0),
+  ]);
+}
+/** A single slope (seng, a lean-to): unit run along x, high (y 1) at −x, falling to +x, width along z. */
+function sengGeometry() {
+  return new THREE.ExtrudeGeometry(new THREE.Shape([new THREE.Vector2(-0.53, 0), new THREE.Vector2(0.53, 0), new THREE.Vector2(-0.53, 1)]), { depth: 1.04, bevelEnabled: false }).translate(0, 0, -0.52);
+}
+/** an instance's own position in metres before it is turned (roof courses, corrugations) */
+const LOCAL_VERT = /* glsl */ `
+#ifdef USE_INSTANCING
+vRl = transformed * vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
+#else
+vRl = transformed;
+#endif`;
+/** Clay tiles (genteng): courses along the ridge, a shadow under each course's lower edge, staggered joints,
+ *  each tile a little different, moss and dirt; fading to its average once finer than a pixel. */
+const TILE_SURF = /* glsl */ `
+{
+  // a course every 0.3 m down the slope (34°): 0.168 m of height; tiles 0.22 m wide
+  float cy = vRl.y / 0.168, row = floor(cy), fy = fract(cy);
+  float cz = vRl.z / 0.22 + 0.5 * mod(row, 2.0), col = floor(cz), fz = fract(cz);
+  float fwT = max(fwidth(cy), fwidth(cz));
+  float vis = 1.0 - smoothstep(0.25, 0.6, fwT);
+  float shade = (0.62 + 0.38 * smoothstep(0.0, 0.3, fy)) * (1.0 - 0.25 * (1.0 - smoothstep(0.0, 0.06, min(fz, 1.0 - fz))));
+  float each = 0.85 + 0.3 * h21(vec2(row, col) + vLampW.xz * 0.013);
+  float moss = smoothstep(0.55, 0.8, vnoise(vLampW.xz * 0.7 + vRl.y));
+  diffuseColor.rgb *= mix(0.86, shade * each, vis) * (1.0 - 0.35 * moss);
+  roughnessFactor = mix(roughnessFactor, roughnessFactor + 0.25, moss);
+}`;
+/** Corrugated zinc: the waves (7.6 cm) bend the normal across the sheet, so it catches the sky in stripes;
+ *  too fine for a pixel, they go on as roughness. */
+const SENG_NORM = /* glsl */ `
+{
+  float fwz = fwidth(vRl.z);
+  float vis = 1.0 - smoothstep(0.015, 0.04, fwz);
+  normal = normalize(normal + vSz * 0.45 * sin(vRl.z * ${(2 * Math.PI / 0.076).toFixed(3)}) * vis);
+  roughnessFactor = min(1.0, roughnessFactor + 0.2 * (1.0 - vis));
+}`;
 /** The desk: a very dark walnut veneer in a satin finish, grain along x, tileable (integer frequencies), with
  *  a roughness map so the sheen breaks softly along the grain. Deterministic. */
 function woodTexture(rnd: () => number) {
@@ -132,8 +204,8 @@ export const CABLE_X = -189;
 // a light field); wet asphalt mirrors lamps and sky (a planar reflection), wet roofs catch the sky.
 type RGB = [number, number, number];
 /** a pool of lamp light on the ground: x, z, strength, radius (m), and its stretch across x / along z
- *  (street lamps throw their light along the street) */
-type Pool = [number, number, number, number, number?, number?];
+ *  (street lamps throw their light along the street), and whether it is a warm bulb (a porch lamp) */
+type Pool = [number, number, number, number, number?, number?, boolean?];
 const SKY_HOR: RGB = [0.076, 0.066, 0.059], SKY_ZEN: RGB = [0.013, 0.0125, 0.0125];
 /** light thrown back up by the lit, wet streets (what the undersides and the lower walls see) */
 const STREET_BOUNCE: RGB = [0.02, 0.016, 0.012];
@@ -161,6 +233,8 @@ const LIGHT_U = {
   poolN: { value: null as THREE.Texture | null }, poolF: { value: null as THREE.Texture | null },
   boxN: { value: new THREE.Vector4(-430, -1850, 430, 330) }, boxF: { value: new THREE.Vector4(-7000, -2650, 7000, 7000) },
   reflTex: { value: null as THREE.Texture | null }, reflMat: { value: new THREE.Matrix4() }, reflK: { value: 0 },
+  /** the phone's light on our ceiling (0..1, phoneSky): what our roster's holes show */
+  roomGlow: { value: 0 },
 };
 const OUT_VERT = /* glsl */ `
 vec4 lampW = vec4(transformed, 1.0);
@@ -204,14 +278,24 @@ if (reflK > 0.0) {
   // the planar reflection (rendered from the mirrored camera), where this point of the street sees it
   vec4 rc = reflMat * vec4(vLampW.x, 0.0, vLampW.z, 1.0);
   vec2 ruv = rc.xy / rc.w * 0.5 + 0.5;
+#ifdef GROUND_ZONES
+  // (how wet: from what the ground is, groundAt)
+  float n1 = vnoise(vLampW.xz * 0.9 + 3.1);
+  float wet = gWet;
+#else
   float n1 = vnoise(vLampW.xz * 0.21) * 0.65 + vnoise(vLampW.xz * 0.9 + 3.1) * 0.35;
   float wet = mix(0.35, 1.0, smoothstep(0.38, 0.62, n1));           // standing water in the dips
+#endif
   vec3 V = normalize(cameraPosition - vLampW);
   float F = 0.02 + 0.98 * pow(1.0 - clamp(V.y, 0.0, 1.0), 5.0);
   // a film of water on rough asphalt stretches each light into a streak toward the eye; a puddle is
   // nearly a mirror
   // (a streak is foreshortened with distance: its length on screen shrinks as the street recedes)
   float sp = mix(0.011, 0.0035, smoothstep(0.5, 1.0, wet)) * clamp(45.0 / rc.w, 0.06, 1.0);
+#ifdef GROUND_ZONES
+  // (a film on rough concrete smears what it mirrors much more than standing water does)
+  sp *= mix(3.0, 1.0, smoothstep(0.6, 0.95, wet));
+#endif
   // the rain is frozen as it lands: in the standing water, the rings around each impact stand still
   vec2 rc2 = vLampW.xz / 0.9, ci = floor(rc2), cf = fract(rc2) - 0.5, co = vec2(h21(ci), h21(ci + 3.7)) - 0.5;
   vec2 dv = cf - co * 0.6; float dr = length(dv) * 0.9;
@@ -222,6 +306,125 @@ if (reflK > 0.0) {
   reflectedLight.indirectSpecular += r / ws * F * wet * reflK * outdoorAt(vLampW);
 }
 #endif`;
+// ── The ground is not one sheet of asphalt. In the kampung: asphalt down the middle of the streets with an
+// open drain (got) each side and a concrete kerb; between the houses cast concrete (the gangs, the yards, the
+// terraces) cracked into slabs, and some yards bare earth or grass. Out in the city: its streets asphalt,
+// the lots concrete. The port: a concrete apron in 6 m slabs, the cable street and the quay road asphalt. All
+// of it wet: puddles in the dips, a film on the concrete. Its light: the overcast (less in a gang between
+// walls), the lamps' pools on it (diffuse; on wet asphalt they mostly show as the sheen, groundGlow).
+const SKY_E: RGB = [0, 1, 2].map((i) => Math.PI * (0.2 * SKY_HOR[i]! + 0.8 * SKY_ZEN[i]!)) as RGB;
+const NOISE_GLSL = /* glsl */ `
+float h21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vnoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }`;
+const GROUND_GLSL = /* glsl */ `
+float gN(vec2 p) { return vnoise(p) * 0.5 + vnoise(p * 2.03 + 5.3) * 0.3 + vnoise(p * 4.1 + 1.7) * 0.2; }
+// distance to the nearest joint of slabs s metres across (0 on the joint)
+float joint(vec2 p, float s) { vec2 q = (0.5 - abs(fract(p / s) - 0.5)) * s; return min(q.x, q.y); }
+// what the ground is at xz (fw = metres per pixel there): albedo (linear), roughness, how wet (standing
+// water 1), how much of the lamps' sheen it shows (wet asphalt 1), how open to the sky
+void groundAt(vec2 p, float fw, out vec3 alb, out float rough, out float wet, out float sheen, out float open) {
+  float n = gN(p * 0.35), n2 = vnoise(p * 1.3 + 7.0);
+  vec3 asph = vec3(0.028, 0.028, 0.03) * (0.85 + 0.3 * n2);
+  vec3 conc = vec3(0.14, 0.134, 0.124) * (0.72 + 0.5 * n) * (0.9 + 0.2 * n2);
+  // puddles: soft-edged, all sizes (warped, three octaves: no grid of blobs)
+  float puddle = smoothstep(0.55, 0.68, gN(p * 0.19 + 3.0 + 0.6 * vec2(n, n2)));
+  // fine joints fade to their average once smaller than a pixel
+  float jAA = 1.0 - smoothstep(0.03, 0.12, fw);
+  // the city beyond: its streets on the warped grid of its blocks, the lots between them
+  float rx = p.x - sin(p.y * 0.002) * 60.0, rz = p.y - sin(p.x * 0.003) * 50.0;
+  float dRoad = min(abs(rx - floor(rx / 90.0 + 0.5) * 90.0), abs(rz - floor(rz / 110.0 + 0.5) * 110.0));
+  float road = 1.0 - smoothstep(5.5, 6.5 + fw, dRoad);
+  alb = mix(conc * 0.6, asph, road); rough = mix(0.6, 0.5, road); sheen = mix(0.4, 1.0, road); open = mix(0.55, 0.8, road);
+  wet = mix(mix(0.4, 0.6, n2), 1.0, puddle);
+  vec2 g = floor(p / ${CELL.toFixed(1)} + 0.5), f = p - g * ${CELL.toFixed(1)};
+  bool inK = g.x >= ${K_GX[0].toFixed(1)} && g.x <= ${K_GX[1].toFixed(1)} && g.y >= ${K_GZ[0].toFixed(1)} && g.y <= ${K_GZ[1].toFixed(1)};
+  if (inK && kStreet(g)) {
+    // a street: asphalt down the middle, an open drain each side, a concrete kerb up to the houses (the
+    // cross street that met under our building is gone: only the gang's end is left there)
+    bool ns = mod(g.x, 6.0) == 0.0, ew = mod(g.y, 7.0) == 0.0 && !(g.y == 0.0 && abs(g.x) <= 1.0);
+    float d = min(ns ? abs(f.x) : 99.0, ew ? abs(f.y) : 99.0);
+    float aw = 1.0 - smoothstep(2.65, 2.75 + fw, d);
+    float drain = smoothstep(2.75, 2.8 + fw, d) * (1.0 - smoothstep(3.1, 3.15 + fw, d));
+    vec3 kerb = conc * (1.0 - 0.3 * (1.0 - smoothstep(0.01, 0.03 + fw, joint(p, 1.2))) * jAA);
+    alb = mix(mix(kerb, asph, aw), vec3(0.012), drain);
+    rough = mix(mix(0.42, 0.5, aw), 0.08, drain);
+    wet = mix(mix(mix(0.5, 0.75, n2), 1.0, puddle), 1.0, drain);
+    sheen = mix(mix(0.45, 1.0, aw), 1.0, drain);
+    open = mix(0.55, 0.8, aw);
+  } else if (inK) {
+    // between the houses: cast concrete cracked into slabs; some yards bare earth or grass
+    float j = 1.0 - smoothstep(0.012, 0.035 + fw, joint(p + 0.37 * g, 1.8));
+    alb = conc * (1.0 - 0.35 * j * jAA);
+    rough = 0.42; sheen = 0.45; open = 0.4;
+    wet = mix(mix(0.45, 0.75, n2), 1.0, puddle);
+    float yard = ihash(g, 7u) < 0.25 ? smoothstep(0.42, 0.56, gN(p * 0.3 + g * 1.7)) : 0.0;
+    vec3 earth = mix(vec3(0.045, 0.035, 0.025), vec3(0.026, 0.036, 0.018), step(0.5, ihash(g, 8u))) * (0.8 + 0.4 * n2);
+    alb = mix(alb, earth, yard); rough = mix(rough, 0.75, yard); sheen = mix(sheen, 0.3, yard);
+    wet = mix(wet, mix(0.2, 1.0, puddle), yard);
+  } else if (p.y < -1850.0 && p.x > -960.0 && p.x < 760.0) {
+    // the port: a concrete apron in 6 m slabs, oil stains; the cable street and the quay road asphalt
+    float j = 1.0 - smoothstep(0.015, 0.05 + fw, joint(p, 6.0));
+    float stain = smoothstep(0.55, 0.75, gN(p * 0.08 + 11.0));
+    vec3 apron = vec3(0.12, 0.118, 0.112) * (0.8 + 0.35 * n) * (1.0 - 0.45 * stain) * (1.0 - 0.4 * j * jAA);
+    float st = max(1.0 - smoothstep(5.0, 5.5 + fw, abs(p.x + 189.0)), 1.0 - smoothstep(${(SHORE_Z + 11).toFixed(1)}, ${(SHORE_Z + 11.5).toFixed(1)}, p.y));
+    // painted lines: the cable street's dashed centre line and its yellow edges, the quay road's edge
+    float cx = abs(p.x + 189.0);
+    float dash = (1.0 - smoothstep(0.07, 0.09 + fw, cx)) * step(fract(p.y / 9.0), 0.33) * step(p.y, -1880.0);
+    float edgeL = (1.0 - smoothstep(0.06, 0.08 + fw, abs(cx - 4.6))) * step(p.y, -1880.0);
+    float quayL = 1.0 - smoothstep(0.06, 0.08 + fw, abs(p.y - ${(SHORE_Z + 10.6).toFixed(1)}));
+    alb = mix(apron, asph, st); rough = mix(0.45, 0.5, st); sheen = mix(0.45, 1.0, st); open = 1.0;
+    alb = mix(alb, vec3(0.45, 0.45, 0.42), dash * 0.8); alb = mix(alb, vec3(0.5, 0.36, 0.06), max(edgeL, quayL) * 0.8);
+    wet = mix(mix(0.3, 0.5, n2), 1.0, puddle);
+  }
+}`;
+/** How much of the lamps' sheen the ground shows (groundAt's, without its noise: the two glow layers over
+ *  the ground need nothing else, and every pixel of them pays for it) */
+const SHEEN_GLSL = /* glsl */ `
+float sheenAt(vec2 p, float fw) {
+  float rx = p.x - sin(p.y * 0.002) * 60.0, rz = p.y - sin(p.x * 0.003) * 50.0;
+  float dRoad = min(abs(rx - floor(rx / 90.0 + 0.5) * 90.0), abs(rz - floor(rz / 110.0 + 0.5) * 110.0));
+  float sh = mix(0.4, 1.0, 1.0 - smoothstep(5.5, 6.5 + fw, dRoad));
+  vec2 g = floor(p / ${CELL.toFixed(1)} + 0.5), f = p - g * ${CELL.toFixed(1)};
+  bool inK = g.x >= ${K_GX[0].toFixed(1)} && g.x <= ${K_GX[1].toFixed(1)} && g.y >= ${K_GZ[0].toFixed(1)} && g.y <= ${K_GZ[1].toFixed(1)};
+  if (inK && kStreet(g)) {
+    bool ns = mod(g.x, 6.0) == 0.0, ew = mod(g.y, 7.0) == 0.0 && !(g.y == 0.0 && abs(g.x) <= 1.0);
+    float d = min(ns ? abs(f.x) : 99.0, ew ? abs(f.y) : 99.0);
+    sh = mix(0.45, 1.0, 1.0 - smoothstep(2.65, 2.75 + fw, d) + smoothstep(2.75, 2.8 + fw, d) * (1.0 - smoothstep(3.1, 3.15 + fw, d)));
+  } else if (inK) {
+    sh = 0.45;
+  } else if (p.y < -1850.0 && p.x > -960.0 && p.x < 760.0) {
+    float st = max(1.0 - smoothstep(5.0, 5.5 + fw, abs(p.x + 189.0)), 1.0 - smoothstep(${(SHORE_Z + 11).toFixed(1)}, ${(SHORE_Z + 11.5).toFixed(1)}, p.y));
+    sh = mix(0.45, 1.0, st);
+  }
+  return sh;
+}`;
+/** the lamps' pools as light (rgb: a porch lamp's warm bulb is painted warmer) */
+const POOL_RGB_GLSL = /* glsl */ `
+vec3 poolRGB(vec2 xz, float lod) {
+  vec2 un = vec2((xz.x - boxN.x) / (boxN.z - boxN.x), 1.0 - (xz.y - boxN.y) / (boxN.w - boxN.y));
+  vec2 uf = vec2((xz.x - boxF.x) / (boxF.z - boxF.x), 1.0 - (xz.y - boxF.y) / (boxF.w - boxF.y));
+  vec3 s = vec3(0.0);
+  if (all(greaterThan(un, vec2(0.0))) && all(lessThan(un, vec2(1.0)))) s += textureLod(poolN, un, lod).rgb;
+  if (all(greaterThan(uf, vec2(0.0))) && all(lessThan(uf, vec2(1.0)))) s += textureLod(poolF, uf, max(lod - 1.8, 0.0)).rgb;
+  return s;
+}`;
+const GROUND_SURF = /* glsl */ `
+float gWet = 1.0, gSheen = 1.0, gOpen = 1.0;
+{
+  vec3 alb; float rough;
+  groundAt(vLampW.xz, length(fwidth(vLampW.xz)), alb, rough, gWet, gSheen, gOpen);
+  diffuseColor.rgb = alb;
+  roughnessFactor = rough;
+}`;
+const GROUND_LAMP = 11.0;
+const GROUND_LIGHT = /* glsl */ `
+{
+  float ogG = outdoorAt(vLampW);
+  // the overcast on open ground (π × its radiance over the dome), less in a gang between walls
+  irradiance += ${glsl3(SKY_E)} * gOpen * ogG;
+  // the lamps' pools, diffusely: what they light on concrete or earth (wet asphalt shows them as its sheen)
+  irradiance += poolRGB(vLampW.xz, 1.0) * ${glsl3(WARM_LAMP)} * ${GROUND_LAMP.toFixed(1)} * ogG;
+}`;
 // Windows in the walls of an instanced building (a unit box, y 0..1, scaled per instance): floors and bays in
 // metres from its own frame; each window a frame, a pane of dark glass that mirrors the sky, and in a share
 // of them a room lit behind a curtain (warm fabric or cooler LED, a lamp somewhere inside). Too small to
@@ -232,9 +435,15 @@ vLoc = transformed; vLocN = objectNormal;
 vIsc = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz)); vSeed = instanceMatrix[3].xz;
 #else
 vIsc = vec3(1.0); vSeed = vec2(0.0);
+#endif
+#ifdef KAMPUNG_DOOR
+vAxU = normalize(instanceMatrix[0].xz);
 #endif`;
 const WIN_SURF = /* glsl */ `
 vec3 winC = vec3(0.0);
+#ifdef KAMPUNG_DOOR
+vec3 porchE = vec3(0.0);
+#endif
 {
   vec3 lp = vLoc * vIsc;
   bool xFace = abs(vLocN.x) > 0.5;
@@ -267,8 +476,31 @@ vec3 winC = vec3(0.0);
   float paneAvg = (2.0 * hw - 0.11) * (WIN_H - 0.11) / (bw * FLOOR_H);
   float frameAvg = ((2.0 * hw) * WIN_H) / (bw * FLOOR_H) - paneAvg;
   // one door on the ground floor, on a side chosen per building
+#if defined(NO_DOOR)
+  float door = 0.0;
+#elif defined(KAMPUNG_DOOR)
+  // a kampung house's door faces the street beside it (or the gang it shares with the row across: kampung.ts
+  // doorDir), on the ground floor's middle bay
+  vec2 gc = floor(vSeed / ${CELL.toFixed(1)} + 0.5);
+  vec2 dW = doorDir(gc);
+  float du = dot(dW, vAxU), dv = dot(dW, vec2(-vAxU.y, vAxU.x));
+  float dFace = abs(du) > 0.5 ? (du > 0.0 ? 1.0 : 2.0) : (dv > 0.0 ? 3.0 : 4.0);
+  float onDoorFace = step(abs(faceId - dFace), 0.1) * wall;
+  float door = step(fl, 0.5) * onDoorFace * step(abs(bay - floor(nb * 0.5)), 0.1)
+    * step(abs(ub), 0.46) * step(vy, 2.15) * (1.0 - aa);
+  // the porch lamp beside it (a bulb PORCH_Y up, PORCH_O out from the wall, on ~70 % of the houses): its
+  // light on this wall, falling off as from a point that close (cos / r²); its shade keeps most of it low
+  {
+    float pu = min((floor(nb * 0.5) + 0.5) * bw + PORCH_B, Wd - 0.25);
+    vec3 pd = vec3(u - pu, lp.y - PORCH_Y, PORCH_O);
+    float pr2 = dot(pd, pd);
+    vec3 bulb = mix(${glsl3(WARM_LAMP)}, ${glsl3(BULB_WARM)}, step(ihash(gc, 2u), PORCH_W));
+    porchE = bulb * step(ihash(gc, 1u), PORCH_P) * onDoorFace * PORCH_I * PORCH_O * inversesqrt(pr2) / pr2 * mix(0.35, 1.0, step(lp.y, PORCH_Y));
+  }
+#else
   float door = step(fl, 0.5) * step(abs(faceId - (h21(vSeed * 0.53) < 0.5 ? 3.0 : 4.0)), 0.1) * step(abs(bay - floor(nb * 0.5)), 0.1)
     * step(abs(ub), 0.46) * step(vy, 2.15) * wall * (1.0 - aa);
+#endif
   pane = mix(pane, paneAvg, aa) * (1.0 - door); frame = mix(frame, frameAvg, aa) * (1.0 - door);
   vec3 lit3 = mix(litC * lit + dimC * (1.0 - lit), tint * 0.62 * WIN_K * LIT_P, aa);
   // the plaster: uneven, rain stains running down from the sills, a darker plinth splashed by the street
@@ -290,9 +522,64 @@ vec3 winC = vec3(0.0);
 #endif
   winC = lit3 * pane;
 }`;
+/** Our building's own windows on its front (x, half width, sill, top): ours (the phone's room) first, then
+ *  the neighbours' lit ones (as drawn below). */
+const OUR_WINS: [number, number, number, number][] = [[0, 0.84, WIN.y0 - 0.06, WIN.y1 + 0.06],
+  ...([[-2.6, 4.2], [2.4, 4.3], [-2.5, 8.7], [2.7, 1.6], [-1.2, 1.5]] as const).map(([x, y]) => [x, 0.6, y - 0.72, y + 0.65] as [number, number, number, number])];
+/** Our building's render, up close (S3 out of the window, S8 coming home): trowelled repairs a shade off,
+ *  a cast lip at each floor slab, rain streaks running from the parapet and from every sill, a darker
+ *  plinth splashed by the street, a panel of breeze blocks (roster) over each window (over ours, the holes
+ *  open into the room: they show the phone's cold light on its ceiling), the steel front door. */
+const FACADE_SURF = /* glsl */ `
+{
+  vec3 nF = normalize((vec4(vNormal, 0.0) * viewMatrix).xyz);
+  float front = step(0.5, -nF.z);
+  float a = abs(nF.x) > 0.5 ? vLampW.z : vLampW.x, y = vLampW.y;
+  float fwF = length(fwidth(vec2(a, y)));
+  float patchN = vnoise(vec2(a, y) * 0.55 + 4.0), mott = vnoise(vec2(a, y) * 7.0);
+  float tone = (0.86 + 0.18 * smoothstep(0.35, 0.7, patchN)) * (0.95 + 0.1 * mott);
+  float band = (step(3.34, y) * step(y, 3.5) + step(6.84, y) * step(y, 7.0)) * (1.0 - smoothstep(0.03, 0.08, fwF));
+  float st = vnoise(vec2(a * 5.0, y * 0.12)) * 0.6 + vnoise(vec2(a * 13.0, y * 0.3 + 2.0)) * 0.4;
+  float streak = smoothstep(0.45, 0.8, st) * smoothstep(2.5, 10.4, y);
+  float rostHole = 0.0, ours = 0.0;
+  ${OUR_WINS.map(([x, hw, yb, yt], i) => `{
+    float dx = abs(a - ${x.toFixed(2)});
+    streak = max(streak, front * smoothstep(${(hw + 0.1).toFixed(2)}, ${(hw - 0.25).toFixed(2)}, dx) * step(y, ${yb.toFixed(2)}) * smoothstep(${(yb - 2.4).toFixed(2)}, ${yb.toFixed(2)}, y) * (0.35 + 0.65 * st));
+    // the roster: 0.2 × 0.15 m blocks, a diamond hole in each
+    float ry0 = ${(yt + 0.12).toFixed(2)};
+    if (dx < ${hw.toFixed(2)} && y > ry0 && y < ry0 + 0.3) {
+      vec2 q = fract(vec2((a - ${x.toFixed(2)}) / 0.2, (y - ry0) / 0.15));
+      float h = (1.0 - smoothstep(0.26, 0.3, abs(q.x - 0.5) + abs(q.y - 0.5))) * front;
+      rostHole = max(rostHole, h);${i === 0 ? '\n      ours = h;' : ''}
+    }
+  }`).join('\n  ')}
+  float plinth = smoothstep(0.6, 0.3, y) * (0.7 + 0.3 * vnoise(vec2(a * 3.0, y * 4.0)));
+  diffuseColor.rgb *= tone * (1.0 - 0.3 * band) * (1.0 - 0.3 * streak) * (1.0 - 0.35 * plinth);
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.008), rostHole);
+  totalEmissiveRadiance += ${glsl3(SCREEN_WHITE)} * roomGlow * 0.012 * ours;
+  // the front door: painted steel (dark green), two panels, a handle
+  float door = front * step(0.1, a) * step(a, 1.1) * step(y, 2.1);
+  if (door > 0.0) {
+    vec2 dq = vec2(a - 0.1, y);
+    float frameD = min(min(dq.x, 1.0 - dq.x), 2.1 - dq.y);
+    float panel = step(0.12, frameD) * (1.0 - step(abs(dq.y - 1.05), 0.04));
+    vec3 paint = vec3(0.03, 0.045, 0.036) * mix(0.75, 1.0, panel);
+    float handle = step(length(vec2(dq.x - 0.86, dq.y - 1.0)), 0.035);
+    diffuseColor.rgb = mix(paint, vec3(0.25), handle);
+    roughnessFactor = mix(0.45, 0.3, handle);
+  }
+}`;
 /** Extra GLSL for one kind of outdoor surface: `surf` after the roughness (may change diffuseColor,
  *  roughnessFactor), `light` after the lamps' pools (may add to irradiance). */
-interface Hooks { key: string; surf?: string; light?: string }
+interface Hooks {
+  key: string; surf?: string; light?: string;
+  /** fragment globals (functions, varyings), after the lamps' helpers */
+  head?: string;
+  /** after the normal is set (view space; may bend it) */
+  norm?: string;
+  /** vertex globals, and code after the vertex is placed (`transformed`, instanceMatrix) */
+  vhead?: string; vert?: string;
+}
 /** The quay lamps in front of the seawall (a row along x, dx apart): what lights the wall, its top, its
  *  railing and the poles. The pools texture stops at the shore, so these surfaces add the lamps up one by one. */
 const QUAY = { x0: -900, dx: 38, n: 43, y: 6, z: SHORE_Z + 6, I: 120 };
@@ -361,17 +648,19 @@ function outdoor<M extends THREE.MeshStandardMaterial>(m: M, lampE: number, env:
   if (hooks) m.customProgramCacheKey = () => `outdoor:${hooks.key}`;
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, LIGHT_U, { lampE: { value: lampE } });
-    const vary = '\nvarying vec3 vLampW;\n#ifdef FACADE_WIN\nvarying vec3 vLoc, vLocN, vIsc; varying vec2 vSeed;\n#endif';
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>${vary}`)
-      .replace('#include <project_vertex>', `#include <project_vertex>\n${OUT_VERT}\n#ifdef FACADE_WIN\n${WIN_VERT}\n#endif`);
+    const vary = '\nvarying vec3 vLampW;\n#ifdef FACADE_WIN\nvarying vec3 vLoc, vLocN, vIsc; varying vec2 vSeed;\n#endif'
+      + (win?.KAMPUNG_DOOR ? '\nvarying vec2 vAxU;' : '');
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>${vary}${hooks?.vhead ? `\n${hooks.vhead}` : ''}`)
+      .replace('#include <project_vertex>', `#include <project_vertex>\n${OUT_VERT}\n#ifdef FACADE_WIN\n${WIN_VERT}\n#endif${hooks?.vert ? `\n${hooks.vert}` : ''}`);
     // outdoors, the room's old fill (the cool hemisphere and "moon" directional light, still lighting the
     // desk in S9) has no source: the overcast has no moon; a wet roof would mirror it as a blue sheen
     const begin = THREE.ShaderChunk.lights_fragment_begin
       .replace('#if ( NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )', '#if 0')
       .replace('#if ( NUM_HEMI_LIGHTS > 0 )', '#if 0');
     sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_begin>', begin)
-      .replace('#include <common>', `#include <common>${vary.replace('varying vec3 vLampW;', '')}\n${OUT_HEAD}`)
+      .replace('#include <common>', `#include <common>${vary.replace('varying vec3 vLampW;', '')}\n${OUT_HEAD}${hooks?.head ? `\n${hooks.head}` : ''}`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>\n#ifdef FACADE_WIN\n${WIN_SURF}\n#endif\n${hooks?.surf ?? ''}`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>${hooks?.norm ? `\n${hooks.norm}` : ''}`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\n#ifdef FACADE_WIN\ntotalEmissiveRadiance += winC * outdoorAt(vLampW);\n#endif`)
       .replace('#include <lights_fragment_maps>', `#include <lights_fragment_maps>\n${OUT_LIGHT}\n${hooks?.light ?? ''}`)
       .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>\n${WET_LIGHT}`);
@@ -418,6 +707,8 @@ export interface CityState {
   /** the lit screen as the room's one lamp (S8): it throws its light up onto the ceiling, which bounces a
    *  little of it back down onto the desk and the walls (0..1, how much of the screen is lit) */
   phoneSky?: number;
+  /** the street lamp in front of our building as a downward spot (no light through our walls) */
+  lampSpot?: boolean;
 }
 
 class City {
@@ -460,6 +751,12 @@ class City {
   private static CLIP = [new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)];
   /** the street lamp in front of our building: it lights the facade under the window (S3 exit, S8 approach) */
   private facadeLamp = new THREE.PointLight(col(WARM_LAMP), 12, 32, 2);
+  /** the same lamp as it really throws its light: down and out, nothing upward (a point light, with no
+   *  shadows here, also lit our room through the wall above it). S3, S4, S8; S9 keeps the old one */
+  private facadeSpot = new THREE.SpotLight(col(WARM_LAMP), 12, 32, 1.45, 0.45, 2);
+  /** the sheer curtain at our window (S3, S4, S8; S9 looks down at the desk) */
+  private vitrase = new THREE.Group();
+  private vitraseU = { sky: { value: 0 } };
   private haloBuf = { p: [] as number[], c: [] as number[], r: [] as number[] };
   /** A street lamp's glow in the rain around it (a few metres of lit drops and mist), relative strength k. */
   private halo(x: number, y: number, z: number, k = 1, r = 2.6) {
@@ -506,9 +803,12 @@ class City {
     s.add(sky);
     this.env = this.skyEnv(ctx);
 
-    // ground: wet asphalt (the pools of lamp light are painted on it below, the reflection added in its shader)
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(40000, 20000).rotateX(-Math.PI / 2).translate(0, 0, SHORE_Z + 10000),
-      outdoor(new THREE.MeshStandardMaterial({ color: 0x19191a, roughness: 0.5 }), 0.0, null, 0, true));
+    // ground: asphalt, concrete, earth, wet (groundAt); the pools of lamp light are painted on it below, the
+    // reflection added in its shader
+    const groundMat = outdoor(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }), 0.0, null, 0, true, undefined,
+      { key: 'ground', head: `${KCELL_GLSL}\n${GROUND_GLSL}\n${POOL_RGB_GLSL}`, surf: GROUND_SURF, light: GROUND_LIGHT });
+    groundMat.defines!.GROUND_ZONES = '';
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(40000, 20000).rotateX(-Math.PI / 2).translate(0, 0, SHORE_Z + 10000), groundMat);
     s.add(ground);
     this.noRefl.push(ground);
     this.buildShore(ctx);
@@ -531,15 +831,20 @@ class City {
     const ROOFS = [0x8c4a33, 0x7a3f2c, 0x6f6962, 0x847f76, 0x5b534c, 0x94553a].map((c) => new THREE.Color(c));
     const wallC: THREE.Color[] = [], roofC: THREE.Color[] = [];
     const rndC = mulberry32(23);   // own stream: the city keeps its layout
+    const fill: [number, number][] = [];
     for (let gx = -40; gx <= 40; gx++) for (let gz = -175; gz <= 30; gz++) {
       const x0 = gx * 10.5, z0 = gz * 10.5;
       if (gx % 6 === 0 || gz % 7 === 0) {   // streets: lamps every other block
-        if (gx % 6 === 0 && gz % 2 === 0 && rnd() < 0.7) { lamp(x0 + 2.5, z0, 3.2, true, x0, z0); pools.push([x0 + 2.5, z0, 1.2, 7, 0.6, 1.9]); }
+        // (the streets that crossed under our building are houses now: no lamp there, nor inside our walls;
+        // the draws stay, so the rest of the city keeps its layout)
+        const off = filledCell(gx, gz) || (gx === 0 && gz === 0);
+        if (gx % 6 === 0 && gz % 2 === 0 && rnd() < 0.7 && !off) { lamp(x0 + 2.5, z0, 3.2, true, x0, z0); pools.push([x0 + 2.5, z0, 1.2, 7, 0.6, 1.9]); }
         // the cross streets have lamps too (own draw, so the rest of the city keeps its layout)
-        if (gz % 7 === 0 && gx % 6 !== 0 && gx % 2 === 0 && rnd2() < 0.6) { lamp(x0, z0 + 2.5, 3.0, false, x0, z0); pools.push([x0, z0 + 2.5, 1.1, 7, 1.9, 0.6]); }
+        if (gz % 7 === 0 && gx % 6 !== 0 && gx % 2 === 0 && rnd2() < 0.6 && !off) { lamp(x0, z0 + 2.5, 3.0, false, x0, z0); pools.push([x0, z0 + 2.5, 1.1, 7, 1.9, 0.6]); }
         // and in between (own draw): a lamp at every block, so the streets read as lit lines from above
-        if (gx % 6 === 0 && gz % 2 !== 0 && rnd3() < 0.6) { lamp(x0 + 2.5, z0, 2.9, true, x0, z0); pools.push([x0 + 2.5, z0, 1.0, 7, 0.6, 1.9]); }
-        if (gz % 7 === 0 && gx % 6 !== 0 && gx % 2 !== 0 && rnd3() < 0.5) { lamp(x0, z0 + 2.5, 2.7, false, x0, z0); pools.push([x0, z0 + 2.5, 0.9, 7, 1.9, 0.6]); }
+        if (gx % 6 === 0 && gz % 2 !== 0 && rnd3() < 0.6 && !off) { lamp(x0 + 2.5, z0, 2.9, true, x0, z0); pools.push([x0 + 2.5, z0, 1.0, 7, 0.6, 1.9]); }
+        if (gz % 7 === 0 && gx % 6 !== 0 && gx % 2 !== 0 && rnd3() < 0.5 && !off) { lamp(x0, z0 + 2.5, 2.7, false, x0, z0); pools.push([x0, z0 + 2.5, 0.9, 7, 1.9, 0.6]); }
+        if (filledCell(gx, gz)) fill.push([gx, gz]);
         continue;
       }
       if (Math.abs(x0) < 9 && z0 > -6 && z0 < 14) continue;          // our building
@@ -548,27 +853,167 @@ class City {
       const w = R(5.5, 8.5), d = R(6.5, 9.5), h = R(3.2, 6.8) * (rnd() < 0.15 ? 1.8 : 1), ry = (rnd() < 0.5 ? 0 : Math.PI / 2) + R(-0.05, 0.05);
       const x = x0 + R(-1.2, 1.2), z = z0 + R(-1.2, 1.2);
       q.setFromAxisAngle(V(0, 1, 0), ry);
-      houses.push(m4.clone().compose(p3.set(x, 0, z), q, sc.set(w, h, d)));
-      roofs.push(m4.clone().compose(p3.set(x, h, z), q, sc.set(w, w * 0.9, d)));
-      wallC.push(WALLS[Math.floor(rndC() * WALLS.length)]!.clone().multiplyScalar(0.8 + 0.3 * rndC()));
-      houseList.push({ x, z, w, d, h, ry, gx, gz, color: wallC[wallC.length - 1]! });
-      roofC.push(ROOFS[Math.floor(rndC() * ROOFS.length)]!.clone().multiplyScalar(0.75 + 0.35 * rndC()));
+      // (at the kampung's ragged edge the city's blocks have taken some plots: the draws stay)
+      const keep = kampungAt(x, z);
+      const wc = WALLS[Math.floor(rndC() * WALLS.length)]!.clone().multiplyScalar(0.8 + 0.3 * rndC());
+      const rc = ROOFS[Math.floor(rndC() * ROOFS.length)]!.clone().multiplyScalar(0.75 + 0.35 * rndC());
+      if (keep) {
+        houses.push(m4.clone().compose(p3.set(x, 0, z), q, sc.set(w, h, d)));
+        roofs.push(m4.clone().compose(p3.set(x, h, z), q, sc.set(w, w * 0.9, d)));
+        wallC.push(wc); roofC.push(rc);
+        houseList.push({ x, z, w, d, h, ry, gx, gz, color: wc, roof: 'gable', door: doorDir(gx, gz) });
+      }
       const nw = rnd() < 0.55 ? 1 + Math.floor(rnd() * 3) : 0;
       for (let k = 0; k < nw; k++) {
         const side = rnd() < 0.5 ? 1 : -1, along = R(-0.35, 0.35);
         const lx = x + Math.cos(ry) * along * w + Math.sin(ry) * side * (d * 0.5 + 0.3), lz = z - Math.sin(ry) * along * w + Math.cos(ry) * side * (d * 0.5 + 0.3);
         const wk = R(0.25, 1.1);
         R(1.4, h - 0.8);   // (the windows are in the walls' shader now; the draw keeps the city's layout)
-        pools.push([lx + Math.sin(ry) * side * 1.2, lz + Math.cos(ry) * side * 1.2, wk * 0.35, 3.5]);
+        if (keep) pools.push([lx + Math.sin(ry) * side * 1.2, lz + Math.cos(ry) * side * 1.2, wk * 0.5, 4.0]);
       }
     }
-    // walls: limewash, lit by the sky and the lamps in their street; roofs: wet, so they also mirror the glowing sky
+    // the cells that closed the streets around our building: houses from their own stream (the one behind it
+    // just clear of its back wall, the two beside it flanking the end of the gang)
+    {
+      const rf = mulberry32(46), F = (a: number, b: number) => a + (b - a) * rf();
+      for (const [gx, gz] of fill) {
+        const x0 = gx * CELL, z0 = gz * CELL;
+        const ry = (rf() < 0.5 ? 0 : Math.PI / 2) + F(-0.04, 0.04), turned = ry > 0.8;
+        let w = F(5.5, 8.5), d = F(6.5, 9.5);
+        if (gz === 1) { if (turned) w = F(5.0, 6.4); else d = F(5.0, 6.4); }
+        const h = F(3.2, 6.8);
+        const ex = (turned ? d : w) / 2, ez = (turned ? w : d) / 2;
+        let x = x0 + F(-0.3, 0.3), z = z0 + F(-1, 1);
+        if (gz === 1) z = 8.8 + ez;                                                    // (our back wall: z 8.2)
+        if (gz === 0) x = gx > 0 ? Math.max(x, 4.9 + ex) : Math.min(x, -4.9 - ex);    // (our side walls: |x| 4.2)
+        q.setFromAxisAngle(V(0, 1, 0), ry);
+        houses.push(m4.clone().compose(p3.set(x, 0, z), q, sc.set(w, h, d)));
+        roofs.push(m4.clone().compose(p3.set(x, h, z), q, sc.set(w, w * 0.9, d)));
+        wallC.push(WALLS[Math.floor(rf() * WALLS.length)]!.clone().multiplyScalar(0.8 + 0.3 * rf()));
+        roofC.push(ROOFS[Math.floor(rf() * ROOFS.length)]!.clone().multiplyScalar(0.75 + 0.35 * rf()));
+        houseList.push({ x, z, w, d, h, ry, gx, gz, color: wallC[wallC.length - 1]!, roof: 'gable', door: doorDir(gx, gz) });
+        const nw = rf() < 0.55 ? 1 + Math.floor(rf() * 3) : 0;
+        for (let k = 0; k < nw; k++) {
+          const side = rf() < 0.5 ? 1 : -1, along = F(-0.35, 0.35);
+          const lx = x + Math.cos(ry) * along * w + Math.sin(ry) * side * (d * 0.5 + 0.3), lz = z - Math.sin(ry) * along * w + Math.cos(ry) * side * (d * 0.5 + 0.3);
+          pools.push([lx + Math.sin(ry) * side * 1.2, lz + Math.cos(ry) * side * 1.2, F(0.25, 1.1) * 0.5, 4.0]);
+        }
+      }
+    }
+    // What makes it a Jakarta kampung and not a suburb: the roofs (clay-tile gables, a few hipped; flat
+    // concrete slabs (dak) with a parapet, the water tank and the washing up there; single slopes of
+    // corrugated zinc) and the houses that grew (rumah tumbuh): a room built later on the slab, a kitchen or a
+    // shop built out into the gap toward the neighbour, leaving a gang a metre wide. The footprints stay (the
+    // poles, the wires, the camera paths know them); own streams, so the city keeps its layout.
+    const rt = mulberry32(44), re = mulberry32(45), E = (a: number, b: number) => a + (b - a) * re();
+    const gableM: THREE.Matrix4[] = [], gableC: THREE.Color[] = [], hipM: THREE.Matrix4[] = [], hipC: THREE.Color[] = [];
+    const dakM: THREE.Matrix4[] = [], dakC: THREE.Color[] = [], sengM: THREE.Matrix4[] = [], sengC: THREE.Color[] = [];
+    const annexM: THREE.Matrix4[] = [], annexC: THREE.Color[] = [];
+    // zinc (bare, rusting, painted blue or green spandek), grey asbestos-cement; cast concrete; bare render, brick
+    const SENG = [0x8b8f92, 0x7c8084, 0x7a4a32, 0x6b4a3a, 0x9a9890, 0x3f5a72, 0x45604c].map((c) => new THREE.Color(c));
+    const DAK = [0x7d7a74, 0x6e6b66, 0x8a867e, 0x5f5c58].map((c) => new THREE.Color(c));
+    const BARE = [0x8f8c86, 0x7f7b75, 0x8a5a48].map((c) => new THREE.Color(c));
+    const pickC = (a: THREE.Color[], r: () => number) => a[Math.floor(r() * a.length)]!.clone().multiplyScalar(0.8 + 0.3 * r());
+    const nearUs = (x: number, z: number, m: number) => Math.abs(x) < 4.2 + m && z > -1.15 - m && z < 8.2 + m;
+    /** a single slope of zinc: centre (x, z) at height y, falling toward world axis (ax, az), run L, width wid */
+    const seng = (x: number, z: number, y: number, ax: number, az: number, L: number, wid: number, rise: number, c: THREE.Color) => {
+      q.setFromAxisAngle(V(0, 1, 0), Math.atan2(-az, ax));
+      sengM.push(m4.clone().compose(p3.set(x, y, z), q, sc.set(L, rise, wid))); sengC.push(c);
+    };
+    houseList.forEach((hs, i) => {
+      const c = Math.cos(hs.ry), s2 = Math.sin(hs.ry);
+      const Wl = (u: number, v: number): [number, number] => [hs.x + c * u + s2 * v, hs.z - s2 * u + c * v];
+      // the house's local axes in the world: u (along w) and v (along d)
+      const AU: [number, number] = [c, -s2], AV: [number, number] = [s2, c];
+      const u0 = rt();
+      const roof: Roof = hs.h > 7 ? (u0 < 0.55 ? 'flat' : u0 < 0.9 ? 'gable' : 'hip') : u0 < 0.38 ? 'gable' : u0 < 0.66 ? 'flat' : u0 < 0.9 ? 'shed' : 'hip';
+      hs.roof = roof;
+      const df = doorFace(hs);
+      if (roof === 'gable') { gableM.push(roofs[i]!); gableC.push(roofC[i]!); }
+      else if (roof === 'hip') { hipM.push(roofs[i]!); hipC.push(roofC[i]!); }
+      else if (roof === 'flat') {
+        q.setFromAxisAngle(V(0, 1, 0), hs.ry);
+        dakM.push(m4.clone().compose(p3.set(hs.x, hs.h, hs.z), q, sc.set(hs.w, 1, hs.d))); dakC.push(pickC(DAK, rt));
+      } else {
+        // the slope falls toward the door (the rain off the front, over the terrace)
+        const A = df.onU ? AU : AV, sg = df.sign, L = df.onU ? hs.w : hs.d;
+        seng(hs.x, hs.z, hs.h, A[0] * sg, A[1] * sg, L, df.onU ? hs.d : hs.w, SHED_RISE * L, pickC(SENG, rt));
+        hs.shed = [A[0] * sg, A[1] * sg, L];
+      }
+      // a room built later on the slab (a lean-to of zinc over it)
+      if (roof === 'flat' && hs.h < 7.5 && re() < 0.5) {
+        const uw = hs.w * E(0.45, 0.7), ud = hs.d * E(0.45, 0.7);
+        const ou = (re() < 0.5 ? -1 : 1) * (hs.w - uw) / 2, ov = (re() < 0.5 ? -1 : 1) * (hs.d - ud) / 2;
+        const [ux, uz] = Wl(ou, ov);
+        q.setFromAxisAngle(V(0, 1, 0), hs.ry);
+        annexM.push(m4.clone().compose(p3.set(ux, hs.h + 0.15, uz), q, sc.set(uw, 2.7, ud)));
+        annexC.push(re() < 0.5 ? hs.color.clone().multiplyScalar(E(0.85, 1.0)) : pickC(BARE, re));
+        const sg = re() < 0.5 ? 1 : -1;
+        seng(ux, uz, hs.h + 2.85, AU[0] * sg, AU[1] * sg, uw, ud, SHED_RISE * uw, pickC(SENG, re));
+        hs.upper = { u: ou, v: ov, w: uw, d: ud };
+      }
+      // a kitchen or a shop built out into the gap toward the neighbour (not on the door's side, never into a
+      // street, nor near our building or the tower's plot)
+      if (re() < 0.75) {
+        const k0 = Math.floor(re() * 4), L0 = E(0, 1), W0 = E(0.45, 0.85), O0 = E(-1, 1), H0 = E(2.5, 3.1), C0 = re();
+        for (let k = 0; k < 4; k++) {
+          const [dx, dz] = ([[1, 0], [0, 1], [-1, 0], [0, -1]] as const)[(k0 + k) % 4]!;
+          if (dx === hs.door[0] && dz === hs.door[1]) continue;
+          const nx = hs.gx + dx, nz = hs.gz + dz;
+          if (nx < K_GX[0] || nx > K_GX[1] || nz < K_GZ[0] || nz > K_GZ[1] || isStreet(nx, nz)) continue;
+          const du = dx * AU[0] + dz * AU[1], onU = Math.abs(du) > 0.5, sg = Math.sign(onU ? du : dx * AV[0] + dz * AV[1]);
+          const A: [number, number] = onU ? [AU[0] * sg, AU[1] * sg] : [AV[0] * sg, AV[1] * sg];
+          const half = onU ? hs.w / 2 : hs.d / 2, span = onU ? hs.d : hs.w;
+          const gap = (hs.gx * dx + hs.gz * dz) * CELL + CELL / 2 - (hs.x * dx + hs.z * dz) - half - 0.6;
+          if (gap < 1.2) continue;
+          const L = Math.min(gap, 1.2 + L0 * 3.3), wid = span * W0, off = O0 * (span - wid) / 2;
+          const cx = hs.x + A[0] * (half + L / 2) - A[1] * off, cz = hs.z + A[1] * (half + L / 2) + A[0] * off;
+          if (nearUs(cx, cz, 2.5) || Math.hypot(cx - TOWER.x, cz - TOWER.z) < 30) break;
+          const ha = Math.min(H0, hs.h - 0.35);
+          q.setFromAxisAngle(V(0, 1, 0), Math.atan2(-A[1], A[0]));
+          annexM.push(m4.clone().compose(p3.set(cx, 0, cz), q, sc.set(L, ha, wid)));
+          annexC.push(C0 < 0.5 ? hs.color.clone().multiplyScalar(0.9) : pickC(BARE, re));
+          // its zinc falls away from the house, under the house's eaves
+          seng(cx, cz, ha, A[0], A[1], L, wid, Math.max(0.05, Math.min(SHED_RISE * L, hs.h - ha - 0.05)), pickC(SENG, re));
+          break;
+        }
+      }
+      // the porch lamp beside the door (kampung.ts PORCH; the walls' shader lights the wall around it)
+      if (ihash(hs.gx, hs.gz, 1) < PORCH.p) {
+        const along = Math.min(df.along + PORCH.beside, df.Wd / 2 - 0.25);
+        const out = df.half + PORCH.out;
+        const [lx, lz] = df.onU ? Wl(df.sign * out, along) : Wl(along, df.sign * out);
+        const warmB = ihash(hs.gx, hs.gz, 2) < PORCH.warmP;
+        light(lx, PORCH.y, lz, warmB ? BULB_WARM : WARM_LAMP, 0.5, 0.03);
+        this.halo(lx, PORCH.y, lz, 0.07, 0.8);
+        pools.push([lx + hs.door[0] * 1.1, lz + hs.door[1] * 1.1, 0.8, 5.0, 1, 1, warmB]);
+      }
+    });
+    // walls: limewash (a door to the street, a porch lamp by it), lit by the sky and the lamps in their street;
+    // roofs: wet, so they also mirror the glowing sky
+    const WIN_K: Record<string, number> = { FLOOR_H: 3.0, BAY_W: 2.7, WIN_W: 1.0, WIN_H: 1.25, SILL: 0.95, LIT_P: 0.34, WIN_K: 1.0 };
     const wallMat = outdoor(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }), 11.0, this.env, 0.45, false,
-      { FLOOR_H: 3.0, BAY_W: 2.7, WIN_W: 1.0, WIN_H: 1.25, SILL: 0.95, LIT_P: 0.34, WIN_K: 1.0 });
-    const roofMat = outdoor(new THREE.MeshStandardMaterial({ color: 0x8c8c8c, roughness: 0.34, metalness: 0.0 }), 4.0, this.env, 2.0);
-    const wallI = new THREE.InstancedMesh(wallG, wallMat, houses.length); houses.forEach((m, i) => { wallI.setMatrixAt(i, m); wallI.setColorAt(i, wallC[i]!); });
-    const roofI = new THREE.InstancedMesh(roofG, roofMat, roofs.length); roofs.forEach((m, i) => { roofI.setMatrixAt(i, m); roofI.setColorAt(i, roofC[i]!); });
-    s.add(wallI, roofI);
+      { ...WIN_K, KAMPUNG_DOOR: 1, PORCH_P: PORCH.p, PORCH_W: PORCH.warmP, PORCH_Y: PORCH.y, PORCH_O: PORCH.out, PORCH_B: PORCH.beside, PORCH_I: 7 },
+      { key: 'kwall', head: KCELL_GLSL, light: 'irradiance += porchE;' });
+    // (what grew later: lower rooms, smaller windows, no door of their own toward the street)
+    const annexMat = outdoor(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }), 11.0, this.env, 0.45, false,
+      { ...WIN_K, WIN_H: 0.8, SILL: 1.0, NO_DOOR: 1 });
+    const tileMat = outdoor(new THREE.MeshStandardMaterial({ color: 0x8c8c8c, roughness: 0.34, metalness: 0.0 }), 4.0, this.env, 2.0, false, undefined,
+      { key: 'tile', vhead: 'varying vec3 vRl;', vert: LOCAL_VERT, head: 'varying vec3 vRl;', surf: TILE_SURF });
+    const dakMat = outdoor(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, metalness: 0.0 }), 4.0, this.env, 1.0);
+    const sengMat = outdoor(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.38, metalness: 0.35 }), 4.0, this.env, 1.8, false, undefined,
+      { key: 'seng', vhead: 'varying vec3 vRl; varying vec3 vSz;', vert: `${LOCAL_VERT}\nvSz = normalize(mat3(modelViewMatrix) * (mat3(instanceMatrix) * vec3(0.0, 0.0, 1.0)));`, head: 'varying vec3 vRl; varying vec3 vSz;', norm: SENG_NORM });
+    const inst = (g: THREE.BufferGeometry, m: THREE.Material, ms: THREE.Matrix4[], cs: THREE.Color[]) => {
+      const im = new THREE.InstancedMesh(g, m, Math.max(1, ms.length)); im.count = ms.length;
+      ms.forEach((mm, k) => { im.setMatrixAt(k, mm); im.setColorAt(k, cs[k]!); });
+      s.add(im);
+    };
+    inst(wallG, wallMat, houses, wallC);
+    inst(wallG, annexMat, annexM, annexC);
+    inst(roofG, tileMat, gableM, gableC);
+    inst(hipGeometry(), tileMat, hipM, hipC);
+    inst(dakGeometry(), dakMat, dakM, dakC);
+    inst(sengGeometry(), sengMat, sengM, sengC);
 
     // a few towers with lit window grids (points), more toward the skyline far down −z; dark glass that
     // mirrors the glowing sky
@@ -612,6 +1057,21 @@ class City {
         blocks.push(m4.clone().compose(p3.set(bx, 0, bz), q, sc.set(w, h, d)));
         bc.push(WALLS[Math.floor(rb() * WALLS.length)]!.clone().multiplyScalar(0.7 + 0.35 * rb()));
       }
+      // the kampung's ragged edge: blocks on the plots its houses gave up (own stream; clear of the houses
+      // left, the cable street and the tower's plot)
+      {
+        const rk = mulberry32(47), K = (a: number, b: number) => a + (b - a) * rk();
+        for (let x = -480; x <= 480; x += 21) for (let z = -1900; z <= 380; z += 21) {
+          const bx = x + K(-4, 4), bz = z + K(-4, 4), w = K(9, 15), d = K(9, 15), h = rk() < 0.06 ? K(14, 30) : K(4, 11), yaw = K(-0.04, 0.04), cc = rk(), ck = rk();
+          if (rk() < 0.3 || !(Math.abs(bx) < 438 && bz > -1858 && bz < 338)) continue;
+          const hw = Math.max(w, d) / 2 + 6;
+          if (kampungAt(bx - hw, bz - hw) || kampungAt(bx + hw, bz - hw) || kampungAt(bx - hw, bz + hw) || kampungAt(bx + hw, bz + hw)) continue;
+          if ((Math.abs(bx + 189) < 22 && bz < -1150) || Math.hypot(bx - TOWER.x, bz - TOWER.z) < 40) continue;
+          q.setFromAxisAngle(V(0, 1, 0), yaw);
+          blocks.push(m4.clone().compose(p3.set(bx, 0, bz), q, sc.set(w, h, d)));
+          bc.push(WALLS[Math.floor(cc * WALLS.length)]!.clone().multiplyScalar(0.7 + 0.35 * ck));
+        }
+      }
       const blockMat = outdoor(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 }), 7.0, this.env, 0.6, false,
         { FLOOR_H: 3.2, BAY_W: 3.0, WIN_W: 1.3, WIN_H: 1.4, SILL: 0.9, LIT_P: 0.3, WIN_K: 0.95, FLAT_ROOF: 1 });
       const blocksI = new THREE.InstancedMesh(wallG, blockMat, blocks.length);
@@ -633,6 +1093,9 @@ class City {
     const FL = FACADE_LAMP;
     light(FL.x, FL.y - 0.08, FL.z, warm, 3.4, 0.13); this.halo(FL.x, FL.y - 0.08, FL.z, 1.3, 2.4); pools.push([FL.x, FL.z, 1.3, 10, 0.8, 1.5]);
     this.facadeLamp.position.set(FL.x, FL.y - 0.25, FL.z);
+    this.facadeSpot.position.set(FL.x, FL.y - 0.05, FL.z); this.facadeSpot.target.position.set(FL.x, 0, FL.z);
+    this.facadeSpot.visible = false;
+    s.add(this.facadeSpot, this.facadeSpot.target);
     const poleMat = outdoor(new THREE.MeshStandardMaterial({ color: 0x3a3c40, roughness: 0.35, metalness: 0.8 }), 0, this.env, 1.5);
     const pole = new THREE.Mesh(mergeGeometries([
       new THREE.CylinderGeometry(0.06, 0.085, FL.y + 0.25, 12).translate(FL.x + 0.85, (FL.y + 0.25) / 2, FL.z),   // post
@@ -715,13 +1178,47 @@ class City {
     box(-4.2, -4, 0, 10.5, Z0, 8); box(4, 4.2, 0, 10.5, Z0, 8); box(-4, 4, 0, 10.5, 8, 8.2);
     // outside, the building wears its own skin (1 cm): pale plaster lit by the sky and the street lamp in
     // front of it; the walls' inner faces stay the room's (dark, lit by the phone alone)
-    const facadeMat = outdoor(new THREE.MeshStandardMaterial({ color: 0xa39c90, roughness: 0.8 }), 1.5, this.env, 0.25);
+    // (lit from below by the pool of the lamp in front: the lamp itself throws nothing upward)
+    const facadeMat = outdoor(new THREE.MeshStandardMaterial({ color: 0xa39c90, roughness: 0.8 }), 5.0, this.env, 0.25, false, undefined,
+      { key: 'facade', head: 'uniform float roomGlow;', surf: FACADE_SURF });
     const SK = 0.011;
     box(-4.2, WIN.x0, 0, 10.5, Z0 - SK, Z0, facadeMat); box(WIN.x1, 4.2, 0, 10.5, Z0 - SK, Z0, facadeMat);
     box(WIN.x0, WIN.x1, 0, WIN.y0 - 0.04, Z0 - SK, Z0, facadeMat); box(WIN.x0, WIN.x1, WIN.y1 + 0.04, 10.5, Z0 - SK, Z0, facadeMat);
     box(-4.2 - SK, -4.2, 0, 10.5, Z0 - SK, 8.2 + SK, facadeMat); box(4.2, 4.2 + SK, 0, 10.5, Z0 - SK, 8.2 + SK, facadeMat);
     box(-4.2, 4.2, 0, 10.5, 8.2, 8.2 + SK, facadeMat);
     box(-4.2, 4.2, 10.5, 10.8, Z0 - 0.3, 8.2, outdoor(new THREE.MeshStandardMaterial({ color: 0x6e6a64, roughness: 0.45 }), 1.0, this.env, 1.2)); // roof slab (wet)
+    // at the front door: a cast concrete canopy over it, the electricity meter (kWh) box beside it
+    box(-0.15, 1.4, 2.3, 2.4, Z0 - SK - 0.7, Z0 - SK, outdoor(new THREE.MeshStandardMaterial({ color: 0x8e887e, roughness: 0.7 }), 1.5, this.env, 0.4));
+    box(1.3, 1.55, 1.45, 1.8, Z0 - SK - 0.14, Z0 - SK, outdoor(new THREE.MeshStandardMaterial({ color: 0x9a9c98, roughness: 0.5 }), 1.5, this.env, 0.6));
+    // a sheer white curtain (vitrase) gathered at the left of our window, on its rod: the phone's cold light
+    // on the ceiling shines through it, so from the street our window is the one that glows white, not warm
+    // (a lit sheer is what makes a window glow at night). From the room in S3 it is a pale silhouette against
+    // the overcast.
+    {
+      const g = new THREE.PlaneGeometry(0.42, 1.62, 40, 1);
+      const pa = g.attributes.position as THREE.BufferAttribute;
+      for (let k = 0; k < pa.count; k++) { const x = pa.getX(k); pa.setZ(k, 0.028 * Math.sin(x * 70) + 0.012 * Math.sin(x * 23 + 1.3)); }
+      g.computeVertexNormals();
+      g.translate(-0.58, (WIN.y0 + 0.02 + WIN.y1 + 0.05) / 2, WIN.z + 0.07);
+      const curtain = new THREE.Mesh(g, new THREE.ShaderMaterial({
+        uniforms: this.vitraseU, transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false,
+        vertexShader: `varying vec3 vW, vN; void main(){ vW = (modelMatrix * vec4(position, 1.0)).xyz; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.0); }`,
+        fragmentShader: /* glsl */ `uniform float sky; varying vec3 vW, vN;
+          void main(){
+            // lit from the room by the ceiling's pool (stronger near the ceiling), from the window by the overcast
+            vec3 Er = ${glsl3(SCREEN_WHITE)} * sky * (0.35 + 0.65 * smoothstep(7.9, 9.6, vW.y));
+            vec3 Ew = ${glsl3(SKY_HOR)} * 1.2;
+            float roomSide = step(vW.z, cameraPosition.z);
+            // a sheer reflects ~45 % and lets ~35 % through; the folds turn it toward and away from the light
+            float fold = 0.4 + 0.6 * pow(abs(normalize(vN).z), 3.0);
+            vec3 L = mix(0.45 * Ew + 0.35 * Er, 0.45 * Er + 0.35 * Ew, roomSide) * fold * vec3(0.92, 0.91, 0.88) * 0.5;
+            gl_FragColor = vec4(L, 0.62 + 0.25 * (1.0 - abs(normalize(vN).z)));
+          }`,
+      }));
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1.7, 8).rotateZ(Math.PI / 2).translate(0, WIN.y1 + 0.08, WIN.z + 0.07), indoor(new THREE.MeshStandardMaterial({ color: 0x3a3a3c, roughness: 0.4, metalness: 0.6 })));
+      this.vitrase.add(curtain, rod);
+      s.add(this.vitrase);
+    }
     box(-4, 4, FLOOR_Y - 0.2, FLOOR_Y, Z1, 8, indoor(new THREE.MeshStandardMaterial({ color: 0x77726b, roughness: 0.35 })));   // ceramic tile floor
     // the bedroom behind the window: a partition 3.6 m back (a door in it) and its side walls, painted
     // off-white; a wardrobe, a bed. Nothing lights them but the phone (its pool on the ceiling), and they
@@ -1005,17 +1502,24 @@ class City {
     // a lamp's pool: a bright core under it, falling off fast, a long faint skirt
     g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.18, 'rgba(255,255,255,0.62)'); g.addColorStop(0.45, 'rgba(255,255,255,0.2)'); g.addColorStop(0.75, 'rgba(255,255,255,0.05)'); g.addColorStop(1, 'rgba(255,255,255,0)');
     sx.fillStyle = g; sx.fillRect(0, 0, 64, 64);
+    // a warm bulb's pool (a porch lamp, 2700 K) painted warmer than the street lamps' white (the tint is theirs)
+    const spotW = document.createElement('canvas');
+    spotW.width = spotW.height = 64;
+    const sw = spotW.getContext('2d')!;
+    sw.drawImage(spot, 0, 0); sw.globalCompositeOperation = 'multiply';
+    sw.fillStyle = `rgb(255,${Math.round(255 * BULB_WARM[1] / WARM_LAMP[1])},${Math.round(255 * BULB_WARM[2] / WARM_LAMP[2])})`; sw.fillRect(0, 0, 64, 64);
+    sw.globalCompositeOperation = 'destination-in'; sw.drawImage(spot, 0, 0);
     const layer = (x0: number, x1: number, z0: number, z1: number, mPerPx: number, inside: (x: number, z: number) => boolean, y: number, gain: number) => {
       const c = document.createElement('canvas');
       c.width = Math.round((x1 - x0) / mPerPx); c.height = Math.round((z1 - z0) / mPerPx);
       const x = c.getContext('2d')!;
       x.fillStyle = '#000'; x.fillRect(0, 0, c.width, c.height);
       x.globalCompositeOperation = 'lighter';
-      for (const [px, pz, k, r, sx = 1, sz = 1] of pools) {
+      for (const [px, pz, k, r, sx = 1, sz = 1, wb] of pools) {
         if (!inside(px, pz)) continue;
         const rp = Math.max(1.5, r / mPerPx);
         x.globalAlpha = Math.min(1, 0.22 * k);
-        x.drawImage(spot, (px - x0) / mPerPx - rp * sx, (pz - z0) / mPerPx - rp * sz, rp * 2 * sx, rp * 2 * sz);
+        x.drawImage(wb ? spotW : spot, (px - x0) / mPerPx - rp * sx, (pz - z0) / mPerPx - rp * sz, rp * 2 * sx, rp * 2 * sz);
       }
       const t = new THREE.CanvasTexture(c);
       t.colorSpace = THREE.NoColorSpace; t.anisotropy = 8;
@@ -1023,9 +1527,15 @@ class City {
         // (light added to the ground: the fog only dims it; a fogged additive material would add the fog colour again)
         new THREE.ShaderMaterial({
           uniforms: { map: { value: t }, tint: { value: new THREE.Vector3(...warm).multiplyScalar(gain) }, fogD: this.fogU },
-          vertexShader: `varying vec2 vU; varying float vD; void main(){ vU = uv; vec4 mv = modelViewMatrix * vec4(position, 1.0); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
-          fragmentShader: `uniform sampler2D map; uniform vec3 tint; uniform float fogD; varying vec2 vU; varying float vD;
-            void main(){ gl_FragColor = vec4(texture2D(map, vU).rgb * tint * exp(-fogD * fogD * vD * vD), 1.0); }`,
+          vertexShader: `varying vec2 vU; varying float vD; varying vec2 vW; void main(){ vU = uv; vW = (modelMatrix * vec4(position, 1.0)).xz; vec4 mv = modelViewMatrix * vec4(position, 1.0); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
+          // (as a sheen: strongest on wet asphalt, a film on concrete, little on earth: groundAt)
+          fragmentShader: `uniform sampler2D map; uniform vec3 tint; uniform float fogD; varying vec2 vU; varying float vD; varying vec2 vW;
+            ${KCELL_GLSL}
+            ${SHEEN_GLSL}
+            void main(){
+              float sheen = sheenAt(vW, length(fwidth(vW)));
+              gl_FragColor = vec4(texture2D(map, vU).rgb * tint * sheen * exp(-fogD * fogD * vD * vD), 1.0);
+            }`,
           blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false,
         }));
       // (canvas row 0 = z0: the plane's top edge, v = 1, lies toward −z)
@@ -1212,6 +1722,9 @@ class City {
     const sky = st.phoneSky ?? 0;
     this.phoneUp.intensity = PHONE_CD * sky; this.phoneUp.visible = sky > 0;
     this.ceilBounce.intensity = BOUNCE_NIT * sky; this.ceilBounce.visible = sky > 0;
+    this.facadeLamp.visible = !st.lampSpot; this.facadeSpot.visible = !!st.lampSpot;
+    LIGHT_U.roomGlow.value = st.phoneSky ?? 0;
+    this.vitrase.visible = !!st.lampSpot; this.vitraseU.sky.value = st.phoneSky ?? 0;
     const hit = st.towerHit ?? 0;
     this.towerFlash.intensity = 500 * hit;
     this.towerGlow.visible = hit > 0.001; this.towerGlow.scale.setScalar(26 * hit + 4);

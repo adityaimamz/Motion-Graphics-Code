@@ -58,6 +58,9 @@ ${SS_TAP_GLSL}
 uniform sampler2D coreTex, wideTex;
 uniform vec4 coreBox, wideBox;          // lon0, lat0, lon1, lat1
 uniform float hCam, headS, threadK, cloudK, lightsK, depthOut, rimK, expoLow;
+#ifdef PULL
+uniform float pullK;
+#endif
 uniform vec3 fO, fE, fN;               // Earth-fixed tangent frame at the core tile's centre (city fabric, lamps)
 uniform vec2 coreSize;                 // core tile texels
 uniform vec2 thread[${NT}];
@@ -142,19 +145,40 @@ float fabric(vec2 q, float fp, float plateau) {
 // the streets span a few pixels, and with the mean kept near 1 (the light stays NASA's).
 float cityGrain(vec2 gs, float fp, float litMap) {
   // (below ~60 km the glow is the map's again, then single lamps: see main)
+#ifdef DIVE
+  // (in the dive the streets carry on down to where the single lamps take over: no structureless glow between)
+  float w = smoothstep(0.2, 0.6, litMap) * smoothstep(0.5, 0.2, fp) * smoothstep(0.008, 0.016, fp);
+#else
   float w = smoothstep(0.2, 0.6, litMap) * smoothstep(0.5, 0.2, fp) * smoothstep(0.03, 0.06, fp);
+#endif
   float g = 1.0;
   if (w > 0.0) {
     vec2 q = gs / 4.0, qi = floor(q), id = qi;
     float best = 9.0;
+#ifdef PULL
+    vec2 id2 = qi; float best2 = 9.0;
+#endif
     for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
       vec2 c = qi + vec2(float(i), float(j));
       float dd = length(q - c - hash22(c));
+#ifdef PULL
+      if (dd < best) { best2 = best; id2 = id; best = dd; id = c; } else if (dd < best2) { best2 = dd; id2 = c; }
+#else
       if (dd < best) { best = dd; id = c; }
+#endif
     }
     float blk = mix(0.14, 0.38, hash12(id + 4.2)), bri = mix(0.65, 1.3, hash12(id + 9.1));
     vec2 u = rot2(hash12(id + 1.7) * 3.1416) * gs / blk;
     float lane = roadCover(u, 0.1, fp / blk, 0.3);
+#ifdef PULL
+    // districts do not end on a line: their grids and their brightness run into each other over ~600 m
+    {
+      float blk2 = mix(0.14, 0.38, hash12(id2 + 4.2)), bri2 = mix(0.65, 1.3, hash12(id2 + 9.1));
+      float lane2 = roadCover(rot2(hash12(id2 + 1.7) * 3.1416) * gs / blk2, 0.1, fp / blk2, 0.3);
+      float m = 0.5 * (1.0 - smoothstep(0.0, 0.5, best2 - best)) * pullK;
+      bri = mix(mix(bri, bri2, m), 1.0, 0.5 * pullK); lane = mix(lane, max(lane, lane2), 2.0 * m);
+    }
+#endif
     // expressways: the zero lines of a slow field (|n| / |grad n| ~ distance), a few per 10 km
     float hwy = 1.0 - smoothstep(0.02, 0.02 + fp, abs(snoise(gs / 11.0 + 2.1)) * 5.5);
     float park = smoothstep(0.55, 0.75, snoise(gs / 1.3 + 3.3)) * step(bri, 0.95);
@@ -173,6 +197,18 @@ float cloudCov(vec3 n) {
   return clamp(mass * smoothstep(0.08, 0.45, fb) + scat * (1.0 - mass), 0.0, 1.0) * cloudK;
 }
 
+#ifdef DIVE
+// the deck as it looks from above it, low: broken into cells with soft edges (no grain finer than a cloud
+// has at this scale: the old one read as cauliflower)
+float cloudCovSoft(vec3 n) {
+  vec2 ll = latlon(n);
+  float dj = length(ll - JKT);
+  float mass = smoothstep(0.9, 0.15, dj + 0.25 * snoise(ll * 3.0));
+  float fb = 0.5 + 0.5 * fbm(vec3(n * 900.0), 4);
+  float scat = smoothstep(0.72, 0.9, 0.5 + 0.5 * fbm(vec3(n * 260.0 + 3.0), 4)) * 0.6;
+  return clamp(mass * smoothstep(0.14, 0.5, fb) + scat * (1.0 - mass), 0.0, 1.0) * cloudK;
+}
+#endif
 void main() {
   vec3 col = vec3(0.0); float depth = 0.0;
   for (int k = ssK0(); k < ssK1(); k++) {
@@ -198,6 +234,10 @@ void main() {
       // low over a city the exposure comes down, so its core keeps its structure instead of going flat white
       vec2 gq = groundKm(p), gs = streetKm(gq);
       float lit = m.r * m.r * 1.6 * expoLow * fabric(gq, fp, smoothstep(0.55, 0.9, m.r)) * cityGrain(gs, fp, m.r);
+#ifdef PULL
+      // (straight up out of the roof the lens is still set for the aisle: it stops down as the city fills it)
+      lit *= 1.0 - 0.4 * pullK;
+#endif
       // close to the ground: the glow breaks into lamps ~35 m apart, fixed to the ground, along the streets
       // (a few in the blocks), density from the map
       float det = smoothstep(0.012, 0.004, fp);
@@ -252,6 +292,21 @@ void main() {
           vec3 glow = CLOUD_WARM * wide.r * wide.r * 1.6 * expoLow * Td * lightsK;
           cloud = mix(cloud, glow + vec3(0.0011, 0.0011, 0.0013) * (0.5 + thick), wo);
         }
+#ifdef DIVE
+        // low over the deck (the dive): the same physics as from orbit. Under thin or thick cloud the city is
+        // a diffuse glow (spread ~3 km sideways, dimmed by the cloud's optical depth), sharp only in the
+        // gaps, whose edges are soft. (0 at S7's scale, where it is as there.)
+        float lowK = 1.0 - smoothstep(0.06, 0.1, fp);
+        if (lowK > 0.0) {
+          cv = mix(cv, cloudCovSoft(normalize(pc)), lowK);
+          vec3 spread = sampleMap(latlon(normalize(pc)), 2.7);
+          float cellS = 0.5 + 0.5 * fbm(normalize(pc) * 350.0, 3);
+          // (a raining deck several km thick: optical depth ~20 at its thin edges, a few hundred in the cores)
+          float tauS = 20.0 + 400.0 * cellS * thick * cv;
+          vec3 glowS = CLOUD_WARM * spread.r * spread.r * 1.6 * expoLow * lightsK / (1.0 + 0.1125 * tauS) + vec3(0.0011, 0.0011, 0.0013) * (0.5 + thick);
+          cloud = mix(cloud, glowS, lowK);
+        }
+#endif
         surf = mix(surf, cloud, cv * 0.96);
       }
       // haze toward the horizon (thin air seen edge-on)
@@ -269,10 +324,13 @@ void main() {
   fragColor = vec4(col * ssWeight(), 1.0);
 }`;
 
-export interface EarthState { headS: number; threadK?: number; cloudK?: number; lightsK?: number }
+export interface EarthState { headS: number; threadK?: number; cloudK?: number; lightsK?: number; pullK?: number }
 
 class Earth {
   pass!: FSPass;
+  /** the same shader for the S8 dive (DIVE) and the S6 pull-out (PULL): own programs, so S7 stays as it was */
+  private dive!: FSPass;
+  private pull!: FSPass;
   async init() {
     const load = (f: string) => new Promise<THREE.Texture>((res) => new THREE.TextureLoader().load(f, (t) => {
       t.colorSpace = THREE.NoColorSpace; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.anisotropy = 8; t.flipY = true;
@@ -290,9 +348,14 @@ class Earth {
       hCam: { value: 1000 }, headS: { value: 0 }, threadK: { value: 1 }, cloudK: { value: 1 }, lightsK: { value: 1 }, depthOut: { value: 0 }, rimK: { value: 1 },
       thread: { value: THREAD.map(([la, lo]) => new THREE.Vector2(la, lo)) },
       cum: { value: THREAD_CUM },
+      pullK: { value: 0 },
     });
+    this.dive = new FSPass(`#define DIVE
+${FRAG}`, this.pass.u);
+    this.pull = new FSPass(`#define PULL
+${FRAG}`, this.pass.u);
   }
-  render(ctx: Ctx, cam: Cam, s: EarthState, out: THREE.WebGLRenderTarget) {
+  render(ctx: Ctx, cam: Cam, s: EarthState, out: THREE.WebGLRenderTarget, variant: 'dive' | 'pull' | null = null) {
     const u = this.pass.u;
     setCamUniforms(u, cam);
     u.hCam!.value = cam.pos.length() - R_EARTH;
@@ -302,7 +365,8 @@ class Earth {
     const lo = Math.min(1, Math.max(0, (u.hCam!.value - 150) / 350));
     u.expoLow!.value = 0.35 + 0.65 * lo * lo * (3 - 2 * lo);
     u.headS!.value = s.headS; u.threadK!.value = s.threadK ?? 1; u.cloudK!.value = s.cloudK ?? 1; u.lightsK!.value = s.lightsK ?? 1;
-    this.pass.render(ctx.renderer, out);
+    u.pullK!.value = s.pullK ?? 0;
+    (variant === 'dive' ? this.dive : variant === 'pull' ? this.pull : this.pass).render(ctx.renderer, out);
   }
 }
 

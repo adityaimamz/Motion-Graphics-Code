@@ -20,8 +20,13 @@ Seluruh video ini adalah **satu kali layar HP menyegarkan gambar**: 16,667 milid
   - lampu berhalo di udara hujan.
 
   Halo itu bagian dari adegan, bukan bloom, jadi caption tetap tanpa halo. Kota diberi eksposur +0,3 stop, masuk dan keluar dengan halus di celah antena, permukaan laut, dek awan, dan jendela. Biru sinyal tetap yang paling terang.
-- *(berubah)* **Kamar kita hanya diterangi layar HP.** Di S8 jendela kita satu-satunya yang berpendar putih-dingin di antara tirai-tirai hangat tetangga: plafon putih menangkap genangan cahaya layar, dan pantulannya samar-samar menerangi dinding, lemari, dan kasur. Penonton tahu "itu kamarnya" sebelum kamera masuk.
-- *(berubah)* **Kampung yang bisa ditunjuk di peta.** Dari dekat, atap-atapnya Jakarta, bukan perumahan generik: tiang listrik beton dengan kabel melendut dan kusut, toren air, parabola, AC, pagar dan gerbang besi, jemuran.
+- *(berubah)* **Kamar kita hanya diterangi layar HP.** Di S8 jendela kita satu-satunya yang berpendar putih-dingin di antara tirai-tirai hangat tetangga: plafon putih menangkap genangan cahaya layar, dan pantulannya samar-samar menerangi dinding, lemari, dan kasur. Penonton tahu "itu kamarnya" sebelum kamera masuk. *(berubah lagi)* Yang membuat jendela itu berpendar dari jalan adalah **vitrase** (tirai tipis putih) yang terkumpul di sisi kirinya: kain itu disinari cahaya dingin dari plafon dan meneruskannya ke luar. Dari luar pada sudut tukikan, plafonnya sendiri tidak terlihat.
+- *(berubah)* **Kampung yang bisa ditunjuk di peta.** Dari dekat, atap-atapnya Jakarta, bukan perumahan generik: tiang listrik beton dengan kabel melendut dan kusut, toren air, parabola, AC, pagar dan gerbang besi, jemuran. *(berubah lagi)* Dari atas pun terbaca kampung, bukan perumahan:
+  - atap campuran: genteng pelana dan limasan, dak beton datar berpagar rendah (toren dan jemuran di atasnya), dan seng miring sepihak;
+  - rumah yang tumbuh: kamar tambahan di atas dak, dapur atau warung yang dibangun ke celah tetangga, menyisakan gang selebar ±1 m;
+  - lampu teras di samping ±70 % pintu, pintu selalu menghadap jalan atau gang;
+  - tanah bukan aspal semua: aspal hanya di tengah jalan, dengan got di kiri-kanan, lalu beton cor yang retak per petak di gang dan halaman, dan sebagian halaman tanah atau rumput. Semuanya basah.
+  - Gedung kita berdiri di **ujung gang** (rumah tusuk sate): gang yang dilihat jendela kita berhenti di depan pintunya. Dulu gedung kita berdiri di tengah perempatan.
 - **Cerdas tapi kering.** Setiap angka di layar benar, dan kejujurannya terlihat (`λ 1550 nm · inframerah · warna palsu`). Lucunya muncul dari fakta ("Hujan pun berhenti." / "Sinyalnya tidak.").
 - **Kecepatan terasa lewat perubahan skala dan laju waktu.** Perubahan laju selalu terlihat (angka × bergulir), dan musik ikut tape-stop / tape-start.
 
@@ -32,8 +37,8 @@ Default brand: void `#000`, paper `#F5F5F5`, mute `#9CA3AF`, blue `#3B82F6`, blu
 Penyimpangan (disengaja):
 - **Subpixel merah dan hijau** hanya di makro layar (S1, S2 awal, S8 akhir, keluar-loop), karena layar memang tersusun dari emitor R/G/B. R `#FF3B2F`, G `#3DFF7A`, B `#2F5BFF`. Tidak pernah dipakai untuk teks atau UI.
 - **Logam redup** (emas pad `#B8A987`, tembaga `#A08A7A`) hanya sebagai material.
-- **Lampu kota** = putih hangat samar (LED), tidak oranye sodium. Awan di atas Jakarta memantulkannya sedikit lebih dalam (hangat-gelap), tetap bukan oranye. *(berubah)* Dari bawah, langit mendung dan udara hujan memakai pendar hangat-netral yang sama (horizon ±`#4E4945`, zenit hampir hitam). Tirai jendela yang menyala berwarna hangat, lebih dalam dari lampu jalan.
-- *(berubah)* **Warna kampung** hanya sebagai material: dinding kapur pucat dan cat pudar, atap genteng tanah liat, seng berkarat, dan semen. Ditambah toren oranye/biru/abu, gerbang besi hijau tua/hitam, dan jemuran berwarna pudar, semuanya diredam.
+- **Lampu kota** = putih hangat samar (LED), tidak oranye sodium. Awan di atas Jakarta memantulkannya sedikit lebih dalam (hangat-gelap), tetap bukan oranye. *(berubah)* Dari bawah, langit mendung dan udara hujan memakai pendar hangat-netral yang sama (horizon ±`#4E4945`, zenit hampir hitam). Tirai jendela yang menyala berwarna hangat, lebih dalam dari lampu jalan. *(baru)* **Lampu teras:** ±60 % bohlam hangat 2.700 K (lebih jingga dari lampu jalan), ±40 % LED putih-netral 4.000 K (sama dengan lampu jalan). Tidak ada yang sedingin layar HP, supaya layar tetap cahaya paling dingin di kota.
+- *(berubah)* **Warna kampung** hanya sebagai material: dinding kapur pucat dan cat pudar, atap genteng tanah liat, seng berkarat, dan semen. Ditambah toren oranye/biru/abu, gerbang besi hijau tua/hitam, dan jemuran berwarna pudar, semuanya diredam. *(baru)* Seng: abu seng, karat, spandek biru/hijau pudar, asbes abu. Dak dan tanah: beton cor abu basah, aspal hampir hitam, tanah coklat tua, rumput hijau gelap. Dinding tambahan: plester semen yang belum dicat atau bata.
 - *(berubah)* **Cahaya layar HP di kamar** putih dingin (D65, `SCREEN_WHITE`), lebih dingin dari lampu mana pun di luar. Dinding kamar dicat putih pucat netral, sehingga kamar terbaca dingin di samping fasad yang hangat.
 - *(berubah)* **Coating serat biru** (serat nomor 1 dalam kode warna TIA-598) hanya sebagai material dinding terowongan di S5. Masih keluarga biru brand.
 - *(baru)* **Air Selat Singapura** dan pendar langit malam di jendela Snell (S5 akhir): biru-batu keruh yang diredam, dari pendar kota hangat-netral yang sama dengan S3 setelah disaring air. Hanya sebagai cahaya adegan.
@@ -152,7 +157,14 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
     - **Parabola** diarahkan ke satelit sungguhan: Telkom-4 (hampir tegak, elevasi 82,6°) atau MEASAT-3 (rendah ke barat-barat laut).
     - **AC luar** dengan noda tetesan di bawahnya.
     - **Tembok depan dengan gerbang besi**, di rumah yang punya halaman ke jalan.
-    - **Jemuran beku** di halaman depan.
+    - **Jemuran beku** di halaman depan, dan di atas dak.
+  - *(baru)* **Tanah, atap, dan lampu teras** (seluruh kampung, bukan hanya dekat kamera):
+    - **Tanah per zona.** Dulu seluruh tanah satu bidang aspal basah dengan albedo ±1 % yang tidak menerima cahaya langit sama sekali, sehingga celah di antara rumah hitam pekat. Sekarang: aspal di tengah jalan (lebar ±5,4 m), got terbuka di kedua sisi, kerb beton; beton cor yang retak per petak 1,8 m di gang dan halaman; ±25 % halaman sebagian tanah atau rumput. Tanah menerima cahaya mendung (lebih sedikit di gang sempit di antara dinding) dan genangan lampu secara difus. Kilau lampu paling kuat di aspal basah, lebih lemah di lapisan air tipis di atas beton, paling lemah di tanah. Genangan berupa noda lembut berbagai ukuran, bukan pola belang.
+    - **Lampu teras** di samping pintu (2,4 m, 22 cm dari dinding). Cahayanya menerangi dinding di sekitar pintu (jatuh seperti titik sedekat itu, sebagian besar ke bawah) dan menggenang di tanah depan pintu. Genangan bohlam hangat dilukis lebih jingga.
+    - **Atap**: ±40 % genteng pelana (dengan baris genteng, bayangan di bawah tiap baris, lumut), ±10 % limasan, ±30 % dak beton datar berpagar rendah (rumah tinggi lebih sering dak), ±20 % seng miring yang turun ke arah pintu (gelombang seng 7,6 cm menangkap langit sebagai garis-garis).
+    - **Rumah tumbuh**: separuh rumah ber-dak punya kamar tambahan di atasnya beratap seng. ±75 % rumah membangun dapur atau warung satu lantai ke celah tetangga (tidak ke arah pintu, tidak ke jalan), menyisakan gang ±1,2 m.
+    - **Tepi kampung tidak lurus**: 15–85 m dari tepi lamanya, di sebagian tempat, blok-blok kota sudah menggantikan rumah. Dulu dari 1,5 km tepi itu terbaca sebagai garis lurus.
+    - **Gedung kita di ujung gang.** Gang menuju menara berhenti di depan pintu gedung kita. Kaki-kaki jalan yang dulu bersilang di bawahnya (di belakang dan kedua sisinya) kini rumah (tiga sel di sisi, enam di belakang), tanpa lampu jalan di dalamnya. Fasad gedung kita: plester bertambal, lis beton di setiap lantai, noda hujan dari parapet dan ambang, plint gelap, roster di atas setiap jendela, pintu besi hijau tua berkanopi beton, dan kotak meteran listrik.
   - Butir hujan diam: tajam di bidang fokus, bokeh di depan/belakang, dan hanya sebagian yang berkilau lampu kota.
   - Kota: ribuan atap kampung, gedung dengan jendela menyala, menara seluler rangka baja di ±1,3 km.
   - 14,06: ramp ke ×1.000.000.
@@ -167,6 +179,7 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
 - **Frame kunci:**
   - Di pangkal menara, kabel menyala seperti sinar-X di bawah jalan, belok, lalu lurus ke utara melewati pelabuhan.
   - Garis itu **terus keluar ke laut beku** (air hitam mengkilap yang memantulkan lampu pantai, dari tangkapan cube map adegan asli) sampai ke cakrawala. *(berubah)* Tangkapan cube map dulu tidak melihat lampu (lampu ada di layer efek), jadi laut hanya memantulkan langit. Sekarang lampu tanggul dan pelabuhan tampak sebagai goresan di air beku, di bawah langit mendung bergumpal yang berpendar.
+  - *(berubah lagi)* Halaman pelabuhan berupa apron beton per petak 6 m dengan noda oli. Jalan kabel dan jalan dermaga beraspal, dengan garis kuning di tepinya. Lapisan air tipis di beton mengaburkan pantulan langit; hanya genangan yang bening. Dulu pantulan tajam dari gumpalan awan terbaca seperti pola loreng.
   - *(berubah)* Jalan kabel di pelabuhan basah dan memantulkan deretan lampunya. Gudang seng yang basah memantulkan langit, dan tanggul disinari lampu-lampunya sendiri.
   - *(berubah)* **Tanggul laut** tidak lagi pita gelap di cakrawala. Bentuknya tanggul raksasa Jakarta: dinding beton cor 2,2 m di atas jalan pelabuhan dengan panel 12 m bersambungan gelap, garis cor, noda hujan yang mengalir, dan kaki yang gelap basah. Di atasnya ada jalan setapak basah dan pagar besi. Lampu-lampu jalan pelabuhan berdiri di tiangnya sendiri di depan tanggul dan menerangi mukanya satu per satu, membentuk pola sisik cahaya.
   - *(berubah)* **Laut beku** di balik tanggul punya ombak yang terbaca: 22 deret gelombang, dari alun 20 m sampai riak 30 cm, menyebar di sekitar arah angin, dihitung per piksel (mesh laut terlalu kasar untuk membawanya, jadi dulu terlihat abu-abu rata). Kaca hitam memantulkan langit mendung. Deret yang terlalu halus untuk satu piksel beralih menjadi kekasaran, sehingga tidak berkilap-kilap.
@@ -234,6 +247,8 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
   - taman atau waduk gelap di sana-sini.
 
   Rata-ratanya dijaga ±1, sehingga total cahaya tetap milik NASA. Eksposur lampu di 150 km menjadi 0,35. Dulu gumpalan putih berbintik.
+
+  *(berubah lagi, 44,95–46,8)* Batas antar-distrik tidak lagi berupa garis poligon yang tegas: grid dan terangnya saling membaur sejauh ±600 m, dan perbedaan terang antar-distrik dikurangi separuh. Eksposur lampu turun lagi 40 % (lensa masih disetel untuk lorong). Semuanya kembali ke nilai S7 pada 46,8.
 - **SFX:** kipas ruang server, sapuan masuk die, tape-stop; lalu hanya jam (kick kering + klik logam) dengan mekaran akor di setiap kilat; reverse swell, riser naik, lepas "udara".
 
 ### S7 · Orbit · 46,875 – 54,375
@@ -250,9 +265,13 @@ Laju konstan per segmen, ramp log halus di antaranya. Segmen fisika dipakai pers
 ### S8 · Pulang · 54,375 – 63,75
 - **Teks:** 61,875 – 63,5: **Sampai. Pas satu frame.** (y 520, di atas cakrawala layar).
 - **Frame kunci:**
-  - Menukik ke Jakarta, masuk **lapisan awan di atas kota**, yang disinari lampu kota dari bawah (sedang hujan). *(berubah)* Dilihat dari atas pada malam hari, awan tidak punya cahaya sendiri. Bagian yang tebal gelap, bagian yang tipis berpendar hangat dari lampu kota di bawahnya (±5× lebih gelap dari sebelumnya, tidak lagi abu-abu terang), dan kota terlihat di celah-celahnya.
+  - Menukik ke Jakarta, masuk **lapisan awan di atas kota**, yang disinari lampu kota dari bawah (sedang hujan). *(berubah)* Dilihat dari atas pada malam hari, awan tidak punya cahaya sendiri. Bagian yang tebal gelap, bagian yang tipis berpendar hangat dari lampu kota di bawahnya (±5× lebih gelap dari sebelumnya, tidak lagi abu-abu terang), dan kota terlihat di celah-celahnya. *(berubah lagi, 54,4–56,1)* Dulu lampu di celah awan terbaca sebagai gumpalan putih "kembang kol". Penyebabnya dua: tepi celah berbutir halus, dan pada 12–30 m/piksel kota tidak punya struktur (di antara skala distrik dan skala lampu tunggal). Sekarang fisikanya sama dengan dari orbit:
+    - di bawah awan tipis maupun tebal, kota adalah pendar difus yang menyebar ±3 km ke samping, diredupkan kedalaman optis awan (±20 di tepi tipis sampai ratusan di inti hujan);
+    - lampu tajam hanya di celah sejati, yang tepinya lembut;
+    - di celah itu terlihat jaringan jalan sampai lampu tunggal mengambil alih.
   - Keluar di bawah awan: karpet lampu kota. Hujan beku muncul di bawah ±400 m. *(berubah)* Lampu-lampu berbaris di sepanjang jaringan jalan yang terpaku ke tanah, dengan genangan cahaya di jalan di antara atap rumah yang gelap. Lampu di jalan melintang juga menyala.
   - *(berubah)* Di bawah dek awan, udara hujan berpendar hangat (kabut lebih tebal di awal tukikan), menyambung dari awan yang berpendar di earth.ts. Dari 1,5 km kota terbaca sebagai jaringan jalan yang menyala di antara blok-blok gelap, dengan jalan utama kampung yang lebih hangat. Makin rendah, rumah-rumah menampakkan jendela, atap basah, dan genangan lampu yang memanjang.
+  - *(berubah lagi)* Lampu jalan di depan gedung kita memancar ke bawah dan ke depan, tidak ke atas (dulu sumber titiknya juga menerangi kamar kita menembus dinding). Fasad di atasnya diterangi genangan cahaya di jalan. Dari tukikan, jendela kita yang paling dingin: vitrase putih yang disinari plafon di belakangnya, dan lubang roster di atasnya yang samar memperlihatkan plafon itu.
   - *(berubah)* 57,6–58,6: lampu jalan di depan gedung kita menyinari fasad dari bawah. Jendela-jendela bertirai menyala di relungnya. Pada 57,656 kilat radio jawaban menyalakan ribuan butir hujan biru di depan fasad.
   - *(berubah)* **Kamar kita tidak lagi lubang hitam.** Layar HP (91–95 % putih) adalah satu-satunya lampu kamar. Cahayanya memancar ke atas seperti bidang difus, menjadi genangan putih-dingin lembut di plafon yang dicat putih. Genangan itu memantulkan sedikit cahaya ke bawah, ke partisi 3,6 m di belakang (ada pintu ke lorong gelap), lemari, kasur, dan lantai keramik. Kamar terbaca dingin dan redup di samping fasad yang hangat. Khusus S8: S3 dan S9 identik per piksel dengan sebelumnya.
   - *(berubah)* Eksposur kota (+0,3 stop) masuk saat menembus awan (56,1–56,35) dan keluar saat kamera masuk jendela (58,6–59,3). Meja, HP, dan kaca layar tetap pada eksposur film.
@@ -347,6 +366,20 @@ Yang baru:
   - **Bumi**: pada fp > 0,08 km/px, cahaya kota di bawah awan diambil dari mip ±12 km dan dikalikan transmisi difus `1 / (1 + 0,1125 τ)`, dengan τ dari sel konvektif (`fbm` ±18 km).
   - **HUD**: `backdrop(t)` dari cue (`layar.plunge`, `chip.layers`, `laut.rise`, `pulang.window/glass`, `foton.back`) → vinyet sudut lebih gelap dan lebar.
   - **Pusat data**: `RectAreaLight` per luminer, lantai HPL (roughness 0,2–0,28, metalness 0) dengan `envMap` dari `CubeCamera` sekali di `init`, pintu containment, LED lorong seberang, sangkar SFP + LC + LED aktivitas, serat patch lewat muka rak.
+- **Revisi tanah–kampung–pulang** *(baru)*:
+  - **Sel kampung** (`kampung.ts`): `isStreet`, `filledCell`, `doorDir`, dan `ihash` (hash integer yang bitnya sama di JS dan GLSL). Rumah, tanah, dan shader dinding memakai aturan yang sama, jadi pintu, lampu teras, dan genangannya selalu cocok.
+  - **Aliran acak sendiri**: rumah pengisi `mulberry32(46)`, tipe atap `(44)`, rumah tumbuh `(45)`, blok tepi `(47)`. Undian kota lama tetap ditarik walau hasilnya tidak dipasang, jadi tata letak kota tidak bergeser. Detail dekat-kamera kini memakai aliran per rumah dan per deret tiang (diseed dari sel). Karena itu detailnya terkocok ulang sekali di revisi ini, dan selanjutnya perubahan di satu tempat tidak menggeser tempat lain.
+  - **Varian program**:
+    - tanah `GROUND_ZONES` (`groundAt`);
+    - dinding kampung `KAMPUNG_DOOR` (pintu + lampu teras), tambahan `NO_DOOR`;
+    - atap `tile` / `seng` (kait vertex `vRl`, normal bergelombang);
+    - fasad gedung kita `facade` (+ `roomGlow`);
+    - Bumi `DIVE` (S8) dan `PULL` (S6).
+
+    Program S1, S2, S5, S6 lorong/die, S7, S9, dan S10 tidak berubah.
+  - **`Hooks`** kini punya `head`, `norm`, `vhead`, dan `vert`.
+  - **Lampu jalan di depan gedung**: `SpotLight` ke bawah (83° + penumbra) di S3, S4, dan S8 (`lampSpot`). S9 tetap memakai titik lama, karena tidak terlihat dari meja dan S9 harus identik. Vitrase juga hanya ditampilkan di S3, S4, dan S8.
+  - **Dicek**: maxdiff 0 di 2, 10, 30, 36, 39, 40,5, 42, 43,4, 44,5, 46,8, 50, 62, 63,9, 64,2, 64,6, 65,5, 66, 67,2, 72, dan 74,8 s. Dua kali render pada t yang sama hasilnya identik. Tidak ada "program not valid".
 - **Peringatan kompiler shader** *(dibereskan)*:
   - X4000: satu `return` per fungsi di screen, die, dan earth;
   - X3577: pengaman NaN memakai bit (`floatBitsToUint`), karena kompiler D3D membuang `isnan()`;
@@ -405,6 +438,14 @@ Yang baru:
 | Coating serat dua lapis | coating primer lunak ±190 µm dan sekunder keras 245–250 µm di atas kaca 125 µm |
 | Konektor LC biru | kode warna konektor: biru = single-mode UPC, hijau = APC, krem/aqua = multimode |
 | LED aktivitas port menyala sepanjang lorong | pulsa LED aktivitas ±50 ms × 5.840 = ±5 menit film |
+| Tanah kampung malam hampir gelap kecuali dekat lampu | permukaan berwarna 12 % di bawah langit seragam memantulkan ±12 % terang langit. Celah antar-rumah terlihat karena lampu teras, jendela, dan lampu jalan, bukan karena langit |
+| Beton basah ±12–14 %, aspal basah ±3 %, tanah basah ±4–5 % | albedo material umum; basah menurunkan albedo dan menambah kilap |
+| Lampu teras ±1/5–1/10 lampu jalan | bohlam/LED 5–10 W (±500–800 lm) dibanding lampu jalan LED ±60–100 W |
+| Lampu jalan tidak menerangi ke atas | luminer jalan LED modern full cut-off: hampir tidak ada cahaya di atas bidang horizontal |
+| Rumah tusuk sate | sebutan untuk rumah di ujung jalan berbentuk T yang menghadap lurus ke jalan; lazim di kampung kota |
+| Roster di atas jendela | blok ventilasi beton/tanah liat, umum di rumah Indonesia; lubangnya membuka ke ruang di belakang |
+| Vitrase berpendar dari luar | kain tipis meneruskan ±30–40 % dan memantulkan ±40–50 % cahaya; disinari dari dalam, ia menjadi permukaan terang yang terlihat dari jalan |
+| Awan hujan dari atas gelap di inti, berpendar di tepi | kedalaman optis awan hujan ±20 di tepi tipis sampai ratusan di inti; transmisi difus ≈ 1 / (1 + 0,1125 τ) |
 
 Penyederhanaan yang disadari:
 - Kamera terbang lebih cepat daripada yang mungkin secara fisik.
@@ -413,6 +454,9 @@ Penyederhanaan yang disadari:
 - Server "di Singapura" bersifat generik.
 - Rute kabel bukan kabel bernama.
 - Tanggul, kampung, dan kamar bersifat generik (bukan alamat nyata); detail kampung hanya dipasang di tempat kamera lewat dekat.
+- Kampung tetap berupa grid sel 10,5 m (tiang, kabel, dan jalur kamera bergantung padanya). Kesan padat datang dari atap, rumah tumbuh, dan gang, bukan dari tata letak organik.
+- Genangan lampu teras di dinding tetangga dan di tanah memakai satu tekstur genangan: warnanya hanya dua (hangat atau netral).
+- S9 tetap memakai lampu jalan bersumber titik dan tanpa vitrase. Keduanya tidak terlihat dari meja, dan S9 harus identik per piksel.
 - Tetes di S3 dan butir hujan beku lainnya tidak jatuh 12 cm selama 13 ms antara S3 dan S8 (medan hujan yang sama dipakai di kedua bab).
 - S5 akhir: eksposur lensa membuka ±28× saat cahaya dari atas datang (mata dan kamera beradaptasi; di air 8 m pada malam hari aslinya jauh lebih gelap). Pita pasir ±3 m lebih sempit daripada pita pasir besar di selat (puluhan–ratusan m), supaya terbaca dari ketinggian kamera.
 - Serat dari luar: di kabel asli serat terendam gel (indeks mendekati kaca, sehingga tepinya hampir tak terlihat). Potongan ini diperlakukan di udara, seperti adegan kupas. Garis batas lapisan ditegaskan.

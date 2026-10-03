@@ -40,10 +40,12 @@ function orbitCam(t: number): Cam {
 }
 
 export function earthPull(ctx: Ctx, t: number, out: THREE.WebGLRenderTarget) {
-  earth.render(ctx, orbitCam(t), { headS: 0, threadK: Math.min(1, (t - 44.95) / 1.2), cloudK: 1 }, out);
+  // (its own program: the districts run into each other, the lights a little lower; back to S7's at 46.875)
+  const pullK = 1 - Math.min(1, Math.max(0, (t - 45.8) / 1.0));
+  earth.render(ctx, orbitCam(t), { headS: 0, threadK: Math.min(1, (t - 44.95) / 1.2), cloudK: 1, pullK: pullK * pullK * (3 - 2 * pullK) }, out, 'pull');
 }
 export function earthDive(ctx: Ctx, t: number, out: THREE.WebGLRenderTarget) {
-  earth.render(ctx, orbitCam(t), { headS: headS(t), threadK: 1, cloudK: 1 }, out);
+  earth.render(ctx, orbitCam(t), { headS: headS(t), threadK: 1, cloudK: 1 }, out, 'dive');
 }
 export { orbitCam, R_EARTH };
 

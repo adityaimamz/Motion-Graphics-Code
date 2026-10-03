@@ -36,6 +36,7 @@ const s4: Chapter = {
     city.render(ctx, cam, {
       scan: scanRow(t), glow: 0.03, fogD: 0.0005,
       cable: [1, 0.35 + 1.1 * Math.exp(-(t - T0) / 0.9)],
+      lampSpot: true,
     }, out);
     ctx.post.bloom = 0.7;
     ctx.post.bloomThreshold = 1.2;
