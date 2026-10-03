@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutorial Vibe Engineer — Beyond Studio</title>
+<link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+<div id="frame">
+  <div id="stage">
+    <div id="dark"></div>
+    <div id="light">
+      <div id="bg"></div>
+      <div id="world"></div>
+      <div id="hud"></div>
+    </div>
+    <div id="top"></div>
+    <div id="closing"></div>
+    <div id="grain"></div>
+  </div>
+</div>
+<div id="ui">
+  <div class="row"><button id="play">Play / pause</button><input id="bar" type="range" min="0" value="0"><span id="time"></span></div>
+  <div class="row"><span id="audio">audio: tekan play</span></div>
+  <div id="marks"></div>
+  <div id="help">space play · ←/→ ±1 s (shift ±5 s) · , / . satu frame · [ / ] scene · l loop scene · m mute · h sembunyikan UI · ?t=12.5 mulai dari detik tertentu</div>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

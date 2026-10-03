@@ -1,0 +1,25 @@
+{
+  "name": "tutorial-vibe-engineer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tutorial Vibe Engineer — video edukasi vertikal Beyond Studio, motion design SaaS dari HTML/CSS, deterministik per frame.",
+  "scripts": {
+    "preview": "node render.mjs serve",
+    "render": "node render.mjs video --jobs 4",
+    "render:draft": "node render.mjs video --draft --jobs 4",
+    "stills": "node render.mjs stills --scenes",
+    "sheet": "node render.mjs sheet --n 40 --cols 8",
+    "strip": "node render.mjs strip",
+    "check": "node render.mjs check",
+    "audio": "node render.mjs audio",
+    "vo": "node render.mjs vo",
+    "vo:bagi": "node tools/vo-bagi.mjs",
+    "vo:rapat": "node tools/vo-rapat.mjs",
+    "aset": "node tools/ambil-aset.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.56.0",
+    "sharp": "^0.34.0"
+  }
+}

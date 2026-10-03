@@ -40,6 +40,8 @@ Aturan repo (dari `CLAUDE.md`) tetap berlaku: kerja di `master`, jangan render M
    - `evolusi-layar/`: Canvas2D, VO elastis, audio sintetis, render paralel;
    - `beyond-studio/`: three.js 3D (studio, perangkat dengan layar Canvas2D, DOF, motion blur adaptif), Node + Chrome headless, `cues.json` dibaca gambar & `audio.py`;
    - `celestial-scrolls/`: satu file HTML;
+   - `satu-frame/`, `harusnya-diam/`: three.js + Vite, `cues.json` sebagai sumber waktu, audio sintetis;
+   - `vibe-engineer/`: Canvas2D pixel art, durasi elastis mengikuti VO;
    - `pdoom-video-main/`: three.js, timeline dari analisis lagu, motion blur adaptif.
 
    Jangan mengimpor lintas folder: setiap video berdiri sendiri. Presentasikan struktur file singkat di chat.

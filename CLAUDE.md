@@ -1,4 +1,4 @@
-# Motion-Grapich-Code — aturan kerja
+# Motion-Graphics-Code — aturan kerja
 
 Repo konten TikTok **Beyond Studio** (edukasi tech sampai promosi), dibuat sebagai motion graphics berbasis kode.
 
@@ -18,4 +18,7 @@ Setiap video baru maupun revisi (sekecil apa pun) wajib memakai skill `beyond-vi
 - `celestial-scrolls/`: promo sinematik satu file HTML (CDP).
 - `satu-frame/`: edukasi vertikal 75 s, satu refresh layar diperlambat tanpa cut (three.js + Vite, `cues.json` = sumber waktu, jam fisik, audio sintetis; render tidak menimpa file lama).
 - `harusnya-diam/`: showreel vertikal 60 s, reaksi berantai kertas risograf 12 fps (three.js + Vite, `cues.json` = sumber waktu, audio sintetis + `bars.json`; closing mengikuti end card legacy).
+- `vibe-engineer/`: edukasi vertikal ±101 s, pixel art Canvas2D, durasi mengikuti file VO.
+- `srikandi-promo/`: promo 38,4 s Srikandi Tailor (Remotion/React, 30 fps).
+- `beyond-studio-legacy/`: promo 16:9 30 s versi lama (Python + HTML); rujukan end card/closing di `site/template.html`.
 - `pdoom-video-main/`: benchmark eksternal (gitignored, hanya ada lokal). Rujukan kualitas, bukan untuk diedit.

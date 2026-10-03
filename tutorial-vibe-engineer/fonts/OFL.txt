@@ -1,0 +1,6 @@
+Font di folder ini berlisensi SIL Open Font License 1.1 (https://openfontlicense.org), diunduh dari Google Fonts (subset latin):
+
+- intertight.woff2         Inter Tight (variable 300–900)       © The Inter Tight Project Authors
+- inter.woff2              Inter (variable 300–800)             © The Inter Project Authors
+- jbmono.woff2             JetBrains Mono (variable 300–800)    © The JetBrains Mono Project Authors
+- instrument-italic.woff2  Instrument Serif Italic              © The Instrument Serif Project Authors

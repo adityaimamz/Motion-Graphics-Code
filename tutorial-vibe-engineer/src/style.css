@@ -1,0 +1,121 @@
+/* style.css — the visual system (TREATMENT.md §3 + "Standar kualitas"). No transitions/animations anywhere:
+   every moving property is written per frame by render(t). */
+@font-face { font-family: IT; src: url(../fonts/intertight.woff2) format('woff2'); font-weight: 300 900; }
+@font-face { font-family: IN; src: url(../fonts/inter.woff2) format('woff2'); font-weight: 300 800; }
+@font-face { font-family: JB; src: url(../fonts/jbmono.woff2) format('woff2'); font-weight: 300 800; }
+@font-face { font-family: IS; src: url(../fonts/instrument-italic.woff2) format('woff2'); font-style: italic; font-weight: 400; }
+
+:root {
+  --bg: #F3F4F7; --ink: #0E1116; --ink2: #3A404B; --mute: #8A909C; --line: #E3E6EC; --card: #FFFFFF;
+  --blue: #2F6BFF; --blue2: #1F55E0; --ok: #1F9D63; --err: #E5484D; --warn: #F2A93B;
+  --shadow: 0 24px 60px rgba(16,24,40,.10), 0 2px 6px rgba(16,24,40,.06);
+  --shadow-lg: 0 40px 90px rgba(16,24,40,.14), 0 4px 12px rgba(16,24,40,.07);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; transition: none !important; animation: none !important; }
+html, body { background: #000; overflow: hidden; }
+body { font-family: IN, system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; font-kerning: normal; }
+
+#frame { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: hidden; }
+#stage { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+#stage > div, #light > div { position: absolute; inset: 0; }
+#dark { background: #000; }
+#light { overflow: hidden; }
+#bg { background: var(--bg); overflow: hidden; }
+#world, #hud, #top, #closing { pointer-events: none; }
+#grain { pointer-events: none; mix-blend-mode: overlay; opacity: .05; background-repeat: repeat; }
+.abs { position: absolute; left: 0; top: 0; }
+.layer { position: absolute; inset: 0; }
+
+/* ---------- background ---------- */
+.blob { position: absolute; border-radius: 50%; filter: blur(110px); will-change: transform; }
+.dots { position: absolute; inset: -40px; background-image: radial-gradient(rgba(14,17,22,.085) 1.3px, transparent 1.6px); background-size: 28px 28px; }
+
+/* ---------- HUD ---------- */
+.hud { position: absolute; font: 500 19px/1 JB, monospace; letter-spacing: .14em; text-transform: uppercase; color: #9097A3; white-space: nowrap; }
+.hud b { font-weight: 500; color: #5B6270; }
+.rail { position: absolute; display: flex; gap: 10px; align-items: center; }
+.rail i { display: block; width: 9px; height: 9px; border-radius: 50%; background: #C9CDD5; }
+
+/* ---------- type ---------- */
+.kicker { position: absolute; font: 500 24px/1 JB, monospace; letter-spacing: .13em; text-transform: uppercase; color: #4A5160; white-space: nowrap; display: flex; align-items: center; gap: 14px; }
+.kicker .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--blue); }
+.head { position: absolute; font-family: IT, sans-serif; font-weight: 640; font-size: 96px; line-height: 1.04; letter-spacing: -0.036em; color: var(--ink); white-space: nowrap; }
+.head .ln { display: block; position: relative; padding: 0 .06em .14em 0; margin-bottom: -.14em; }
+.head .w { display: inline-block; position: relative; white-space: pre; }
+.head .c { display: inline-block; position: relative; white-space: pre; }
+.accent { color: var(--blue); }
+.serif { font-family: IS, serif; font-style: italic; font-weight: 400; letter-spacing: -0.012em; font-size: 1.1em; }
+.mono { font-family: JB, monospace; }
+
+/* ---------- surfaces ---------- */
+.card { position: absolute; background: var(--card); border-radius: 28px; border: 1px solid var(--line); box-shadow: var(--shadow); overflow: hidden; }
+.card .hdr { display: flex; align-items: center; gap: 14px; height: 76px; padding: 0 28px; border-bottom: 1px solid #EEF0F3; font: 600 28px/1 IN; color: var(--ink); }
+.card .hdr .sub { margin-left: auto; font: 500 20px/1 JB; color: var(--mute); letter-spacing: .02em; }
+.lights { display: flex; gap: 9px; } .lights i { width: 14px; height: 14px; border-radius: 50%; background: #E3E5EA; display: block; }
+.pill { position: absolute; border-radius: 999px; white-space: nowrap; }
+.chip { display: inline-flex; align-items: center; gap: 10px; height: 46px; padding: 0 20px; border-radius: 999px; background: #fff; border: 1px solid var(--line); box-shadow: 0 2px 8px rgba(16,24,40,.06); font: 600 22px/1 IN; color: var(--ink2); white-space: nowrap; }
+.chip i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+.badge { font: 500 18px/1 JB; color: var(--mute); }
+
+/* ---------- prompt dock ---------- */
+.dock { position: absolute; background: #fff; border-radius: 30px; border: 1px solid var(--line); box-shadow: var(--shadow-lg); }
+.dock .txt { position: absolute; left: 34px; top: 30px; right: 34px; font: 450 33px/1.32 IN; color: var(--ink); white-space: pre-wrap; word-break: normal; }
+.dock .ph { color: #A3A9B4; }
+.dock .hl { background: rgba(47,107,255,.16); color: var(--blue2); border-radius: 6px; }
+.dock .caret { display: inline-block; width: 3px; height: 1.05em; margin-left: 2px; vertical-align: -0.16em; background: var(--blue); border-radius: 2px; }
+.dock .tools { position: absolute; left: 30px; bottom: 22px; display: flex; gap: 26px; align-items: center; }
+.dock .tools svg { width: 30px; height: 30px; stroke: #9AA0AB; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dock .send { position: absolute; right: 22px; bottom: 16px; width: 62px; height: 62px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; }
+.dock .send svg { width: 30px; height: 30px; stroke: #fff; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.ring { position: absolute; border-radius: 50%; border: 3px solid var(--blue); }
+.glow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(47,107,255,.35), rgba(47,107,255,0)); }
+
+/* ---------- figma selection ---------- */
+.sel { position: absolute; border: 2px solid #3B82F6; }
+.sel i { position: absolute; width: 13px; height: 13px; background: #fff; border: 2px solid #3B82F6; }
+.sel .lab { position: absolute; left: 50%; top: calc(100% + 12px); transform: translateX(-50%); background: #3B82F6; color: #fff; font: 500 17px/1 JB; padding: 6px 9px; border-radius: 6px; white-space: nowrap; }
+.guide { position: absolute; background: rgba(59,130,246,.35); }
+
+/* ---------- cursor ---------- */
+.cursor { position: absolute; width: 46px; height: 58px; }
+
+/* ---------- TikTok reply bubble (S1) ---------- */
+.tk { position: absolute; background: #fff; border-radius: 30px; padding: 30px 36px 36px 32px; display: flex; gap: 24px; align-items: flex-start; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+.tk .av { flex: none; width: 88px; height: 88px; border-radius: 50%; background: #D9DCE3; color: #6B7280; font: 700 40px/88px IN; text-align: center; }
+.tk .who { font: 500 31px/1.2 IN; color: #8A8F98; margin-bottom: 10px; }
+.tk .msg { font: 750 54px/1.22 IN; color: #111; letter-spacing: -0.012em; }
+.tk .tail { position: absolute; left: 0; bottom: -26px; width: 0; height: 0; border-left: 0 solid transparent; border-right: 40px solid transparent; border-top: 30px solid #fff; }
+.selbox { position: absolute; background: rgba(47,107,255,.28); border-radius: 4px; }
+
+/* ---------- stat tiles ---------- */
+.tile { position: absolute; background: rgba(255,255,255,.86); border: 1px solid var(--line); border-radius: 26px; box-shadow: 0 10px 30px rgba(16,24,40,.07); text-align: center; }
+.tile .num { font: 700 84px/1 IT; letter-spacing: -0.04em; color: var(--blue); font-variant-numeric: tabular-nums; margin-top: 30px; }
+.tile .lab { font: 500 22px/1.25 IN; color: var(--ink2); margin-top: 14px; padding: 0 14px; }
+
+/* ---------- code ---------- */
+.code { font: 400 21px/1.55 JB; color: #3A404B; white-space: pre; }
+.code .k { color: #7C3AED; } .code .s { color: #0F8A5F; } .code .c { color: #9AA0AB; } .code .n { color: #C2410C; } .code .f { color: #1F55E0; }
+
+/* ---------- closing ---------- */
+#closing { background: #000; }
+.wm { position: absolute; font: 700 92px/1 IT; letter-spacing: -0.045em; color: #F5F5F5; white-space: nowrap; }
+.cta-line { position: absolute; font: 500 40px/1.2 IT; letter-spacing: -0.02em; color: #F5F5F5; white-space: nowrap; }
+.cta-ask { position: absolute; font: 500 30px/1 IN; color: #9CA3AF; white-space: nowrap; }
+.cta { position: absolute; height: 100px; border-radius: 999px; display: flex; align-items: center; gap: 16px; padding: 0 40px; font: 700 38px/1 IT; letter-spacing: -0.02em; white-space: nowrap; }
+.cta .tag { font: 500 17px/1 JB; letter-spacing: .14em; opacity: .7; margin-left: 6px; }
+
+/* ---------- preview player ---------- */
+#ui { display: none; }
+body.preview { background: #0a0a0c; height: 100vh; }
+body.preview #frame { left: 50%; top: 12px; transform-origin: 0 0; }
+body.preview #ui { display: block; position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); width: min(900px, 96vw); font-family: IN, system-ui; }
+#ui.hidden { visibility: hidden; }
+.row { display: flex; gap: 12px; align-items: center; }
+#play { background: #2563EB; color: #fff; border: 0; border-radius: 8px; height: 32px; padding: 0 14px; font: 600 14px IN; cursor: pointer; }
+#play:focus-visible, #marks button:focus-visible { outline: 2px solid #60A5FA; outline-offset: 2px; }
+#bar { flex: 1; accent-color: #3B82F6; }
+#time { font: 500 13px IN; color: #9CA3AF; min-width: 210px; text-align: right; font-variant-numeric: tabular-nums; }
+#marks { position: relative; height: 26px; margin-top: 6px; }
+#marks button { position: absolute; transform: translateX(-50%); background: #131318; color: #c9cbd1; border: 1px solid #26262E; border-radius: 6px; font: 500 10px IN; padding: 3px 5px; cursor: pointer; }
+#audio { font: 500 12px IN; color: #60A5FA; margin-top: 4px; }
+#help { font: 400 12px IN; color: #6B7280; margin-top: 6px; }

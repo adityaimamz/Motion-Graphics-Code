@@ -1,0 +1,28 @@
+Naskah VO — Tutorial Vibe Engineer (transkrip)
+
+Teks yang diucapkan, persis, dengan ejaan asli (teks layar memakai ejaan ini).
+Satu file per baris, nama file persis seperti id. Versi bertag ElevenLabs v4: naskah-elevenlabs.txt.
+
+Suara narator (sama untuk semua baris, sebaiknya sama dengan video Vibe Engineer):
+Young Indonesian male narrator in his late 20s, warm mid-range voice, light playful tone, casual Jakarta
+Indonesian accent, conversational pace like explaining to a friend, not like an ad.
+
+01-komentar    Ada yang minta tutorialnya. Oke, aku bongkar semua.
+02-kode        Video kemarin itu nggak ada keyframe-nya sama sekali. Nggak pakai After Effects. Semuanya kode... dan yang nulis, Claude Code.
+03-urutan      Tapi jangan bayangin sekali prompt langsung jadi, ya. Nggak gitu. Ada urutannya.
+04-siapkan     Yang perlu di-install ada di layar, ya. Udah? Bikin folder kosong, terus ketik claude.
+05-claudemd    Nah, sebelum nyuruh apa-apa, aku bikin satu file, namanya CLAUDE.md. Isinya aturan kerja... dan Claude bakal baca ini tiap kali mulai.
+06-aturan      Isinya simpel. Jangan langsung ngerjain, kasih rencana dulu. Jangan render sendiri. Dan jangan pernah commit tanpa nanya aku.
+07-skill       Terus aku bikinin dia skill, semacam buku panduan gaya. Ukuran video, logo di akhir, sampai daftar hal yang nggak boleh... biar hasilnya nggak kelihatan generik.
+08-naskah      Baru deh mulai. Tapi jangan minta videonya dulu... minta naskahnya.
+09-setuju      Baca, coret yang nggak pas, bolak-balik sampai cocok. Baru bilang setuju.
+10-storyboard  Habis itu minta storyboard. Detail banget... sampai posisi teks sama bunyi tiap gerakan ditulis.
+11-kunci       Nah, baru masuk kode. Ada satu kalimat yang wajib kamu taruh di prompt: tiap frame itu fungsi dari waktu.
+12-identik     Artinya, mau lompat ke detik berapa pun, gambarnya selalu sama persis. Yang kamu lihat di preview, itu juga yang keluar pas render.
+13-suara       Buat suara, rekam aja suaramu sendiri. Sekali jalan, dari awal sampai akhir. Nanti Claude yang motong per kalimat, terus dicocokin ke gambarnya.
+14-cek         Terus minta dia ekspor gambar tiap scene. Dan ini penting... lihat sendiri, satu-satu.
+15-revisi      Ada yang aneh? Bilang aja, yang spesifik. Video kemarin aja sampai tiga versi.
+16-render      Kalau udah oke, render di laptopmu sendiri. Terus commit, biar ada titik aman buat balik.
+17-lima        Eh, sadar nggak? Ini lima aturan yang sama kayak di video kemarin. Baca dulu, kasih konteks, perintah kecil, tes, commit.
+18-cara        Jadi video soal vibe engineer... ya dibikin pakai cara vibe engineer juga.
+19-follow      Follow, ya. Biar nggak cuma vibe coding. Terus kalau mau dibikinin video kayak gini... kontaknya ada di layar.

@@ -29,7 +29,7 @@ Aturan logo: jangan diputar, dicerminkan, atau diubah proporsinya. Celah selalu 
 
 Rujukan implementasi:
 - Canvas2D: `evolusi-layar/src/film.js` (`drawClosing`, `drawFollow`).
-- SVG/DOM: `beyond-studio/site/template.html` (`#logo1`, `#wm1`).
+- SVG/DOM: `beyond-studio-legacy/site/template.html` (`#logo1`, `#wm1`).
 
 ### Teknis
 - 1080×1920, 60 fps. Durasi dan audio sesuai naskah yang disetujui.
@@ -78,7 +78,7 @@ Pola yang pernah berhasil di video sebelumnya. Boleh dipakai, diubah, atau diaba
 - Gerak mengambang ala screensaver; elemen bergerak tanpa sebab (setiap perubahan dipicu klik, ketukan, atau narasi).
 - Wajah/mata realistis.
 - Teks bergaris tepi (outline) atau ber-halo; lebih dari satu kalimat utama sekaligus.
-- Karya "ilustrasi" palsu untuk promo: tampilkan website klien asli (`beyond-studio/site/assets/`).
+- Karya "ilustrasi" palsu untuk promo: tampilkan website klien asli (`beyond-studio/app/public/assets/`).
 
 ## 5. Checklist "Siap render"
 - [ ] Naskah dan treatment sudah disetujui; `TREATMENT.md` sesuai dengan hasil akhir.

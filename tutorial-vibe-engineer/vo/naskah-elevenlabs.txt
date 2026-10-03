@@ -1,0 +1,76 @@
+Naskah SATU TARIKAN — Tutorial Vibe Engineer (ElevenLabs Eleven v4)
+===================================================================
+
+Semua 19 baris dibacakan dalam SATU generate, supaya suara dan nada konsisten dari awal sampai akhir.
+Nanti audio dipotong otomatis jadi 19 file (tools/vo-bagi.mjs, disiapkan saat build).
+
+LANGKAH
+  1. Di ElevenLabs: Text to Speech, model Eleven v4, pilih SATU suara.
+     Saran: suara yang sama dengan video Vibe Engineer, supaya penonton mengenali naratornya.
+  2. Copy hanya blok di antara >>> dan <<< (baris kosong antarbaris jangan dihapus), paste, lalu Generate.
+     Jangan pakai mode dialog / Add speaker. Stabilitas: condong ke Creative/rendah supaya tag nada bekerja.
+  3. Generate 2–3 kali, dengarkan, lalu pilih SATU rekaman utuh yang terbaik. Jangan menyambung potongan dari
+     rekaman yang berbeda, karena itu yang membuat nada melompat.
+  4. Unduh, lalu simpan sebagai  tutorial-vibe-engineer/vo/satu-tarikan.mp3  (wav juga boleh).
+     Pemotongan jadi 19 file dikerjakan saat build.
+
+NADA UMUM
+  Ngobrol ke teman, bukan iklan dan bukan membaca dokumentasi. Santai, hangat, sedikit senyum di suara.
+  Tempo sedang; boleh agak cepat di bagian teknis, melambat di "Eh, sadar nggak?" dan kalimat sesudahnya.
+
+PELAFALAN (penting)
+  - "Claude" ditulis "Klod" di blok di bawah supaya v4 tidak membacanya "klau-de". Teks di layar tetap "Claude".
+    "CLAUDE.md" ditulis "Klod em-de". Kalau suaramu justru sudah benar membaca "Claude", boleh dikembalikan.
+  - Kata Inggris (keyframe, After Effects, prompt, skill, storyboard, preview, render, commit, vibe coding,
+    vibe engineer) dibiarkan apa adanya. Kalau ada yang terdengar aneh, kabari kata yang mana; ejaannya
+    di sini saja yang diganti, teks layar tidak berubah.
+
+CATATAN
+  - Tag dalam [kurung siku] tidak diucapkan; v4 memakainya sebagai arahan. Satu tag per klausa.
+  - Jeda di dalam baris ditulis "..." (v4 tidak mendukung SSML <break>). Jeda antarbaris datang dari baris kosong.
+  - Kalau ada tag yang ikut terbaca, hapus tag itu dan generate ulang seluruhnya.
+  - Baris 19 sudah versi panjang (dengan ajakan kontak). Kalau tidak dipakai, hapus kalimat terakhirnya
+    sebelum generate: "Terus kalau mau dibikinin video kayak gini... kontaknya ada di layar."
+  - Teks persis (tanpa tag, ejaan asli) ada di vo/naskah-tts.txt.
+
+----------------------------------------------------------------------------------------------------------
+
+>>>
+[casual, amused] Ada yang minta tutorialnya. [warm, confident] Oke, aku bongkar semua.
+
+[casual, a little proud] Video kemarin itu nggak ada keyframe-nya sama sekali. Nggak pakai After Effects. [slower, savoring it] Semuanya kode... [playful] dan yang nulis, Klod Code.
+
+[friendly, lightly teasing] Tapi jangan bayangin sekali prompt langsung jadi, ya. [laughs softly] Nggak gitu. [clear] Ada urutannya.
+
+[relaxed, conversational] Yang perlu di-install ada di layar, ya. [quick] Udah? Bikin folder kosong, terus ketik klod.
+
+[conversational, explaining to a friend] Nah, sebelum nyuruh apa-apa, aku bikin satu file, namanya Klod em-de. Isinya aturan kerja... dan Klod bakal baca ini tiap kali mulai.
+
+[casual, counting off on fingers] Isinya simpel. Jangan langsung ngerjain, kasih rencana dulu. Jangan render sendiri. [firm, half-joking] Dan jangan pernah commit tanpa nanya aku.
+
+[conversational] Terus aku bikinin dia skill, semacam buku panduan gaya. Ukuran video, logo di akhir, sampai daftar hal yang nggak boleh... [knowing] biar hasilnya nggak kelihatan generik.
+
+[upbeat] Baru deh mulai. [leaning in, like sharing a tip] Tapi jangan minta videonya dulu... minta naskahnya.
+
+[easy-going] Baca, coret yang nggak pas, bolak-balik sampai cocok. [satisfied] Baru bilang setuju.
+
+[conversational] Habis itu minta storyboard. [impressed] Detail banget... sampai posisi teks sama bunyi tiap gerakan ditulis.
+
+[upbeat] Nah, baru masuk kode. [leaning in, important] Ada satu kalimat yang wajib kamu taruh di prompt: [slow, clear] tiap frame itu fungsi dari waktu.
+
+[explaining, friendly] Artinya, mau lompat ke detik berapa pun, gambarnya selalu sama persis. Yang kamu lihat di preview, itu juga yang keluar pas render.
+
+[warm, encouraging] Buat suara, rekam aja suaramu sendiri. Sekali jalan, dari awal sampai akhir. [casual] Nanti Klod yang motong per kalimat, terus dicocokin ke gambarnya.
+
+[conversational] Terus minta dia ekspor gambar tiap scene. [serious, slower] Dan ini penting... lihat sendiri, satu-satu.
+
+[casual] Ada yang aneh? Bilang aja, yang spesifik. [wry, honest] Video kemarin aja sampai tiga versi.
+
+[relaxed] Kalau udah oke, render di laptopmu sendiri. [warm] Terus commit, biar ada titik aman buat balik.
+
+[playful, slowing down] Eh, sadar nggak? [curious, building] Ini lima aturan yang sama kayak di video kemarin. [clear, rhythmic] Baca dulu, kasih konteks, perintah kecil, tes, commit.
+
+[warm, a little smug] Jadi video soal vibe engineer... [satisfied, smiling] ya dibikin pakai cara vibe engineer juga.
+
+[warm, friendly] Follow, ya. Biar nggak cuma vibe coding. [casual, inviting] Terus kalau mau dibikinin video kayak gini... kontaknya ada di layar.
+<<<
