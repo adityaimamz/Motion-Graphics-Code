@@ -45,7 +45,7 @@ export default {
     st(trail, { height: '10px', 'border-radius': '10px', background: 'linear-gradient(90deg, rgba(59,130,246,0), rgba(96,165,250,.9))', filter: 'blur(3px)', 'transform-origin': '100% 50%' });
     arrowG = svgEl('g', {}, svg);
     svgEl('path', { d: ARROW, fill: '#F5F5F5' }, arrowG);
-    wave = svgEl('circle', { cx: 384, cy: 247, r: 0, fill: 'none', stroke: '#60A5FA' }, svg);
+    wave = svgEl('circle', { cx: RING.cx, cy: RING.cy, r: 0, fill: 'none', stroke: '#60A5FA' }, svg);
     // wordmark from behind a mask
     const wmClip = el('div', 'abs', root); st(wmClip, { left: '0px', top: `${Y.wm}px`, width: '1080px', height: '120px', overflow: 'hidden' });
     wm = el('div', 'wm', wmClip, 'Beyond Studio'); st(wm, { left: '0px', top: '6px', width: '1080px', 'text-align': 'center' });
@@ -89,7 +89,9 @@ export default {
     st(trail, { display: t >= C.arrow[0] && ap < 1 && tl > 4 ? '' : 'none', left: `${tipX - tl - 40}px`, top: `${tipY - 5}px`, width: `${tl}px`, opacity: clamp(ap * 3) });
     // shockwave from the gap
     const wp = clamp((t - C.wave[0]) / (C.wave[1] - C.wave[0]));
-    attr(wave, { r: (ease.outCubic(wp) * 260).toFixed(2), 'stroke-width': (8 * (1 - wp) + 0.5).toFixed(2), opacity: t >= C.wave[0] && wp < 1 ? (1 - wp).toFixed(3) : 0 });
+    // centred on the logo, growing from the ring's edge (same as vibe-engineer: R + 620 px, 3→9 px, α .85)
+    const we = ease.outCubic(wp);
+    attr(wave, { r: (RING.r + we * (620 / K)).toFixed(2), 'stroke-width': ((3 + 6 * (1 - we)) / K).toFixed(2), opacity: t >= C.wave[0] && wp < 1 ? (0.85 * (1 - we)).toFixed(3) : 0 });
     // wordmark
     const wq = ease.outExpo(clamp((t - C.wordmark[0]) / (C.wordmark[1] - C.wordmark[0])));
     st(wm, { transform: tf({ y: (1 - wq) * 118 }) });

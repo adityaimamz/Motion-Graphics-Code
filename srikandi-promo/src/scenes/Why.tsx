@@ -6,7 +6,7 @@ import {BEAT, C, EASE_IN, EASE_IN_OUT, EASE_OUT, SANS, SERIF, tween} from '../th
 const POINTS = [
   {n: '01', title: 'Pas di badan', desc: 'Diukur langsung, dipotong mengikuti bentuk tubuhmu.'},
   {n: '02', title: 'Jahitan rapi', desc: 'Detail dikerjakan teliti — rapi di luar, rapi di dalam.'},
-  {n: '03', title: 'Bahan berkualitas', desc: 'Kain dan renda pilihan yang nyaman dipakai seharian.'},
+  {n: '03', title: 'Bahan berkualitas', desc: 'Bahan, aksesori, dan manik-manik pilihan yang nyaman dipakai seharian.'},
 ];
 
 // 00:20.4 – 00:27  ·  Kenapa Srikandi: tiga hal yang kami jaga

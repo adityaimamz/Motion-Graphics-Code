@@ -6,8 +6,8 @@ import {BEAT, C, EASE_IN_OUT, EASE_OUT, SANS, SERIF, tween} from '../theme';
 const LINES = [
   {text: 'Kebaya custom', italic: false},
   {text: 'Gaun pesta', italic: true},
-  {text: 'Seragam', italic: false},
-  {text: 'Permak pakaian', italic: true},
+  {text: 'Baju Dinas / PDH', italic: false},
+  {text: 'Seragam sekolah', italic: true},
 ];
 
 const THREAD =
@@ -106,7 +106,7 @@ export const Services: React.FC = () => {
                 fontFamily: SERIF,
                 fontStyle: l.italic ? 'italic' : 'normal',
                 fontWeight: l.italic ? 400 : 500,
-                fontSize: 122,
+                fontSize: 108,
                 lineHeight: 1,
                 color: l.italic ? C.goldDeep : C.night,
                 opacity: p,

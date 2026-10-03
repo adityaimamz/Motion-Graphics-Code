@@ -85,7 +85,7 @@ body { font-family: IN, system-ui, sans-serif; color: var(--ink); -webkit-font-s
 .cursor { position: absolute; width: 46px; height: 58px; }
 
 /* ---------- TikTok reply bubble (S1) ---------- */
-.tk { position: absolute; background: #fff; border-radius: 30px; padding: 30px 36px 36px 32px; display: flex; gap: 24px; align-items: flex-start; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+.tk { position: absolute; background: #fff; border-radius: 30px 30px 30px 6px; padding: 30px 36px 36px 32px; display: flex; gap: 24px; align-items: flex-start; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
 .tk .av { flex: none; width: 88px; height: 88px; border-radius: 50%; background: #D9DCE3; color: #6B7280; font: 700 40px/88px IN; text-align: center; }
 .tk .who { font: 500 31px/1.2 IN; color: #8A8F98; margin-bottom: 10px; }
 .tk .msg { font: 750 54px/1.22 IN; color: #111; letter-spacing: -0.012em; }
@@ -94,8 +94,8 @@ body { font-family: IN, system-ui, sans-serif; color: var(--ink); -webkit-font-s
 
 /* ---------- stat tiles ---------- */
 .tile { position: absolute; background: rgba(255,255,255,.86); border: 1px solid var(--line); border-radius: 26px; box-shadow: 0 10px 30px rgba(16,24,40,.07); text-align: center; }
-.tile .num { font: 700 84px/1 IT; letter-spacing: -0.04em; color: var(--blue); font-variant-numeric: tabular-nums; margin-top: 30px; }
-.tile .lab { font: 500 22px/1.25 IN; color: var(--ink2); margin-top: 14px; padding: 0 14px; }
+.tile .num { font: 700 78px/1 IT; letter-spacing: -0.04em; color: var(--blue); font-variant-numeric: tabular-nums; margin-top: 30px; }
+.tile .lab { font: 500 20px/1.25 IN; color: var(--ink2); margin-top: 14px; padding: 0 8px; white-space: nowrap; }
 
 /* ---------- code ---------- */
 .code { font: 400 21px/1.55 JB; color: #3A404B; white-space: pre; }

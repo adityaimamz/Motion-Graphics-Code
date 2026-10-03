@@ -186,7 +186,7 @@ Cue memakai `at(id, 'kata')`, sama seperti `vibe-engineer`.
 ### S1 · Komentar · 0,0 – 3,9 · VO 01
 - **VO 01:** "Ada yang minta tutorialnya. Oke, aku bongkar semua."
 - **Frame kunci:**
-  - frame 0: **latar hitam** seperti layar balas komentar TikTok (tanpa HUD). 0,1 s: gelembung putih **Balas komentar frenius_17** pop (outBack) di tengah (x 120–860, y 640–900) dengan ekor kiri bawah, persis seperti sticker TikTok;
+  - frame 0: **latar hitam** seperti layar balas komentar TikTok (tanpa HUD). 0,1 s: gelembung putih **Balas komentar frenius_17** pop (outBack) di tengah (x 120–860, y 640–900) dengan ekor kiri bawah, persis seperti sticker TikTok (sudut kiri-bawah hampir lancip supaya ekornya menyambung mulus);
   - avatar = lingkaran inisial "F" abu `#D9DCE3`, bukan foto profil;
   - judul abu 26 px, teks hitam 44 px bold: "wihhh bagus bang. buat tutorial nya bang". "[Stiker]" tidak ditulis.
   - Di "Oke": kursor masuk dan memblok teks (sorot biru per kata).
@@ -205,7 +205,7 @@ Cue memakai `at(id, 'kata')`, sama seperti `vibe-engineer`.
     - muncul nomor baris, tab `film.js` + path `vibe-engineer/src`;
     - huruf kode 17 → 22 px;
     - motion blur dan whoosh;
-  - di "Claude Code": tiga kartu angka naik bergantian di bawah: `4.246` baris kode · `0` gambar dari luar · `musik` juga kode (ikon gelombang).
+  - di "Claude Code": tiga kartu angka naik bergantian di bawah: `4.246` baris kode · `0` gambar dari luar · `musik & suara dari kode` (ikon gelombang). Angka 78 px, label 20 px satu baris, supaya tiga kartu rapi dan tidak ada label yang patah.
 - **Transisi keluar:** kartu angka menyusut menjadi titik-titik yang terbang ke HUD kanan atas dan menjadi rel bab.
 - **SFX:** swish per pergantian kata, klik seleksi, kibasan kartu, tiga tik angka bernada naik.
 
@@ -445,7 +445,7 @@ Mengikuti STYLE.md §1–2, dengan **satu tambahan atas permintaan user**: selai
 - **Masuk:** dari dorongan kamera ke layar HP (S11), latar void `#000`.
 - **Urutan:**
   1. **(direvisi, disetujui user)** cincin `#F5F5F5` sudah utuh sejak awal karena datang dari klip HP (S11): tebal dan diameter identik dengan logo, celahnya menyempit dari 81 ke 36 unit logo dalam 0,5 s. Pengganti langkah "digambar simetris dari jam 9" (STYLE.md §1.1). Kunci panah dimajukan ±0,5 s;
-  2. panah terbang masuk dari kiri dengan jejak cahaya biru dan mengunci di celah kanan **tepat di ketukan** (gelombang kejut `#60A5FA`, pop outBack, impact + bell);
+  2. panah terbang masuk dari kiri dengan jejak cahaya biru dan mengunci di celah kanan **tepat di ketukan** (gelombang kejut `#60A5FA` berpusat di pusat logo, tumbuh dari tepi cincin seperti `vibe-engineer`; pop outBack, impact + bell);
   3. wordmark "Beyond Studio" (Inter Tight 700, −0,045 em) naik dari balik mask (outExpo 0,75 s), di bawah logo;
   4. di "Follow" (VO 19): kalimat **Follow, biar nggak cuma vibe coding.** naik, pil **+ Follow** `#3B82F6` pop (outBack), lalu di-tap di ketukan → **✓ Following**;
   5. di "dibikinin video": baris mute "Mau dibikinin video kayak gini?", lalu pil URL `beyondstudio.site` (ikon globe, diketik) dan tombol WhatsApp `#25D366` `0819-2707-0239` pop berurutan; tombol WhatsApp mendapat satu cincin pulse (tanpa tap kedua, supaya Follow tetap aksi utama).

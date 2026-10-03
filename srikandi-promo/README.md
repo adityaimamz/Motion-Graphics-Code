@@ -47,7 +47,7 @@ Resolusi **1080 × 1920**, **30 fps**, teks Bahasa Indonesia, musik & efek suara
 | 00:09.6 | Logo | Kartu terakhir menjadi lingkaran → gong → logo Srikandi muncul, "Dijahit pas, tampil anggun." |
 | 00:13.2 | Koleksi | Logo "digunting" di tengah. *Satu model, banyak cerita* — slider mint → sage berpayet, stiker Pilih warna / renda / payet. Lalu gaun batik: *Dari kebaya hingga gaun pesta.* |
 | 00:20.4 | Kenapa Srikandi | 01 Pas di badan · 02 Jahitan rapi · 03 Bahan berkualitas |
-| 00:26.4 | Layanan | Kebaya custom · Gaun pesta · Seragam · Permak pakaian + pita berjalan (wisuda, lamaran, pernikahan…) |
+| 00:26.4 | Layanan | Kebaya custom · Gaun pesta · Baju Dinas / PDH · Seragam sekolah + pita berjalan (wisuda, lamaran, pernikahan…) |
 | 00:30.8 | Ajakan | Logo, *"Wujudkan busana impianmu."*, tombol WhatsApp **+62 823-1310-1314**, alamat — ditahan ±7 detik |
 
 **Arah visual:** indigo malam + biru Srikandi (diambil langsung dari logo) + gading + benang emas.
