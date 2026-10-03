@@ -1,6 +1,6 @@
 # Tutorial Vibe Engineer · Treatment
 
-Status: **gerbang 3 disetujui; potongan uji (S1 + S2 + closing) dibangun dan direvisi: showcase memakai klip asli, bukan foto (2026-10-03).** Naskah v2 disetujui di gerbang 1. VO sudah direkam dan didengar user.
+Status: **semua scene dibangun (S1–S12, 2026-10-03).** Potongan uji S1 + S2 + closing disetujui; S3–S11 dibangun sesuai storyboard ini, dok prompt dan animasi ketik dipoles (lihat "Catatan build S3–S11" di akhir). Naskah v2 disetujui di gerbang 1. VO sudah direkam dan didengar user.
 Jenis: edukasi (tutorial sungguhan). Sekitar 2 menit 25 detik, elastis (panjang tiap beat mengikuti file VO). 1080×1920, 60 fps.
 Audio: VO ElevenLabs **Eleven v4** (satu tarikan 136,2 s, suara "Zephlyn", dipotong jadi 19 file) + musik dan SFX sintetis.
 Waktu scene di storyboard masih perkiraan (±14 karakter/detik). Waktu persisnya dihitung `timeline.js` dari file VO.
@@ -156,9 +156,9 @@ y    0 ┌───────────────────────�
   640  ├──────────────────────────────┤
        │ PANGGUNG: kartu UI, file,     │  x 60–1020 (teks penting ≤ x 930)
        │ terminal, still pixel         │
- 1420  ├──────────────────────────────┤
-       │ DOK PROMPT (kolom Claude Code)│  x 80–930, tinggi 120
- 1560  ├──────────────────────────────┤
+ 1398  ├──────────────────────────────┤
+       │ DOK PROMPT (kolom Claude Code)│  x 80–930, tinggi 156 (chip konteks di atasnya, y 1336)
+ 1554  ├──────────────────────────────┤
        │ HUD bawah (dekoratif)         │  kiri: timecode · 128 BPM   kanan: 1080×1920 · 60FPS
  1920  └──────────────────────────────┘
 ```
@@ -166,7 +166,7 @@ Area aman STYLE.md (250 atas, 350 bawah, 150 kanan) terpenuhi untuk semua teks p
 
 ## 4. Motif / benang merah
 
-1. **Dok prompt = poros.** Selalu di y 1420–1540. Gelembung komentar menjadi prompt pertama (S1). Setiap bab dimulai dengan prompt diketik lalu dikirim (tombol biru dengan cincin klik). Di S11 dok prompt meredup dan tenggelam: kerjanya selesai.
+1. **Dok prompt = poros.** Selalu di y 1398–1554 (tepi bawah tetap; dok yang memuat 3 baris tumbuh ke atas). Gelembung komentar menjadi prompt pertama (S1). Setiap bab dimulai dengan prompt diketik lalu dikirim (tombol biru dengan cincin klik). Di S11 dok prompt meredup dan tenggelam: kerjanya selesai.
 2. **Rel bab di HUD.** Tujuh titik `00–06` di pojok kanan atas, terisi satu per bab. Di S11 rel ini diputar 90° dan menjadi kolom kiri diagram "langkah → aturan".
 3. **Kotak seleksi Figma** (`#2F6BFF`, 4 handle, label `W × H`) menandai hal yang harus diingat penonton: `100% kode` (S2), baris aturan (S4), `frame = f(t)` (S7), pin revisi (S9).
 4. **Bukti asli dari video pertama.** Still pixel *Vibe Engineer* muncul sebagai kartu di S2, S6, S7, S9, dan S11. Pixel tajam (`image-rendering: pixelated`) di dalam kartu yang bersih: kontras dua gaya.
@@ -178,7 +178,7 @@ Area aman STYLE.md (250 atas, 350 bawah, 150 kanan) terpenuhi untuk semua teks p
 Gerak dasar, kecuali disebut lain:
 - headline naik dari balik mask per kata (outExpo 0,6 s, stagger 0,05 s) dan keluar ke atas (inExpo 0,25 s);
 - kartu naik 40 px + skala 0,96 → 1 + bayangan tumbuh (outExpo 0,7 s);
-- ketikan 28 karakter/detik dikunci ke frame, caret berkedip 1,06 Hz;
+- ketikan dikunci ke frame dengan ritme tangan: jeda per tombol tidak rata (±38 % lewat `hash`), jeda singkat sesudah spasi, lebih panjang sesudah koma/titik; total satu baris tetap panjang ÷ cps sehingga cue tidak bergeser. Huruf terbaru muncul dengan tinta biru yang memudar ke warna teks dalam 0,2 s; caret solid saat mengetik, lalu berdenyut lembut 1,06 Hz (bukan kedip keras);
 - kursor panah digambar sendiri, klik = cincin `#2F6BFF` melebar 0,4 s.
 
 Cue memakai `at(id, 'kata')`, sama seperti `vibe-engineer`.
@@ -345,8 +345,8 @@ Cue memakai `at(id, 'kata')`, sama seperti `vibe-engineer`.
 - **Frame kunci, VO 18:**
   - diagram mundur dan memudar; headline putih **Vibe engineer, dibikin dengan cara vibe engineer.** (aksen pada "cara");
   - bingkai HP (garis tipis, sudut 64 px) naik dari bawah, memutar potongan asli *Vibe Engineer* S15 topi pindah → S16 `▶ LANJUT` (±5 s, urutan frame JPG, deterministik).
-- **Transisi keluar:** di saat iris-out pixel di dalam HP menutup, kamera mendorong masuk ke layar HP sampai layar hitamnya memenuhi frame. Kita sudah di dalam closing.
-- **SFX:** whoosh rel berputar, 5 nada naik saat chip aturan muncul (motif jingle "+1" video pertama, diaransemen ulang lembut), garis tertarik ×5, chiptune asli video pertama terdengar kecil dari "speaker HP" (dari klip), dorongan masuk (whoosh rendah).
+- **Transisi keluar (direvisi, disetujui user):** video pertama berakhir dengan iris pixel yang meninggalkan **cincin putih bercelah di kanan, berproporsi sama dengan logo** (diukur di frame terakhir klip: Ø 194 px, tebal 21,5 px). Kamera mendorong masuk (ease inOutExpo, 0,78 s) sambil bergeser, sehingga cincin itu mendarat tepat di tempat dan ukuran cincin logo closing (pusat 538,9 / 636,6; Ø 340,5). Layer closing memudar masuk di 0,14 s terakhir dengan cincin yang identik, jadi closing **melanjutkan** cincin itu, bukan menggambar cincin kedua (sebelumnya terasa seperti hampir membentuk logo lalu mengulang dari awal).
+- **SFX:** whoosh rel berputar, 5 nada naik saat chip aturan muncul (motif jingle "+1" video pertama, diaransemen ulang lembut), garis tertarik ×5, chiptune + efek asli video pertama terdengar kecil dari "speaker HP" (klip **tanpa narator lama**, di-EQ ke 380 Hz–5,2 kHz, memudar saat kamera mendorong), dorongan masuk (whoosh rendah + nada D2→D3 sesuai kunci pad).
 
 ### S12 · Closing · 131,2 – ±141,5 · VO 19
 Lihat §8.
@@ -432,7 +432,7 @@ Struktur rencana (dirinci di gerbang 3):
 - `assets/ve/`: aset dari *Vibe Engineer*, dibuat oleh `npm run aset` (hanya membaca `vibe-engineer/`, tidak ada yang diubah):
   - 44 still 540×960 JPG;
   - `klip/*.mp4`: 11 klip asli dipotong dari MP4 final (540×960, 30 fps, nearest-neighbour, yuv444p) + `.wav` untuk klip yang bersuara (reel S2, HP S11);
-  - total di-commit ±7 MB.
+  - ±7 MB, **di-ignore git** (`.gitignore`): di clone baru dibuat ulang dengan `npm run aset`.
 
   Frame klip diekstrak otomatis ke `assets/ve/.frames/` (di-ignore git) saat preview atau render pertama. Saat ekspor, setiap frame menunggu gambar klip selesai di-decode, jadi tetap deterministik.
 
@@ -444,7 +444,7 @@ Mengikuti STYLE.md §1–2, dengan **satu tambahan atas permintaan user**: selai
 
 - **Masuk:** dari dorongan kamera ke layar HP (S11), latar void `#000`.
 - **Urutan:**
-  1. cincin `#F5F5F5` tergambar simetris dari jam 9;
+  1. **(direvisi, disetujui user)** cincin `#F5F5F5` sudah utuh sejak awal karena datang dari klip HP (S11): tebal dan diameter identik dengan logo, celahnya menyempit dari 81 ke 36 unit logo dalam 0,5 s. Pengganti langkah "digambar simetris dari jam 9" (STYLE.md §1.1). Kunci panah dimajukan ±0,5 s;
   2. panah terbang masuk dari kiri dengan jejak cahaya biru dan mengunci di celah kanan **tepat di ketukan** (gelombang kejut `#60A5FA`, pop outBack, impact + bell);
   3. wordmark "Beyond Studio" (Inter Tight 700, −0,045 em) naik dari balik mask (outExpo 0,75 s), di bawah logo;
   4. di "Follow" (VO 19): kalimat **Follow, biar nggak cuma vibe coding.** naik, pil **+ Follow** `#3B82F6` pop (outBack), lalu di-tap di ketukan → **✓ Following**;
@@ -479,3 +479,24 @@ Mengikuti STYLE.md §1–2, dengan **satu tambahan atas permintaan user**: selai
 | selingan gelap "Build agents that…" | selingan gelap "lima aturan" |
 | logo wall + kartu angka | kartu angka asli: 4.246 baris, 0 gambar, musik kode |
 | logo + CTA di-klik | closing Beyond Studio + Follow + URL + WhatsApp |
+
+## Catatan build S3–S11 (2026-10-03)
+
+**Revisi sesudah review:** (1) suara klip dibuat ulang tanpa narator video pertama — sebelumnya "…tapi nggak asal" dari narator lama terdengar setelah VO 18 selesai karena klip dipotong dari MP4 final; (2) closing menyambung dari cincin iris klip (lihat S11 "Transisi keluar" dan §8). Tool: `tools/ambil-klip-audio.mjs`.
+
+Waktu sebenarnya dari file VO (`npm run vo`): S3 15,8 · S4 23,0 · S5 29,9 · S6 58,4 · S7 69,7 · S8 77,3 · S9 94,3 · S10 105,0 ·
+S11 123,9 · closing 141,1 – 152,4 s. Semua cue dikunci ke kata VO di `src/timeline.js` (`node render.mjs cues <scene>`).
+
+Yang berbeda dari storyboard di atas (semuanya kecil, maksud tiap beat tetap):
+- **Determinisme klip:** frame klip dan still dipasang di ukuran sumber 540 × 960 lalu diperkecil dengan `transform` (bukan diatur lebarnya), supaya Chromium selalu memakai decode JPEG yang sama; `npm run check -- --dump` menyimpan dua versi frame yang berbeda ke `out/check/`.
+- **Tanpa jeda kosong antar-bab:** headline bab berikutnya mulai ±0,1–0,4 s sebelum scene lama selesai, jadi selalu ada yang bergerak (dicek dengan strip 10 fps di tiap pergantian).
+- **Dok prompt dipoles:** tinggi 124 → 156 (tepi bawah tetap 1554), toolbar ikon 25 px dengan tombol `+` bulat, tombol kirim 56 px yang tetap biru muda saat kosong (biru penuh saat siap kirim), satu sumbu dengan toolbar; bayangan tiga lapis + garis 1 px. Animasi ketik: lihat "Gerak dasar".
+- **S3:** "Bukan satu prompt." sudah masuk di "jangan bayangin" (coretan biru tetap di "Nggak gitu"); tujuh chip bab diberi keterangan pendek (`install · folder`, `CLAUDE.md · skill`, …) dan disambung garis tipis; chip mulai di "Ada". Keluar: chip `00 SIAPKAN` mengecil naik menjadi kicker S4 (pengganti "kanvas geser").
+- **S4:** centang ada di kanan baris komentar (`# Claude Code`, lalu dua untuk `# Node.js 18+ dan ffmpeg`). Terminal tidak dibersihkan: `mkdir …` dan `claude` menyusul di bawah baris install, lalu terminal menggulir naik untuk memperlihatkan layar sambutan (VO "Udah? Bikin folder" terlalu cepat untuk dua layar terpisah).
+- **S5:** baris `CLAUDE.md` berupa kutipan asli yang dipotong "…" agar muat; satu kotak seleksi Figma berpindah di antara tiga aturan; kartu `CLAUDE.md` melipat jadi header saja (bukan geser kiri), skill tampil sebagai satu kartu pohon folder + `STYLE.md`; tag di baris asli: `ukuran video`, `logo di akhir`, `nggak boleh`.
+- **S6:** tiap kartu hook punya tombol Setuju; isi hook A/B/C adalah contoh balasan (bukan klaim dari video pertama). Gelembung: "ganti hook B, bikin lebih singkat" → "oke, udah kuganti".
+- **S7:** prompt "Tulis storyboard: teks, posisi, dan bunyi."; judul scene asli bergulir (daftar diulang supaya gulirannya panjang) lalu berhenti di S8. Isi blok S8 diambil dari teks asli treatment video pertama: `WAKTU`, `TEKS`, `POSISI` (diagram 9:16 mini), `BUNYI` ("ting"). Klip mengecil menjadi thumbnail ke-4 timeline S8.
+- **S8:** rumus `frame = f(t)` 104 px (150 px melewati batas kanan area aman). Bukti "sama persis": pemutar `render.mp4` digeser menumpuk `preview` dengan blend *difference*, hasilnya hitam (`diff 0 px · identik ✓`); pembacaan `WAKTU VIDEO` + nomor frame ikut melompat.
+- **S9:** pil REC dengan meter level dari amplitudo asli; waveform 1 take disapu kiri → kanan di "Sekali jalan … akhir" (selubung asli dari `vo/13-suara.wav`, `npm run env`); prompt "Potong per kalimat, cocokkan ke gambar."; 4 garis potong → 5 klip yang menempel di 5 thumbnail scene.
+- **S10:** contact sheet 6×2 (4×3 terlalu kecil untuk 9:16); headline berganti per VO (Lihat sendiri. → Bilang yang spesifik. → Render, lalu commit.); keluhan muncul sebagai gelembung, jawaban di-stream dengan ekor memudar; kristal "titik aman" di header kartu commit. Lampu mati = cakram gelap dari pojok kanan atas; dok prompt tenggelam di saat yang sama (bukan di awal S11), jadi S11 dibuka gelap bersih.
+- **S11:** di "video kemarin" lima slot kosong bergaris putus (warna slot video pertama) menunggu di kanan, lalu terisi chip aturan satu per satu. "Lima aturan yang sama:" + baris biru menggulung lima aturan dengan garis progres bertik dan `0N / 05`; HUD kanan atas bertuliskan `LIMA ATURAN`; HP 400 × 711 di tengah, dorongan kamera 2,8× masuk ke layar hitam tepat saat iris klip menutup.

@@ -43,3 +43,16 @@ export const VO_LINES = [
 ];
 export const VO_EXTS = ['wav', 'mp3', 'm4a', 'ogg', 'flac', 'aac', 'webm'];
 export const SOURCE_TAKE = 'ElevenLabs_2026-10-03T08_55_57_Zephlyn - Calm, Neutral and Measured_pvc_sp100_s50_sb75_v4.mp3';
+
+// prompts typed into the dock on screen (their lengths set the typing cues in timeline.js)
+export const PROMPT_NASKAH = 'Bikin video edukasi 9:16 tentang vibe coder vs vibe engineer, gaya pixel art. Tulis naskahnya dulu, jangan coding.';
+export const PROMPT_STORYBOARD = 'Tulis storyboard: teks, posisi, dan bunyi.';
+export const PROMPT_KUNCI = 'Setiap frame adalah fungsi dari waktu t.';
+export const PROMPT_SUARA = 'Potong per kalimat, cocokkan ke gambar.';
+export const CMD_STILLS = 'npm run stills';
+export const COMPLAINT_TXT = 'S5: laut depan jangan menutupi palka';
+export const COMMIT_TXT = 'feat(vibe-engineer): video edukasi Vibe Engineer + longgarkan larangan';
+export const PROMPT_URUTAN = 'bikinin video kayak kemarin';
+export const TERM_INSTALL = ['# Claude Code', 'irm https://claude.ai/install.ps1 | iex', '# Node.js 18+ dan ffmpeg (untuk render)', 'winget install OpenJS.NodeJS.LTS Gyan.FFmpeg'];
+export const TERM_FOLDER = ['mkdir video-saya; cd video-saya', 'claude'];
+export const HOOK_REWRITE = 'Bedanya: tahu kenapa.';

@@ -16,7 +16,9 @@
     "vo": "node render.mjs vo",
     "vo:bagi": "node tools/vo-bagi.mjs",
     "vo:rapat": "node tools/vo-rapat.mjs",
-    "aset": "node tools/ambil-aset.mjs"
+    "aset": "node tools/ambil-aset.mjs && node tools/ambil-klip-audio.mjs",
+    "aset:audio": "node tools/ambil-klip-audio.mjs",
+    "env": "node tools/ambil-env.mjs"
   },
   "dependencies": {
     "playwright": "^1.56.0",

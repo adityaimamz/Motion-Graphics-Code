@@ -5,7 +5,7 @@
 // follows the scenes: dark hum on the comment, light plucks after the iris, groove through the chapters, a breakdown
 // for "frame = f(t)", dark pad for the five rules, the brand chord for the closing. SFX come from timeline.SFX.
 import { S, SFX, DURATION, VO_PLACE, BEAT, CUE } from './timeline.js';
-import { hash, clamp, lerp } from './core.js';
+import { hash, clamp, lerp, typeTimes } from './core.js';
 
 export const SR = 48000;
 const TAU = Math.PI * 2;
@@ -131,17 +131,26 @@ function groove(M, V, K, t0, t1, o = {}) {
 
 // a real clip's own sound (the first video's chiptune + SFX), placed at t0, with short fades; it rides the music bus
 // so the narrator ducks it like the music
-function clipSound(b, x, t0, dur, g, from = 0) {
+// o.speaker: band-limit to a phone speaker (≈ 380 Hz – 5.2 kHz); o.fade = [from, length] in seconds after t0: fade out.
+// (The clip files are the first video's music + effects WITHOUT its narrator, see tools/ambil-klip-audio.mjs.)
+function clipSound(b, x, t0, dur, g, from = 0, o = {}) {
   if (!x) return;
   const a = Math.round(from * SR), n = Math.min(Math.round(dur * SR), x.length - a), f = Math.round(0.02 * SR), i0 = Math.round(t0 * SR);
-  for (let k = 0; k < n; k++) { const i = i0 + k; if (i < 0 || i >= N) continue; const w = Math.min(1, k / f, (n - 1 - k) / f), v = x[a + k] * g * w; b.L[i] += v; b.R[i] += v; }
+  const hp = o.speaker ? new SVF(380, 0.7) : null, lp = o.speaker ? new SVF(5200, 0.7) : null;
+  for (let k = 0; k < n; k++) {
+    let v = x[a + k];
+    if (hp) { hp.run(v); lp.run(hp.hp); v = lp.lp; }
+    const i = i0 + k; if (i < 0 || i >= N) continue;
+    const fo = o.fade ? 1 - clamp((k / SR - o.fade[0]) / o.fade[1]) : 1, w = Math.min(1, k / f, (n - 1 - k) / f) * fo * fo;
+    v *= g * w; b.L[i] += v; b.R[i] += v;
+  }
 }
 let CLIPS = {};
 
 function score() {
   const M = new Bus(), X = new Bus(), V = new Bus(), K = [];
   // ---- the S2 reel plays quietly under everything
-  for (const [name, a, b] of CUE.kode.reel) clipSound(M, CLIPS[name], a, b - a, 0.16);
+  for (const [name, a, b] of CUE.kode.reel) clipSound(M, CLIPS[name], a, b - a, 0.24);
   const sc = (id) => S[id];
   // ---- S1 komentar: a dark hum, tension into the iris, then light
   {
@@ -157,6 +166,8 @@ function score() {
   groove(M, V, K, S.kunci.t0, S.kunci.t1, { pad: 0.034, ep: 0.02, padFc: 900 });
   // ---- S9 → S10: groove back, a little denser
   groove(M, V, K, S.suara.t0, S.cek.t1, { pad: 0.022, ep: 0.024, bass: 0.17, kick: 0.34, clap: 0.06, hat: 0.03, shaker: 0.018, motif: 0.012 });
+  // ---- the real chiptune of the first video's ending plays quietly from the phone (S11)
+  clipSound(M, CLIPS.hp, CUE.lima.clip, 7.4, 0.2, 0, { speaker: true, fade: [CUE.lima.push - CUE.lima.clip - 0.15, 0.8] });
   // ---- S11 lima: dark pad, a low pulse on every beat
   { const s = sc('lima'); pad(M, s.t0, [38, 45, 50, 53, 57], s.len, 0.05, 0, 700, 0.05, 0.6, V, 0.6);
     for (let t = s.t0; t < s.t1; t += BEAT) sub(M, t, 38, BEAT * 0.5, 0.09); }
@@ -194,7 +205,41 @@ function score() {
       case 'pop2': pop(X, t, 0.1, 0.15, 880, V, 0.2); break;
       case 'tap': click(X, t, 0.16, 0, 2200); fm(X, t + 0.12, mtof(84), 0.3, 0.045, 0.1, { ratio: 2, index: 0.8, idec: 0.1, adec: 0.4 }, V, 0.5); fm(X, t + 0.21, mtof(91), 0.6, 0.045, 0.1, { ratio: 2, index: 0.8, idec: 0.1, adec: 0.6 }, V, 0.5); break;
       case 'pulse': chime(X, t, 88, 0.8, 0.03, 0.2, V, 0.6); break;
-      case 'type': for (let k = 0; k < o.n; k++) { const tt = t + k / o.cps; noise(X, tt, 0.02, 3500 + hash(k, 41) * 2500, 2.5, 0.04 * (o.g ?? 1), (hash(k, 42) - 0.5) * 0.3, (x) => 1 - x); } break;
+      case 'railTurn': whoosh(X, t, 0.9, 400, 2400, 0.07, 0.8, -0.5, 'bell', V, 0.3); break;
+      case 'rule': { const m = [72, 76, 79, 83, 88][o.i ?? 0]; ep(X, t, m, 0.5, 0.045, (o.i - 2) * 0.2, V, 0.4); chime(X, t, m + 12, 0.8, 0.02, (o.i - 2) * 0.2, V, 0.5); break; }
+      case 'link': whoosh(X, t, 0.4, 900, 3000, 0.03, -0.3, 0.3, 'bell'); break;
+      case 'dive': whoosh(X, t, 0.8, 200, 3000, 0.1, 0, 0, 'rise', V, 0.2); glide(X, t, 0.8, 73.4, 146.8, 0.05, 0, V, 0.2); break; // D2 → D3, the key of S11's pad
+      case 'shutter': click(X, t, 0.07, -0.5 + ((o.i ?? 0) % 6) * 0.2, 3600); noise(X, t, 0.04, 5200, 1.5, 0.04, -0.5 + ((o.i ?? 0) % 6) * 0.2, (x) => 1 - x); break;
+      case 'sweep': whoosh(X, t, 2.0, 700, 2400, 0.03, -0.5, 0.5, 'bell'); break;
+      case 'pin': softThud(X, t, 0.14, 150); click(X, t + 0.01, 0.1, 0.2, 2600); break;
+      case 'bell': [76, 83, 88].forEach((m, j) => bell(X, t + j * 0.08, m, 1.6, 0.03, (j - 1) * 0.2, V, 0.7)); break;
+      case 'lights': whoosh(X, t, 0.9, 3500, 150, 0.08, 0.7, 0, 'fall', V, 0.3); softThud(X, t + 0.7, 0.14, 62); break;
+      case 'lift': whoosh(X, t, 0.8, 300, 2600, 0.07, 0, 0, 'rise', V, 0.25); pop(X, t + 0.78, 0.1, 0, 520, V, 0.3); break;
+      case 'jump': click(X, t, 0.12, 0.1, 3000); blip(X, t + 0.005, 2200, 0.05, 0.04, 0.1); break;
+      case 'slide': whoosh(X, t, 0.5, 500, 2200, 0.05, -0.4, 0.4, 'bell'); break;
+      case 'pass': [72, 76, 79, 84].forEach((m, j) => chime(X, t + j * 0.06, m, 1.2, 0.03, (j - 1.5) * 0.2, V, 0.6)); break;
+      case 'snip': click(X, t, 0.14, 0, 4200); noise(X, t + 0.01, 0.05, 6500, 2, 0.06, 0, (x) => 1 - x); break;
+      case 'snap': click(X, t, 0.12, -0.3 + (o.i ?? 0) * 0.15, 2000); pop(X, t + 0.005, 0.07, -0.3 + (o.i ?? 0) * 0.15, mtof(64 + (o.i ?? 0) * 3)); break;
+      case 'paper': noise(X, t, 0.3, 3400, 0.9, 0.05, 0.15, (x) => Math.sin(Math.PI * x) ** 2); softThud(X, t + 0.22, 0.05, 150); break;
+      case 'sel': click(X, t, 0.09, 0, 2800); blip(X, t + 0.01, 1900, 0.03, 0.03, 0); break;
+      case 'tick': click(X, t, 0.07, (o.i % 2 ? 0.2 : -0.2), 2200 + (o.i ?? 0) * 140); break;
+      case 'stamp': softThud(X, t, 0.22, 95); noise(X, t, 0.07, 1800, 1.2, 0.07, 0, (x) => 1 - x); break;
+      case 'scroll': noise(X, t, 1.0, 2600, 0.8, 0.06, 0, (x) => Math.sin(Math.PI * x) ** 1.3); whoosh(X, t, 1.0, 600, 3000, 0.035, -0.2, 0.2, 'bell'); break;
+      case 'chime': [79, 83, 88].forEach((m, j) => chime(X, t + j * 0.07, m, 0.9, 0.03, 0.15 * (j - 1), V, 0.5)); break;
+      case 'buzz': { const s = sine(), f = new SVF(1400, 0.8); play(X, t, 0.22, (tt, k) => (f.run(s(150) > 0 ? 1 : -1), f.lp) * (tt < 0.01 ? tt / 0.01 : ex(tt, 0.1)) * 0.6, 0.07, 0); break; }
+      case 'strike': whoosh(X, t, 0.34, 700, 3200, 0.06, -0.5, 0.5, 'rise'); click(X, t + 0.33, 0.07, 0.4, 2000); break;
+      case 'chipIn': click(X, t, 0.07, -0.3 + o.i * 0.1, 1800 + o.i * 150); pop(X, t + 0.01, 0.06, -0.3 + o.i * 0.1, mtof(60 + [0, 2, 4, 7, 9, 12, 14][o.i ?? 0]), V, 0.15); break;
+      case 'check': pop(X, t, 0.08, 0.2, mtof(79 + (o.i ?? 0) * 2)); chime(X, t + 0.02, 84 + (o.i ?? 0) * 2, 0.5, 0.025, 0.2, V, 0.4); break;
+      case 'enter': click(X, t, 0.14, 0.2, 1500); softThud(X, t + 0.01, 0.1, 110); break;
+      case 'type': {
+        // one soft key per character, on the same uneven rhythm as the picture (core.typeTimes); the space bar is lower
+        const at = o.text ? typeTimes(o.text, o.cps) : Array.from({ length: o.n }, (_, k) => k / o.cps), g = 0.04 * (o.g ?? 1);
+        at.forEach((dt, k) => {
+          const sp = o.text && o.text[k] === ' ', pan = (hash(k, 42) - 0.5) * 0.3;
+          noise(X, t + dt, sp ? 0.03 : 0.02, sp ? 1400 + hash(k, 41) * 400 : 3500 + hash(k, 41) * 2500, 2.5, g * (sp ? 0.8 : 0.85 + 0.3 * hash(k, 43)), pan, (x) => 1 - x);
+        });
+        break;
+      }
       default: break;
     }
   }

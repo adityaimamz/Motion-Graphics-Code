@@ -6,11 +6,12 @@
 //   node render.mjs serve  [--port 5173]
 //   node render.mjs video  [--draft] [--out f.mp4] [--from 0] [--to <dur>] [--crf 16] [--preset slow] [--jobs N] [--ss 1|2] [--nomb]
 //   node render.mjs audio  [--out f.wav]
+//   node render.mjs cues   <scene id>   prints the scene's window and every cue time (to see what lands on which word)
 //   node render.mjs vo
 //   node render.mjs stills --scenes | --t 1.2,10 [--out out/stills]
 //   node render.mjs sheet  [--from 0] [--to <dur>] [--n 40] [--cols 8] [--out out/sheet.png]
 //   node render.mjs strip  --from 3.5 --to 6 [--fps 10] [--cols 8] [--out out/strip.png]   (compare with the references)
-//   node render.mjs check  determinism: the same t gives the same pixels
+//   node render.mjs check  [--dump]   determinism: the same t gives the same pixels (--dump writes both versions of a mismatch to out/check/)
 //   any mode: --novo ignores vo/      video: --noaudio  --audio my-mix.wav
 import http from 'node:http';
 import { readFile, mkdir, writeFile, readdir } from 'node:fs/promises';
@@ -22,7 +23,7 @@ import { ensureFrames } from './tools/frames.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
-const MODES = ['serve', 'video', 'audio', 'vo', 'stills', 'sheet', 'strip', 'check'];
+const MODES = ['serve', 'video', 'audio', 'vo', 'cues', 'stills', 'sheet', 'strip', 'check'];
 const mode = argv[0];
 // no default mode: rendering a video must always be asked for by name
 if (!MODES.includes(mode)) { console.error(`Pemakaian: node render.mjs <${MODES.join('|')}> [opsi]  (lihat komentar di atas file)`); process.exit(1); }
@@ -191,6 +192,14 @@ async function main() {
     console.log(`\ndurasi total: ${T.DURATION.toFixed(2)} s`);
     return;
   }
+  if (mode === 'cues') {
+    await loadVO();
+    const T = await import('./src/timeline.js'), id = argv[1];
+    const rd = (v) => (typeof v === 'number' ? +v.toFixed(2) : Array.isArray(v) ? v.map(rd) : v);
+    console.log(id, 'scene', rd([T.S[id].t0, T.S[id].t1]), 'len', rd(T.S[id].len));
+    for (const [k, v] of Object.entries(T.CUE[id] ?? {})) console.log(' ', k.padEnd(12), JSON.stringify(rd(v)));
+    return;
+  }
   if (mode === 'audio') {
     const out = path.resolve(opt('out', `out/tutorial-vibe-engineer_${stamp()}.wav`));
     const t0 = Date.now(); await makeAudio(out);
@@ -238,10 +247,12 @@ async function main() {
     } else if (mode === 'check') {
       const times = T.STILLS.filter((_, i) => i % 2 === 0).map(([, t]) => t);
       const grab = async (t) => (await frameRGB(shot, t, 1, false)).toString('base64');
+      const nd = (x, y) => { const A = Buffer.from(x, 'base64'), B = Buffer.from(y, 'base64'); let n = 0, m = 0, x0 = W, y0 = H, x1 = -1, y1 = -1; for (let i = 0; i < A.length; i++) { const e = Math.abs(A[i] - B[i]); if (e) { n++; m = Math.max(m, e); const p = (i / 3) | 0, px = p % W, py = (p / W) | 0; x0 = Math.min(x0, px); y0 = Math.min(y0, py); x1 = Math.max(x1, px); y1 = Math.max(y1, py); } } return [n, m, `${x0},${y0} → ${x1},${y1}`]; };
       const a = []; for (const t of times) a.push(await grab(t));
       for (const t of [...times].reverse()) await grab(t);
       let same = 0; const bad = [];
-      for (const [i, t] of times.entries()) { if ((await grab(t)) === a[i]) same++; else bad.push(t); }
+      for (const [i, t] of times.entries()) { const g = await grab(t); if (g === a[i]) same++; else { bad.push(t); const [n, m, box] = nd(g, a[i]); console.log('  beda di t=' + t.toFixed(2) + ': ' + n + ' nilai kanal, selisih maks ' + m + '/255, area ' + box);
+          if (hasFlag('dump')) { await mkdir('out/check', { recursive: true }); await png(Buffer.from(a[i], 'base64')).toFile(`out/check/${t.toFixed(2)}-a.png`); await png(Buffer.from(g, 'base64')).toFile(`out/check/${t.toFixed(2)}-b.png`); } } }
       console.log(`determinisme: ${same}/${times.length} frame identik` + (bad.length ? `  ✗ beda di t = ${bad.map((b) => b.toFixed(2)).join(', ')}` : '  ✓'));
     } else if (mode === 'video') {
       const from = +opt('from', '0'), to = +opt('to', String(duration));

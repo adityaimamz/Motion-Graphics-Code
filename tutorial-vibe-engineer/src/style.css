@@ -21,7 +21,8 @@ body { font-family: IN, system-ui, sans-serif; color: var(--ink); -webkit-font-s
 #dark { background: #000; }
 #light { overflow: hidden; }
 #bg { background: var(--bg); overflow: hidden; }
-#world, #hud, #top, #closing { pointer-events: none; }
+#world, #hud, #top, #fx, #closing { pointer-events: none; }
+#fx { position: absolute; inset: 0; }
 #grain { pointer-events: none; mix-blend-mode: overlay; opacity: .05; background-repeat: repeat; }
 .abs { position: absolute; left: 0; top: 0; }
 .layer { position: absolute; inset: 0; }
@@ -44,13 +45,14 @@ body { font-family: IN, system-ui, sans-serif; color: var(--ink); -webkit-font-s
 .head .w { display: inline-block; position: relative; white-space: pre; }
 .head .c { display: inline-block; position: relative; white-space: pre; }
 .accent { color: var(--blue); }
+.dark .accent { color: #5B8CFF; }
 .serif { font-family: IS, serif; font-style: italic; font-weight: 400; letter-spacing: -0.012em; font-size: 1.1em; }
 .mono { font-family: JB, monospace; }
 
 /* ---------- surfaces ---------- */
 .card { position: absolute; background: var(--card); border-radius: 28px; border: 1px solid var(--line); box-shadow: var(--shadow); overflow: hidden; }
 .card .hdr { display: flex; align-items: center; gap: 14px; height: 76px; padding: 0 28px; border-bottom: 1px solid #EEF0F3; font: 600 28px/1 IN; color: var(--ink); }
-.card .hdr .sub { margin-left: auto; font: 500 20px/1 JB; color: var(--mute); letter-spacing: .02em; }
+.card .hdr .sub { margin-left: auto; white-space: nowrap; font: 500 20px/1 JB; color: var(--mute); letter-spacing: .02em; }
 .lights { display: flex; gap: 9px; } .lights i { width: 14px; height: 14px; border-radius: 50%; background: #E3E5EA; display: block; }
 .pill { position: absolute; border-radius: 999px; white-space: nowrap; }
 .chip { display: inline-flex; align-items: center; gap: 10px; height: 46px; padding: 0 20px; border-radius: 999px; background: #fff; border: 1px solid var(--line); box-shadow: 0 2px 8px rgba(16,24,40,.06); font: 600 22px/1 IN; color: var(--ink2); white-space: nowrap; }
@@ -58,15 +60,18 @@ body { font-family: IN, system-ui, sans-serif; color: var(--ink); -webkit-font-s
 .badge { font: 500 18px/1 JB; color: var(--mute); }
 
 /* ---------- prompt dock ---------- */
-.dock { position: absolute; background: #fff; border-radius: 30px; border: 1px solid var(--line); box-shadow: var(--shadow-lg); }
-.dock .txt { position: absolute; left: 34px; top: 30px; right: 34px; font: 450 33px/1.32 IN; color: var(--ink); white-space: pre-wrap; word-break: normal; }
-.dock .ph { color: #A3A9B4; }
-.dock .hl { background: rgba(47,107,255,.16); color: var(--blue2); border-radius: 6px; }
-.dock .caret { display: inline-block; width: 3px; height: 1.05em; margin-left: 2px; vertical-align: -0.16em; background: var(--blue); border-radius: 2px; }
-.dock .tools { position: absolute; left: 30px; bottom: 22px; display: flex; gap: 26px; align-items: center; }
-.dock .tools svg { width: 30px; height: 30px; stroke: #9AA0AB; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.dock .send { position: absolute; right: 22px; bottom: 16px; width: 62px; height: 62px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; }
-.dock .send svg { width: 30px; height: 30px; stroke: #fff; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.dock { position: absolute; background: #fff; border-radius: 34px; border: 1px solid #E3E6EC;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 30px 64px rgba(16,24,40,.10), 0 6px 16px rgba(16,24,40,.07), 0 1px 3px rgba(16,24,40,.05); }
+.dock .txt { position: absolute; left: 36px; top: 28px; right: 36px; font: 450 31px/1.34 IN; letter-spacing: -0.006em; color: var(--ink); white-space: pre-wrap; word-break: normal; }
+.dock .ph { color: #8E95A3; }
+.dock .hl { background: rgba(47,107,255,.16); color: var(--blue2); border-radius: 6px; padding: 0 2px; margin: 0 -2px; }
+.dock .tools { position: absolute; left: 20px; bottom: 27px; display: flex; gap: 4px; align-items: center; }
+.dock .tool { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.dock .tool.plus { background: #F1F3F7; margin-right: 6px; }
+.dock .tool svg { width: 25px; height: 25px; stroke: #6B7280; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dock .tool.plus svg { width: 23px; height: 23px; stroke: #4A5160; stroke-width: 2; }
+.dock .send { position: absolute; right: 24px; bottom: 20px; width: 56px; height: 56px; border-radius: 50%; background: #E4ECFF; display: flex; align-items: center; justify-content: center; }
+.dock .send svg { width: 28px; height: 28px; stroke: #2F6BFF; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .ring { position: absolute; border-radius: 50%; border: 3px solid var(--blue); }
 .glow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(47,107,255,.35), rgba(47,107,255,0)); }
 

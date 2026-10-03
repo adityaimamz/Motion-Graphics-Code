@@ -20,11 +20,12 @@ export class Hud {
     st(this.br, { right: '60px', top: '1846px' });
   }
   // ch: chapter index or null; a: alpha; dark: 0..1; chT: time the chapter began (for the rail's fill)
-  render(t, { ch = null, a = 1, dark = 0, chT = 0 } = {}) {
+  render(t, { ch = null, a = 1, dark = 0, chT = 0, railA = 1, label = 'INTRO' } = {}) {
     st(this.root, { opacity: a, display: a > 0.001 ? '' : 'none' });
+    st(this.rail, { opacity: railA });
     const col = dark > 0.5 ? '#6B7280' : '#9097A3';
     for (const n of [this.tl, this.tr, this.bl, this.br]) st(n, { color: col });
-    html(this.tr, ch == null ? 'INTRO' : `<b>${CHAPTERS[ch].n}</b> — ${CHAPTERS[ch].name}`);
+    html(this.tr, ch == null ? label : `<b>${CHAPTERS[ch].n}</b> — ${CHAPTERS[ch].name}`);
     // timecode HH:MM:SS:FF, frame-locked
     const f = fidx(t), s = Math.floor(f / FPS), ff = f % FPS;
     const p2 = (n) => String(n).padStart(2, '0');

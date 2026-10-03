@@ -5,7 +5,7 @@ import { el, st, tf, gblur, show, html } from '../dom.js';
 import { clamp, ease, lerp } from '../core.js';
 import { S, CUE } from '../timeline.js';
 import { path } from '../ui/cursor.js';
-import { DOCK } from '../ui/prompt.js';
+import { DOCK, sendCenter } from '../ui/prompt.js';
 
 const MSG = ['wihhh bagus bang.', 'buat tutorial nya bang'];
 const FULL = MSG.join(' ');
@@ -72,7 +72,7 @@ export default {
     // the flyer: the selected text, dragged along an arc into the dock
     const f = clamp((t - C.fly[0]) / (C.fly[1] - C.fly[0])), fe = ease.move(f);
     if (show(flyer, t >= C.fly[0] && t < C.fly[1] + 0.12)) {
-      const x0 = g.msg.x - 22, y0 = g.msg.y - 14, x1 = DOCK.x + 20, y1 = DOCK.y + 14, sc = lerp(1, 0.56, fe);
+      const x0 = g.msg.x - 22, y0 = g.msg.y - 14, x1 = DOCK.x + 24, y1 = DOCK.y + 18, sc = lerp(1, 0.56, fe);
       const arc = Math.sin(Math.PI * fe) * -150;
       const fadeOut = clamp((t - C.fly[1] + 0.12) / 0.2);
       st(flyer, { transform: tf({ x: lerp(x0, x1, fe), y: lerp(y0, y1, fe) + arc, s: sc, r: Math.sin(Math.PI * fe) * -5 }), opacity: 1 - fadeOut, filter: gblur(fadeOut * 6) });
@@ -80,7 +80,7 @@ export default {
     // after sending: the message flies up into a blue "sent" pill on the right (TypingMind 4.5 s)
     if (show(sent, t >= C.sent[0] && t < S.kode.t0 + 0.7)) {
       const p = ease.ui(clamp((t - C.sent[0]) / 0.6)), out = ease.inCubic(clamp((t - (S.kode.t0 + 0.25)) / 0.42));
-      const xEnd = 930 - g.sentW, yEnd = 300, xs = DOCK.x + 20, ys = DOCK.y + 10;
+      const xEnd = 930 - g.sentW, yEnd = 300, xs = DOCK.x + 24, ys = DOCK.y + 16;
       st(sent, { left: '0px', top: '0px', transform: tf({ x: lerp(xs, xEnd, p), y: lerp(ys, yEnd, p) - out * 60, s: lerp(0.8, 1, p) }), opacity: clamp(p * 3) * (1 - out), filter: gblur(Math.sin(Math.PI * clamp(p * 1.2)) * 3 + out * 8) });
     }
   },
@@ -93,13 +93,13 @@ export default {
     const C = CUE.komentar, g = this.measure();
     if (t < C.cursorIn || t > C.send + 0.7) return null;
     const w0 = g.words[0], wl = g.words[g.words.length - 1];
-    const sx = DOCK.x + DOCK.w - 53, sy = DOCK.y + DOCK.h - 47;
+    const { x: sx, y: sy } = sendCenter();
     // in from the lower right → start of the comment → drag across it → carry the words down → the send button
     const p = path(t, [
       [C.cursorIn, 980, 1500], [C.select[0], w0.x - 4, w0.y + w0.h * 0.6, ease.ui],
       [C.select[1], wl.x + wl.w, wl.y + wl.h * 0.6, ease.inOutCubic],
       [C.fly[0] + 0.02, wl.x + wl.w - 30, wl.y + wl.h * 0.5],
-      [C.fly[1], DOCK.x + 330, DOCK.y + 60, ease.move],
+      [C.fly[1], DOCK.x + 330, DOCK.y + 66, ease.move],
       [C.send - 0.06, sx, sy, ease.ui],
     ]);
     const a = clamp((t - C.cursorIn) / 0.25) * (1 - clamp((t - C.send - 0.35) / 0.3));
@@ -110,6 +110,6 @@ export default {
     const C = CUE.komentar;
     if (t >= C.iris[1]) return null;
     const p = ease.inOutCubic(clamp((t - C.iris[0]) / (C.iris[1] - C.iris[0])));
-    return { x: DOCK.x + DOCK.w - 53, y: DOCK.y + DOCK.h - 47, r: p * 2300 };
+    return { ...sendCenter(), r: p * 2300 };
   },
 };

@@ -31,6 +31,12 @@ export class Headline {
       }
     }
   }
+  // box of words a..b relative to the headline's origin (needs the headline to be on screen: layout is measured)
+  wordRect(a, b = a) {
+    const A = this.words[a], B = this.words[b], ln = A.offsetParent;
+    const x0 = this.head.offsetLeft + ln.offsetLeft + A.offsetLeft, y0 = this.head.offsetTop + ln.offsetTop + A.offsetTop;
+    return { x: x0, y: y0, w: B.offsetLeft + B.offsetWidth - A.offsetLeft, h: A.offsetHeight };
+  }
   // tIn: first word starts; tOut: exit starts (Infinity = stays). exit: 'tumble' | 'up' | 'fade' | 'blur'
   render(t, tIn, tOut = Infinity, { exit = 'tumble', stagger = 0.055, dur = 0.62, dy = 0, dx = 0, scale = 1, alpha = 1, blur = 0 } = {}) {
     const exitDur = exit === 'tumble' ? 0.5 + this.chars.length * 0.012 : 0.42;

@@ -1,4 +1,5 @@
-// S12 · closing — STYLE.md §1–2, brand kit. The ring draws symmetrically from 9 o'clock, the notched arrow flies in
+// S12 · closing — STYLE.md §1–2, brand kit. The ring is the one the first video's iris leaves on the phone's screen: S11's
+// push-in lands it exactly here (same centre, Ø and stroke), and its notch narrows to the logo's 36 units; then the notched arrow flies in
 // from the left on a blue light trail and locks into the right gap ON the beat (#60A5FA shockwave, outBack pop),
 // the wordmark rises from a mask, then the education CTA (Follow, clicked: Notion 43–46 s) and, at the user's request,
 // the site + WhatsApp pills (beyond-studio/kontak.json). VO 19.
@@ -16,8 +17,9 @@ const K = L.size / 500, LX = L.cx - L.size / 2, LY = L.cy - L.size / 2;
 const sx = (u) => LX + u * K, sy = (v) => LY + v * K;
 const Y = { wm: 872, line: 1022, follow: 1104, ask: 1262, url: 1318, wa: 1428 };
 const URL = 'beyondstudio.site', WA = '0819-2707-0239';
+const GAP0 = (52 / 194) * 304; // the iris ring's notch (52 px of its 194 px) in logo units
 
-let root, glow, svg, arcT, arcB, arrowG, trail, wave, wm, wmIn, line, fol, folTxt, ask, url, urlTxt, wa, waRing, cur;
+let root, gapR, glow, svg, arcT, arcB, arrowG, trail, wave, wm, wmIn, line, fol, folTxt, ask, url, urlTxt, wa, waRing, cur;
 
 function pillBox(parent, bg, color, border) {
   const p = el('div', 'cta', parent);
@@ -26,7 +28,7 @@ function pillBox(parent, bg, color, border) {
 }
 
 export default {
-  id: 'closing', layer: 'closing', pre: 0, post: 0,
+  id: 'closing', layer: 'closing', pre: 0.2, post: 0,
   init({ closing }) {
     root = el('div', 'layer', closing);
     glow = el('div', 'blob', root); st(glow, { left: `${L.cx - 520}px`, top: `${L.cy - 520}px`, width: '1040px', height: '1040px', background: '#14306E', filter: 'blur(140px)' });
@@ -34,7 +36,7 @@ export default {
     const defs = svgEl('defs', {}, svg);
     const m = svgEl('mask', { id: 'gap', maskUnits: 'userSpaceOnUse', x: -200, y: -200, width: 900, height: 900 }, defs);
     svgEl('rect', { x: -200, y: -200, width: 900, height: 900, fill: '#fff' }, m);
-    svgEl('rect', { x: 300, y: 229, width: 200, height: 36, fill: '#000' }, m);
+    gapR = svgEl('rect', { x: 300, y: 229, width: 200, height: 36, fill: '#000' }, m);
     const g = svgEl('g', { mask: 'url(#gap)' }, svg);
     const a0 = `M${RING.cx - RING.r},${RING.cy}`;
     arcT = svgEl('path', { d: `${a0} A${RING.r},${RING.r} 0 0 1 ${RING.cx + RING.r},${RING.cy}`, fill: 'none', stroke: '#F5F5F5', 'stroke-width': RING.w, 'stroke-linecap': 'butt', 'stroke-dasharray': ARC }, g);
@@ -69,12 +71,12 @@ export default {
   },
   render(t) {
     const C = CUE.closing, s = S.closing;
-    if (!show(root, t >= s.t0)) return;
-    // ring: two arcs from 9 o'clock, meeting at the gap
-    const rp = ease.inOutCubic(clamp((t - C.ring[0]) / (C.ring[1] - C.ring[0])));
-    attr(arcT, { 'stroke-dashoffset': (ARC * (1 - rp)).toFixed(2) });
-    attr(arcB, { 'stroke-dashoffset': (ARC * (1 - rp)).toFixed(2) });
-    st(glow, { opacity: 0.25 + 0.35 * clamp((t - C.lock) / 0.6) });
+    if (!show(root, t >= s.t0 - 0.2)) return;
+    // ring: already complete (it arrives from the phone); its notch narrows from the iris' 81 units to the logo's 36
+    const gh = lerp(GAP0, 36, ease.outCubic(clamp((t - C.ring[0]) / (C.ring[1] - C.ring[0]))));
+    attr(gapR, { y: (247 - gh / 2).toFixed(2), height: gh.toFixed(2) });
+    attr(arcT, { 'stroke-dashoffset': 0 }); attr(arcB, { 'stroke-dashoffset': 0 });
+    st(glow, { opacity: 0.25 * clamp((t - (s.t0 - 0.1)) / 0.5) + 0.35 * clamp((t - C.lock) / 0.6) });
     // arrow: flies in from the left, decelerating hard into the gap on the beat; outBack pop on lock
     // nearly constant speed with only a hint of braking: it visibly ARRIVES on the beat and stops dead (the impact)
     const ap = clamp((t - C.arrow[0]) / (C.arrow[1] - C.arrow[0])), ae = 1 - Math.pow(1 - ap, 1.35);

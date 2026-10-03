@@ -103,6 +103,63 @@ export function css(c, a = 1) {
 }
 export const mixc = (a, b, k, al = 1) => css(mix(a, b, k), al);
 
+// ---------- typing (frame-locked, human rhythm) ----------
+// When each character of `text` appears, in seconds from the start of typing. The rhythm is uneven like a hand on a
+// keyboard (±38 % per key from hash(), a short beat after a space, longer after , ; : and longest after . ? !), and the
+// whole line is normalised to (length − 1) / cps, so every cue computed as length / cps still holds. Fast lines (≥ 90 cps:
+// pasted text) stay perfectly even.
+const schedCache = new Map();
+export function typeTimes(text, cps, seed = 7) {
+  const key = `${cps}|${seed}|${text}`;
+  let a = schedCache.get(key);
+  if (a) return a;
+  const n = text.length; a = new Array(n);
+  if (cps >= 90 || n < 2) { for (let i = 0; i < n; i++) a[i] = i / cps; }
+  else {
+    const w = []; let sum = 0;
+    for (let i = 0; i < n; i++) {
+      let x = 0.62 + 0.76 * hash(i + seed * 131, seed);
+      if (i > 0) { const c = text[i - 1]; if (c === ' ') x += 0.4; else if (',;:'.includes(c)) x += 2.4; else if ('.?!'.includes(c)) x += 3.4; }
+      w.push(x); if (i > 0) sum += x;
+    }
+    const k = ((n - 1) / cps) / sum; a[0] = 0;
+    for (let i = 1; i < n; i++) a[i] = a[i - 1] + w[i] * k;
+  }
+  schedCache.set(key, a);
+  return a;
+}
+// characters typed so far: pass the text (human rhythm) or a plain length (even rhythm)
+export function typedN(x, t, at, cps = 30) {
+  const e = fq(t) - at + 1e-6;
+  if (typeof x === 'number') return clamp(Math.floor(e * cps), 0, x);
+  if (e < 0) return 0;
+  const a = typeTimes(x, cps); let n = 0;
+  while (n < a.length && a[n] <= e) n++;
+  return n;
+}
+export const typed = (s, t, at, cps = 30) => s.slice(0, typedN(s, t, at, cps));
+// seconds since the newest character appeared (a big number before typing starts)
+export function typeIdle(s, t, at, cps = 30) {
+  const n = typedN(s, t, at, cps);
+  return n === 0 ? 1e9 : fq(t) - at - typeTimes(s, cps)[n - 1];
+}
+// the caret: solid while typing and a moment after, then a soft pulse (never a hard blink)
+export function caretOpacity(idle) {
+  if (idle < 0.35) return 1;
+  return Math.round(Math.max(0.12, 0.5 + 0.5 * Math.cos(TAU * 1.06 * (idle - 0.35))) * 20) / 20;
+}
+export const caretHtml = (op, h = '1.05em') => `<span style="display:inline-block;width:3px;height:${h};margin-left:2px;vertical-align:-0.16em;background:#2F6BFF;border-radius:2px;opacity:${op};box-shadow:0 0 ${(8 * op).toFixed(0)}px rgba(47,107,255,${(0.45 * op).toFixed(2)})"></span>`;
+// the typed text as html: the newest characters fade in with a blue ink tint that settles to `base`
+export function typeHtml(s, t, at, cps, esc, base = '#0E1116', k = 3) {
+  const n = typedN(s, t, at, cps), a = typeTimes(s, cps), e = fq(t) - at;
+  let out = esc(s.slice(0, Math.max(0, n - k)));
+  for (let j = Math.max(0, n - k); j < n; j++) {
+    const age = e - a[j], p = clamp(age / 0.2), op = clamp(age / 0.06);
+    out += p >= 1 ? esc(s[j]) : `<span style="color:${mixc('#2F6BFF', base, p)};opacity:${(Math.round(op * 20) / 20)}">${esc(s[j])}</span>`;
+  }
+  return out;
+}
+
 // rounding for style strings (keeps the DOM writes stable)
 export const r2 = (x) => Math.round(x * 100) / 100;
 export const r3 = (x) => Math.round(x * 1000) / 1000;

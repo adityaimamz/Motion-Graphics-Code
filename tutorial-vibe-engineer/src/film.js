@@ -2,28 +2,36 @@
 // grain. Everything is written from t; nothing depends on the previous frame.
 import { el, st, initFilters, show } from './dom.js';
 import { hash, clamp, ease, fidx } from './core.js';
-import { S, SCENE_IDS, DURATION, MARKERS, CHAPTERS } from './timeline.js';
+import { S, CUE, SCENE_IDS, DURATION, MARKERS, CHAPTERS } from './timeline.js';
 import { Background } from './ui/background.js';
 import { Hud } from './ui/hud.js';
 import { Dock } from './ui/prompt.js';
 import { Cursor } from './ui/cursor.js';
-import { placeholder } from './scenes/placeholder.js';
 import s01 from './scenes/s01-komentar.js';
 import s02 from './scenes/s02-kode.js';
+import s03 from './scenes/s03-urutan.js';
+import s04 from './scenes/s04-siapkan.js';
+import s05 from './scenes/s05-aturan.js';
+import s06 from './scenes/s06-naskah.js';
+import s07 from './scenes/s07-storyboard.js';
+import s08 from './scenes/s08-kunci.js';
+import s09 from './scenes/s09-suara.js';
+import s10 from './scenes/s10-cek.js';
+import s11 from './scenes/s11-lima.js';
 import s12 from './scenes/s12-closing.js';
 
 export { DURATION, MARKERS };
-const SCENES = [s01, s02, ...['urutan', 'siapkan', 'aturan', 'naskah', 'storyboard', 'kunci', 'suara', 'cek', 'lima'].map(placeholder), s12];
+const SCENES = [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12];
 
 let L, bg, hud, dock, cursor;
 
 export function init() {
   const $ = (id) => document.getElementById(id);
-  L = { stage: $('stage'), light: $('light'), bgEl: $('bg'), world: $('world'), hudEl: $('hud'), top: $('top'), closing: $('closing'), grain: $('grain') };
+  L = { stage: $('stage'), light: $('light'), bgEl: $('bg'), world: $('world'), hudEl: $('hud'), top: $('top'), fx: $('fx'), closing: $('closing'), grain: $('grain') };
   initFilters(L.stage);
   bg = new Background(L.bgEl);
   hud = new Hud(L.hudEl);
-  const ctx = { world: L.world, top: L.top, closing: L.closing };
+  const ctx = { world: L.world, top: L.top, fx: L.fx, closing: L.closing };
   for (const sc of SCENES) sc.init(ctx);
   dock = new Dock(L.top);
   cursor = new Cursor(L.top);
@@ -50,7 +58,8 @@ export function render(t) {
   const ch = S[cur].ch;
   const tintK = ch != null ? ease.inOutCubic(clamp((t - S[cur].t0) / 0.6)) : 0;
   bg.render(t, { tint: ch != null ? CHAPTERS[ch].tint : null, k: tintK, dark: darkK });
-  hud.render(t, { ch, a: t < S.closing.t0 ? 1 : 0, dark: darkK, chT: S[cur].t0 });
+  const railA = t >= S.lima.t0 ? 1 - clamp((t - CUE.lima.rail) / 0.15) : 1;
+  hud.render(t, { ch, a: 1 - clamp((t - (S.closing.t0 - 0.55)) / 0.3), dark: darkK, chT: S[cur].t0, railA, label: cur === 'lima' ? 'LIMA ATURAN' : 'INTRO' });
   // scenes
   for (const sc of SCENES) sc.render(activeAt(sc, t) ? t : -1e9);
   // the shared dock + cursor: the latest active scene that wants them
@@ -63,7 +72,9 @@ export function render(t) {
   dock.render(t, ds);
   cursor.render(t, cs);
   // closing layer
-  show(L.closing, t >= S.closing.t0);
+  // the closing layer fades in over the last 0.14 s of the push-in: its ring is the iris ring the camera has just landed
+  show(L.closing, t >= S.closing.t0 - 0.2);
+  st(L.closing, { opacity: clamp((t - (S.closing.t0 - 0.14)) / 0.14) });
   // grain (shifted per frame, deterministic)
   const f = fidx(t);
   st(L.grain, { 'background-position': `${Math.floor(hash(f, 3) * 256)}px ${Math.floor(hash(f, 4) * 256)}px`, opacity: t >= S.closing.t0 ? 0.07 : 0.05 });
